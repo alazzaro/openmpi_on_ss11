@@ -1,6 +1,10 @@
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-cd $SCRIPT_DIR
+function change_dir() {
+    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    cd $SCRIPT_DIR
+}
+
+change_dir
 
 source sourceme_libfabric.sh
 
