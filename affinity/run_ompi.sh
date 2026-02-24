@@ -19,3 +19,10 @@ APP=xthi
 
 mpicc -g -fopenmp -o ${APP}_ompi.c.x ${APP}.c
 mpirun --bind-to core --map-by L3cache:pe=${OMP_NUM_THREADS} --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind ../select_gpu.sh ./${APP}_ompi.c.x | sort -n -k 4 -k 6
+
+# Run hpcat, if present
+if [ -d hpcat/install/share/modulefiles ]; then
+    module use hpcat/install/share/modulefiles
+    module load hpcat
+    mpirun --bind-to core --map-by L3cache:pe=${OMP_NUM_THREADS} --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind ../select_gpu.sh hpcat -c --no-banner
+fi
