@@ -9,11 +9,25 @@ change_dir
 
 source sourceme_libfabric.sh
 
+# system-specific - check if your system supports running OpenMPI apps using srun
+export USE_SRUN=0
+
 case "$USER" in
     lazzaroa)
         XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
         GPU_OMPI="--with-rocm=$ROCM_PATH"
         ;;
+    marcink)
+	# seems to be needed. slurm race?
+	sleep 2
+	ml reset
+	ml load NRIS/GPU 
+	ml load OpenMPI/5.0.9-GCC-14.3.0
+	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks/
+	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
+	export USE_SRUN=1
+	return 0
+	;;
     *)
         echo "User not recongnized"
         exit -1

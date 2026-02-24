@@ -13,7 +13,13 @@ case "$USER" in
 	GPU_INCLUDE="-I$ROCM_PATH/include"
 	GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
 	;;
+    marcink)
+	ml load NRIS/GPU 
+	ml load libfabric/2.3.1-GCCcore-14.3.0
+	return 0
+	;;
     *)
+        export CUSTOM_INSTALL=1
 	echo "User not recongnized"
 	exit -1
 	;;
