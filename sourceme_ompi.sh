@@ -4,11 +4,6 @@ function change_dir() {
     cd $SCRIPT_DIR
 }
 
-OLDDIR=`pwd`
-change_dir
-
-source sourceme_libfabric.sh
-
 # system-specific - check if your system supports running OpenMPI apps using srun
 export USE_SRUN=0
 
@@ -33,6 +28,11 @@ case "$USER" in
         exit -1
         ;;
 esac
+
+OLDDIR=`pwd`
+change_dir
+
+source sourceme_libfabric.sh
 
 export PREFIX_OMPI=$ROOT_DIR/install_ompi # installation directory
 export OMPI_DIR=$ROOT_DIR/openmpi5
