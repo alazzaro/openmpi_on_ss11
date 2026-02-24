@@ -1,18 +1,18 @@
 case "$USER" in
     lazzaroa)
-	     module load PrgEnv-gnu
-	     module load rocm
-	     module list
+	module load PrgEnv-gnu
+	module load rocm
+	module list
 
-	     echo "ROCM_PATH = "$ROCM_PATH
+	echo "ROCM_PATH = "$ROCM_PATH
 
-	     XPMEM_ROOT=$(pkg-config --variable=libdir cray-xpmem)
-	     XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
-	     echo "XPMEM Lib path  = "$XPMEM_ROOT
+	XPMEM_ROOT=$(pkg-config --variable=libdir cray-xpmem)
+	XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
+	echo "XPMEM Lib path  = "$XPMEM_ROOT
 
-	     GPU_INCLUDE="-I$ROCM_PATH/include"
-	     GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
-	     ;;
+	GPU_INCLUDE="-I$ROCM_PATH/include"
+	GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
+	;;
     *)
 	echo "User not recongnized"
 	exit -1
