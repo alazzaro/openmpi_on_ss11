@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=YourJobname
 #SBATCH --gpus-per-node=2 --nodes=1 --ntasks-per-node=2 --cpus-per-task=72
-#SBATCH --time=24:00:00
+#SBATCH --time=0:10:00
 
 # load runtime environment
 ORIGINAL_SCRIPT=$(scontrol show job "$SLURM_JOB_ID" | awk -F= '/Command=/{print $2}')
