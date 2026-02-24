@@ -5,6 +5,7 @@
 #SBATCH -p standard-g
 #SBATCH --gres=gpu:8
 #SBATCH --exclusive
+#SBATCH --hint=nomultithread
 #SBATCH --network=single_node_vni
 
 export OMP_PROC_BIND=close
