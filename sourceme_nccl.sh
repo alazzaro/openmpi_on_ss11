@@ -11,7 +11,10 @@ source sourceme_libfabric.sh
 
 case "$USER" in
     marcink)
-	ml load NCCL/2.29.2-GCCcore-14.3.0-CUDA-12.9.1
+	if [ "${CRAY_MPICH_VER}" == "" ]; then
+	    ml load NRIS/GPU
+	    ml load NCCL/2.29.2-GCCcore-14.3.0-CUDA-12.9.1
+	fi
 	return 0
 	;;
     *)
