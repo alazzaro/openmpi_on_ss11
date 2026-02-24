@@ -4,11 +4,6 @@ function change_dir() {
     cd $SCRIPT_DIR
 }
 
-OLDDIR=`pwd`
-change_dir
-
-source sourceme_libfabric.sh
-
 case "$USER" in
     lazzaroa)
         XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
@@ -19,6 +14,11 @@ case "$USER" in
         exit -1
         ;;
 esac
+
+OLDDIR=`pwd`
+change_dir
+
+source sourceme_libfabric.sh
 
 export PREFIX_OMPI=$ROOT_DIR/install_ompi # installation directory
 export OMPI_DIR=$ROOT_DIR/openmpi5
