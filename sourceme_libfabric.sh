@@ -14,7 +14,6 @@ case "$USER" in
 	GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
 	;;
     marcink)
-	echo ---------------- ${CRAY_MPICH_VER} ---------------
 	if [ "${CRAY_MPICH_VER}" == "" ]; then
 	    ml load NRIS/GPU
 	    ml load libfabric/2.3.1-GCCcore-14.3.0
