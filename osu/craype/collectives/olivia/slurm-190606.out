@@ -1,0 +1,539 @@
+Starting job 190606 on gpu-1-[1-2] on Olivia at Wed Feb 25 10:11:43 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) gcc-native/14.2 => gcc-native/13.2
+
+
+Currently Loaded Modules:
+  1) init-NRIS                      (S)   9) craype/2.7.34
+  2) craype-arm-grace                    10) cray-dsmml/0.3.1
+  3) libfabric/1.22.0                    11) PrgEnv-gnu/8.6.0
+  4) craype-network-ofi                  12) gcc-native/13.2
+  5) perftools-base/25.03.0              13) cray-mpich/8.1.32
+  6) xpmem/2.11.3-1.3_gdbda01a1eb3d      14) cray-libsci/25.03.0
+  7) CrayEnv                             15) craype-accel-nvidia90
+  8) cuda/12.6
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+
+ 
+
+-- srun osu_alltoall D D
+cpu-bind=MASK - gpu-1-2, task  4  0 [332855]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [332859]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [332863]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [332866]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  0  0 [3011122]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3011127]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3011132]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3011137]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      29.76
+2                      29.51
+4                      29.21
+8                      28.98
+16                     29.04
+32                     29.81
+64                     30.75
+128                    31.10
+256                    54.69
+512                    55.45
+1024                   63.18
+2048                   63.22
+4096                   64.07
+8192                   65.83
+16384                  66.86
+32768                  66.62
+65536                  66.69
+131072                 77.17
+262144                101.49
+524288                313.94
+1048576               612.10
+-- srun osu_allreduce D D
+cpu-bind=MASK - gpu-1-1, task  0  0 [3012198]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3012199]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3012200]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3012201]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  4  0 [333899]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [333900]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-2, task  6  2 [333901]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-2, task  7  3 [333902]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      12.51
+8                      12.46
+16                     12.44
+32                     12.38
+64                     12.44
+128                    13.40
+256                    15.03
+512                    29.73
+1024                   50.98
+2048                   55.21
+4096                   94.82
+8192                   99.60
+16384                 105.70
+32768                 115.69
+65536                 124.16
+131072                146.96
+262144                205.76
+524288                336.98
+1048576               719.05
+-- srun osu_allgather D D
+cpu-bind=MASK - gpu-1-2, task  4  0 [334726]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [334727]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [334728]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [334729]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-1, task  0  0 [3013037]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3013038]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3013039]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3013040]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      21.26
+2                      21.13
+4                      20.95
+8                      20.98
+16                     20.83
+32                     21.48
+64                     22.53
+128                    22.71
+256                    22.79
+512                    31.21
+1024                   50.70
+2048                   51.83
+4096                   53.81
+8192                   59.28
+16384                  64.48
+32768                  74.78
+65536                  96.93
+131072                148.08
+262144                241.14
+524288                442.15
+1048576               884.58
+-- srun osu_alltoall H H
+cpu-bind=MASK - gpu-1-2, task  4  0 [335595]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [335596]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  0  0 [3013918]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  6  2 [335597]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3013919]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [335598]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3013920]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3013921]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      29.88
+2                      29.84
+4                      29.46
+8                      29.27
+16                     29.44
+32                     30.03
+64                     30.97
+128                    31.18
+256                    54.85
+512                    55.77
+1024                   63.21
+2048                   63.15
+4096                   64.26
+8192                   65.64
+16384                  66.65
+32768                  65.93
+65536                  66.43
+131072                 77.12
+262144                103.52
+524288                328.88
+1048576               648.25
+-- srun osu_allreduce H H
+cpu-bind=MASK - gpu-1-2, task  4  0 [336604]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [336605]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [336606]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [336607]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  0  0 [3014939]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3014940]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3014941]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3014942]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      12.48
+8                      12.85
+16                     12.49
+32                     12.39
+64                     12.36
+128                    13.36
+256                    15.21
+512                    29.47
+1024                   50.32
+2048                   56.11
+4096                   97.09
+8192                  101.78
+16384                 109.19
+32768                 119.55
+65536                 119.94
+131072                144.06
+262144                214.04
+524288                340.87
+1048576               722.20
+-- srun osu_allgather H H
+cpu-bind=MASK - gpu-1-1, task  0  0 [3015777]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3015778]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3015779]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3015780]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-2, task  4  0 [337429]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [337430]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [337431]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [337432]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      21.03
+2                      20.90
+4                      20.89
+8                      20.80
+16                     20.80
+32                     21.39
+64                     22.02
+128                    22.51
+256                    22.55
+512                    31.21
+1024                   50.31
+2048                   52.11
+4096                   53.87
+8192                   59.63
+16384                  65.29
+32768                  74.97
+65536                  97.80
+131072                148.13
+262144                241.94
+524288                435.24
+1048576               867.63
+---------------- 8.1.32 ---------------
+-- srun osu_xccl_alltoall
+cpu-bind=MASK - gpu-1-1, task  0  0 [3016619]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3016620]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3016621]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  4  0 [338261]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [338262]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3016622]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [338263]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [338264]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+#Using NCCL
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+#Using NCCL
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+#Using NCCL
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+#Using NCCL
+#Using NCCL
+#Using NCCL
+
+# OSU NCCL-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      58.15
+2                      52.62
+4                      52.41
+8                      52.43
+16                     51.58
+32                     52.87
+64                     53.20
+128                    51.97
+256                    50.49
+512                    50.45
+1024                   50.32
+2048                   51.35
+4096                   51.30
+8192                   52.34
+16384                  54.36
+32768                  68.23
+65536                  90.98
+131072                139.97
+262144                234.61
+524288                416.57
+1048576               782.54
+-- srun osu_xccl_allreduce
+cpu-bind=MASK - gpu-1-2, task  4  0 [339336]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [339337]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [339338]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [339339]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+cpu-bind=MASK - gpu-1-1, task  0  0 [3017709]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3017710]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3017711]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3017712]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+#Using NCCL
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+#Using NCCL
+#Using NCCL
+#Using NCCL
+
+# OSU NCCL-CUDA Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                      25.10
+8                      24.14
+16                     24.31
+32                     24.24
+64                     25.35
+128                    25.35
+256                    25.46
+512                    25.70
+1024                   26.33
+2048                   27.09
+4096                   28.32
+8192                   31.83
+16384                  34.85
+32768                  55.77
+65536                  97.28
+131072                103.41
+262144                116.49
+524288                103.51
+1048576               122.89
+-- srun osu_xccl_allgather
+cpu-bind=MASK - gpu-1-2, task  4  0 [340366]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  5  1 [340367]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  6  2 [340368]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-2, task  7  3 [340369]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  0  0 [3018756]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [3018757]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [3018758]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [3018759]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+#Using NCCL
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+#Using NCCL
+#Using NCCL
+#Using NCCL
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+#Using NCCL
+using SLURM envars
+rank local 1 gpu 1 nic cxi1
+using SLURM envars
+rank local 3 gpu 3 nic cxi3
+using SLURM envars
+rank local 2 gpu 2 nic cxi2
+#Using NCCL
+#Using NCCL
+#Using NCCL
+
+# OSU NCCL-CUDA Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      32.48
+2                      32.22
+4                      32.04
+8                      31.78
+16                     31.88
+32                     31.97
+64                     32.18
+128                    33.34
+256                    33.64
+512                    34.37
+1024                   34.58
+2048                   35.40
+4096                   36.97
+8192                   45.54
+16384                  51.46
+32768                  64.92
+65536                  65.16
+131072                 77.30
+262144                111.01
+524288                181.81
+1048576               332.32
+
+Job 190606 consumed 0.0 billing hours and 0.2 GPU hours from project nn9997k.
+
+Submitted 2026-02-25T10:11:42; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 10.0 minutes
+Elapsed wallclock time:   1.2 minutes
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+190606              576            0.0 %  2026-02-25T10:11:42   73.0 s  0
+190606.batch        288      1     0.0 %  2026-02-25T10:11:42   73.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:11:44   12.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:11:56    6.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:02    6.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:08    7.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:15    6.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:21    6.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:27    9.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:36   11.0 s  0
+190606.gpubind.sh   576      8     0.0 %  2026-02-25T10:12:47    8.0 s  0
+
+Used CPU time:   1.1 CPU seconds
+Unused CPU time: 11.7 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+190606             1400.0        
+190606.batch        700.0     0.2
+190606.gpubind.sh  1400.0     1.9
+190606.gpubind.sh  1400.0     1.5
+190606.gpubind.sh  1400.0     1.5
+190606.gpubind.sh  1400.0     1.8
+190606.gpubind.sh  1400.0     1.5
+190606.gpubind.sh  1400.0     1.6
+190606.gpubind.sh  1400.0     5.9
+190606.gpubind.sh  1400.0     5.0
+190606.gpubind.sh  1400.0     4.9
+
+Job 190606 completed at Wed Feb 25 10:12:56 CET 2026

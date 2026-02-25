@@ -6,7 +6,7 @@
 
 # load runtime environment
 ORIGINAL_SCRIPT=$(scontrol show job "$SLURM_JOB_ID" | awk -F= '/Command=/{print $2}')
-export SCRIPT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )" &> /dev/null && pwd -P )
+export OUTPUT_DIR=$SLURM_SUBMIT_DIR
 export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../.." &> /dev/null && pwd -P )
 echo "ROOT_DIR = "$ROOT_DIR
 source $ROOT_DIR/sourceme_ompi.sh
@@ -28,11 +28,11 @@ for cmd in "${CMDS[@]}"; do
     if [ ${USE_SRUN} = 1 ]; then
 	logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_lnx_srun.txt"
 	echo -- srun $cmd
-	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
     fi
     logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_lnx_mpirun.txt"
     echo -- mpirun $cmd
-    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
 done
 
 # with OpenMPI internal transport
@@ -53,11 +53,11 @@ for cmd in "${CMDS[@]}"; do
     if [ ${USE_SRUN} = 1 ]; then
 	logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_ob1_srun.txt"
 	echo -- srun $cmd
-	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
     fi
     logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_ob1_mpirun.txt"
     echo -- mpirun $cmd
-    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
 done
 
 # NCCL
@@ -66,11 +66,11 @@ source $ROOT_DIR/sourceme_nccl.sh
 CMDS=("osu_xccl_bibw -W 64 D D" "osu_xccl_bibw -W 1 D D" "osu_xccl_latency D D")
 for cmd in "${CMDS[@]}"; do
     if [ ${USE_SRUN} = 1 ]; then
-	logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_ob1_srun.txt"
+	logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_srun.txt"
 	echo -- srun $cmd
-	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+	srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
     fi
-    logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_ob1_mpirun.txt"
+    logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode_mpirun.txt"
     echo -- mpirun $cmd
-    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+    mpirun -bind-to core -map-by numa --report-bindings $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
 done

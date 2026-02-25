@@ -6,8 +6,8 @@
 
 # load runtime environment
 ORIGINAL_SCRIPT=$(scontrol show job "$SLURM_JOB_ID" | awk -F= '/Command=/{print $2}')
-export SCRIPT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )" &> /dev/null && pwd -P )
-export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../.." &> /dev/null && pwd -P )
+export OUTPUT_DIR=$SLURM_SUBMIT_DIR
+export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
 echo "ROOT_DIR = "$ROOT_DIR
 source $ROOT_DIR/sourceme_craympi.sh
 
@@ -19,7 +19,7 @@ CMDS=("osu_bibw -W 64 D D" "osu_bibw -W 1 D D" "osu_latency D D" "osu_bibw -W 64
 for cmd in "${CMDS[@]}"; do
     logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode.txt"
     echo -- srun $cmd
-    srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+    srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/mpi/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
 done
 
 # NCCL
@@ -29,5 +29,5 @@ CMDS=("osu_xccl_bibw -W 64 D D" "osu_xccl_bibw -W 1 D D" "osu_xccl_latency D D")
 for cmd in "${CMDS[@]}"; do
     logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_singlenode.txt"
     echo -- srun $cmd
-    srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $SCRIPT_DIR/$logname
+    srun --cpu-bind=verbose,cores $GPUBIND $OSU_HOME/xccl/pt2pt/$cmd | tee $OUTPUT_DIR/$logname
 done

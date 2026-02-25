@@ -1,0 +1,1108 @@
+Starting job 189410 on gpu-1-43 on Olivia at Tue Feb 24 11:24:07 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun osu_bibw -W 64 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [816935]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [816936]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.21
+2                       0.43
+4                       0.87
+8                       1.74
+16                      3.50
+32                      7.01
+64                     14.00
+128                    27.98
+256                    56.98
+512                   113.92
+1024                  227.56
+2048                  448.72
+4096                  896.29
+8192                 1775.47
+16384                3541.17
+32768                6898.11
+65536               13541.14
+131072              25388.53
+262144              45306.69
+524288              77807.64
+1048576            117920.52
+2097152            158971.95
+4194304            195241.95
+-- mpirun osu_bibw -W 64 D D
+[gpu-1-43:817567] Rank 0 bound to package[0][core:0]
+[gpu-1-43:817567] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.22
+2                       0.45
+4                       0.90
+8                       1.80
+16                      3.60
+32                      7.19
+64                     14.36
+128                    28.77
+256                    57.36
+512                   114.06
+1024                  228.67
+2048                  455.12
+4096                  905.67
+8192                 1793.49
+16384                3545.23
+32768                6940.26
+65536               13457.45
+131072              25304.60
+262144              45237.40
+524288              76992.84
+1048576            117186.01
+2097152            159251.85
+4194304            195749.70
+-- srun osu_bibw -W 1 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [818398]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [818399]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.15
+2                       0.31
+4                       0.62
+8                       1.23
+16                      2.53
+32                      5.07
+64                     10.02
+128                    20.48
+256                    40.54
+512                    79.93
+1024                  166.85
+2048                  334.42
+4096                  664.16
+8192                 1332.79
+16384                2623.03
+32768                5225.32
+65536               10268.56
+131072              19641.04
+262144              36535.88
+524288              60571.24
+1048576             94374.06
+2097152            137822.50
+4194304            177598.13
+-- mpirun osu_bibw -W 1 D D
+[gpu-1-43:819029] Rank 0 bound to package[0][core:0]
+[gpu-1-43:819029] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.17
+2                       0.34
+4                       0.68
+8                       1.37
+16                      2.74
+32                      5.42
+64                     10.98
+128                    21.97
+256                    43.28
+512                    88.01
+1024                  174.68
+2048                  349.97
+4096                  705.70
+8192                 1387.05
+16384                2748.72
+32768                5515.94
+65536               10570.66
+131072              20225.29
+262144              37424.68
+524288              64831.36
+1048576            101949.49
+2097152            143960.76
+4194304            184659.86
+-- srun osu_latency D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [819859]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [819860]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      11.32
+2                      11.12
+4                      10.78
+8                      10.75
+16                     10.68
+32                     10.70
+64                     10.69
+128                    10.52
+256                    10.67
+512                    10.69
+1024                   10.70
+2048                   10.71
+4096                   10.83
+8192                   10.93
+16384                  10.96
+32768                  11.05
+65536                  11.36
+131072                 12.00
+262144                 13.05
+524288                 15.05
+1048576                19.23
+2097152                27.35
+4194304                43.34
+-- mpirun osu_latency D D
+[gpu-1-43:820674] Rank 0 bound to package[0][core:0]
+[gpu-1-43:820674] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      10.65
+2                      10.62
+4                      10.61
+8                      10.62
+16                     10.61
+32                     10.54
+64                     10.63
+128                    10.64
+256                    10.63
+512                    10.66
+1024                   10.66
+2048                   10.71
+4096                   10.78
+8192                   10.87
+16384                  11.00
+32768                  11.13
+65536                  11.35
+131072                 11.94
+262144                 13.06
+524288                 15.03
+1048576                19.14
+2097152                27.35
+4194304                43.16
+-- srun osu_bibw -W 64 H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [821504]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [821505]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.41
+2                       2.81
+4                       5.62
+8                      11.26
+16                     22.57
+32                     45.29
+64                     89.37
+128                   179.82
+256                   245.69
+512                   495.40
+1024                  875.36
+2048                 1446.46
+4096                 2739.64
+8192                10492.61
+16384               19969.25
+32768               36083.79
+65536               59982.94
+131072              87720.40
+262144             113366.27
+524288              98097.63
+1048576             52341.51
+2097152             40186.36
+4194304             34572.12
+-- mpirun osu_bibw -W 64 H H
+[gpu-1-43:822361] Rank 0 bound to package[0][core:0]
+[gpu-1-43:822361] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.35
+2                       2.72
+4                       5.45
+8                      10.93
+16                     21.78
+32                     43.64
+64                     86.41
+128                   172.67
+256                   239.89
+512                   478.03
+1024                  850.39
+2048                 1425.27
+4096                 2624.38
+8192                10276.52
+16384               19590.81
+32768               35436.06
+65536               59224.08
+131072              86599.70
+262144             107795.15
+524288             100550.14
+1048576             54412.78
+2097152             41039.04
+4194304             35683.46
+-- srun osu_bibw -W 1 H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [823007]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [823008]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.77
+2                       1.72
+4                       3.61
+8                       7.33
+16                     14.75
+32                     30.43
+64                     53.99
+128                   104.40
+256                   124.41
+512                   277.71
+1024                  425.66
+2048                  763.29
+4096                 1442.71
+8192                 4952.27
+16384               10993.39
+32768               18384.72
+65536               32716.88
+131072              49069.96
+262144              67398.30
+524288              66569.91
+1048576             46321.59
+2097152             44304.21
+4194304             40504.06
+-- mpirun osu_bibw -W 1 H H
+[gpu-1-43:823822] Rank 0 bound to package[0][core:0]
+[gpu-1-43:823822] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.74
+2                       1.74
+4                       3.59
+8                       7.06
+16                     12.62
+32                     28.82
+64                     52.22
+128                   103.46
+256                   128.95
+512                   265.83
+1024                  457.88
+2048                  744.64
+4096                 1438.57
+8192                 4853.70
+16384                9561.44
+32768               18867.42
+65536               30129.42
+131072              51105.67
+262144              64940.58
+524288              77919.33
+1048576             49382.57
+2097152             44275.78
+4194304             39511.44
+-- srun osu_latency H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [824469]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [824470]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       1.80
+2                       1.79
+4                       1.78
+8                       1.78
+16                      1.78
+32                      1.78
+64                      1.82
+128                     1.82
+256                     3.43
+512                     3.25
+1024                    4.25
+2048                    4.63
+4096                    5.20
+8192                    2.01
+16384                   2.08
+32768                   2.30
+65536                   2.71
+131072                  3.56
+262144                  5.15
+524288                 13.61
+1048576                37.39
+2097152               102.11
+4194304               231.12
+-- mpirun osu_latency H H
+[gpu-1-43:825283] Rank 0 bound to package[0][core:0]
+[gpu-1-43:825283] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       1.87
+2                       1.82
+4                       1.82
+8                       1.81
+16                      1.81
+32                      1.81
+64                      1.85
+128                     1.86
+256                     3.42
+512                     3.23
+1024                    4.24
+2048                    4.64
+4096                    5.26
+8192                    2.06
+16384                   2.13
+32768                   2.36
+65536                   2.76
+131072                  3.71
+262144                  5.31
+524288                 13.37
+1048576                38.83
+2097152               101.88
+4194304               229.42
+-- srun osu_bibw -W 64 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [825929]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [825930]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.31
+2                       0.69
+4                       1.34
+8                       2.73
+16                      5.27
+32                     10.69
+64                     21.19
+128                    42.79
+256                    85.43
+512                   180.94
+1024                  353.72
+2048                  713.02
+4096                 1399.79
+8192                 2841.36
+16384                5631.49
+32768               11520.40
+65536               22588.64
+131072              46327.12
+262144              87293.95
+524288             133321.45
+1048576            173580.72
+2097152            204243.39
+4194304            225436.74
+-- mpirun osu_bibw -W 64 D D
+[gpu-1-43:826740] Rank 0 bound to package[0][core:0]
+[gpu-1-43:826740] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.35
+2                       0.72
+4                       1.41
+8                       2.86
+16                      5.55
+32                     11.11
+64                     22.22
+128                    44.30
+256                    88.43
+512                   180.76
+1024                  362.95
+2048                  730.53
+4096                 1456.14
+8192                 2899.31
+16384                5749.87
+32768               11782.08
+65536               23304.93
+131072              46073.70
+262144              88800.52
+524288             133188.94
+1048576            173499.23
+2097152            205026.85
+4194304            225382.08
+-- srun osu_bibw -W 1 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [827382]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [827383]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.15
+2                       0.28
+4                       0.60
+8                       1.15
+16                      2.33
+32                      4.84
+64                      9.37
+128                    18.79
+256                    37.09
+512                    77.69
+1024                  156.75
+2048                  321.15
+4096                  640.98
+8192                 1261.81
+16384                2387.58
+32768                4904.97
+65536                9155.41
+131072              18058.53
+262144              33605.84
+524288              58725.99
+1048576             92909.24
+2097152            136708.67
+4194304            173743.19
+-- mpirun osu_bibw -W 1 D D
+[gpu-1-43:828203] Rank 0 bound to package[0][core:0]
+[gpu-1-43:828203] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.15
+2                       0.30
+4                       0.63
+8                       1.23
+16                      2.49
+32                      4.97
+64                     10.29
+128                    20.31
+256                    40.33
+512                    85.10
+1024                  157.83
+2048                  321.93
+4096                  617.78
+8192                 1343.66
+16384                2544.18
+32768                5147.18
+65536               10071.62
+131072              19819.23
+262144              35383.98
+524288              60027.54
+1048576             97708.51
+2097152            136218.51
+4194304            179938.52
+-- srun osu_latency D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [828845]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [828846]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      12.14
+2                      12.02
+4                      11.84
+8                      12.15
+16                     11.82
+32                     11.52
+64                     11.63
+128                    12.15
+256                    12.39
+512                    11.34
+1024                   11.65
+2048                   11.47
+4096                   11.38
+8192                   11.59
+16384                  11.62
+32768                  11.67
+65536                  11.99
+131072                 12.60
+262144                 13.74
+524288                 15.68
+1048576                19.95
+2097152                27.94
+4194304                43.82
+-- mpirun osu_latency D D
+[gpu-1-43:829659] Rank 0 bound to package[0][core:0]
+[gpu-1-43:829659] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      11.43
+2                      11.47
+4                      11.42
+8                      11.28
+16                     11.35
+32                     11.37
+64                     11.41
+128                    11.40
+256                    11.41
+512                    11.30
+1024                   11.30
+2048                   11.23
+4096                   11.28
+8192                   11.35
+16384                  11.52
+32768                  11.77
+65536                  12.03
+131072                 12.71
+262144                 13.70
+524288                 15.66
+1048576                19.98
+2097152                27.94
+4194304                43.64
+-- srun osu_bibw -W 64 H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [830715]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [830716]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       5.28
+2                      10.25
+4                      20.10
+8                      40.82
+16                     39.81
+32                     76.90
+64                    122.19
+128                   182.01
+256                   312.12
+512                   608.85
+1024                 1170.69
+2048                 2161.01
+4096                 4342.86
+8192                 7763.19
+16384               15642.49
+32768               29648.22
+65536               49957.59
+131072              77706.45
+262144             102340.85
+524288              77206.99
+1048576             50911.55
+2097152             39104.63
+4194304             36075.82
+-- mpirun osu_bibw -W 64 H H
+[gpu-1-43:831332] Rank 0 bound to package[0][core:0]
+[gpu-1-43:831332] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       5.18
+2                      11.08
+4                      21.66
+8                      41.21
+16                     45.26
+32                     99.85
+64                    127.15
+128                   186.23
+256                   321.55
+512                   556.61
+1024                 1136.09
+2048                 2335.24
+4096                 4423.22
+8192                 7962.76
+16384               13803.89
+32768               29395.22
+65536               50137.22
+131072              77244.52
+262144              98165.15
+524288              75282.76
+1048576             51733.13
+2097152             39267.77
+4194304             35982.83
+-- srun osu_bibw -W 1 H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [831964]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [831965]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.58
+2                       3.78
+4                       7.69
+8                      15.25
+16                     26.00
+32                     52.11
+64                    101.40
+128                   193.43
+256                   373.06
+512                   339.39
+1024                  681.89
+2048                 1361.02
+4096                 2483.58
+8192                 5338.51
+16384               10428.03
+32768               15462.99
+65536               29174.76
+131072              48518.23
+262144              72353.51
+524288              76118.63
+1048576             60198.55
+2097152             41707.50
+4194304             37234.13
+-- mpirun osu_bibw -W 1 H H
+[gpu-1-43:832580] Rank 0 bound to package[0][core:0]
+[gpu-1-43:832580] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.56
+2                       3.81
+4                       7.71
+8                      15.35
+16                     26.75
+32                     53.81
+64                    103.95
+128                   195.13
+256                   367.32
+512                   330.83
+1024                  675.13
+2048                 1020.93
+4096                 2682.68
+8192                 5290.52
+16384               10189.37
+32768               15159.67
+65536               28524.61
+131072              47001.11
+262144              67579.00
+524288              82469.26
+1048576             49371.41
+2097152             41218.95
+4194304             36484.81
+-- srun osu_latency H H
+cpu-bind=MASK - gpu-1-43, task  0  0 [833396]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [833397]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.88
+2                       0.88
+4                       0.89
+8                       0.89
+16                      1.07
+32                      1.09
+64                      1.12
+128                     1.21
+256                     1.36
+512                     2.51
+1024                    2.52
+2048                    2.53
+4096                    2.55
+8192                    2.60
+16384                   2.66
+32768                   3.53
+65536                   3.94
+131072                  4.69
+262144                  6.29
+524288                 13.51
+1048576                41.12
+2097152               105.79
+4194304               230.04
+-- mpirun osu_latency H H
+[gpu-1-43:834012] Rank 0 bound to package[0][core:0]
+[gpu-1-43:834012] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.84
+2                       0.86
+4                       0.85
+8                       0.87
+16                      1.11
+32                      1.12
+64                      1.14
+128                     1.20
+256                     1.27
+512                     2.63
+1024                    2.64
+2048                    2.64
+4096                    2.65
+8192                    2.70
+16384                   2.77
+32768                   3.54
+65536                   3.93
+131072                  4.70
+262144                  6.32
+524288                 14.44
+1048576                41.01
+2097152               101.06
+4194304               223.34
+-- srun osu_xccl_bibw -W 64 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [834881]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [834882]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)
+1                       0.43
+2                       0.88
+4                       1.77
+8                       3.53
+16                      7.10
+32                     14.17
+64                     28.29
+128                    56.44
+256                   113.76
+512                   225.61
+1024                  449.08
+2048                  883.52
+4096                 1610.97
+8192                 2751.12
+16384                4516.99
+32768                7170.24
+65536               12303.81
+131072              24102.76
+262144              45521.87
+524288              67735.06
+1048576             91896.56
+2097152            113870.57
+4194304            138498.05
+-- mpirun osu_xccl_bibw -W 64 D D
+[gpu-1-43:835523] Rank 0 bound to package[0][core:0]
+[gpu-1-43:835523] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)
+1                       0.45
+2                       0.89
+4                       1.80
+8                       3.60
+16                      7.20
+32                     14.34
+64                     28.75
+128                    57.35
+256                   115.61
+512                   229.77
+1024                  454.88
+2048                  894.01
+4096                 1633.37
+8192                 2792.74
+16384                4585.46
+32768                7094.81
+65536               12372.83
+131072              24382.25
+262144              46068.64
+524288              68098.84
+1048576             92668.17
+2097152            114440.43
+4194304            139585.67
+-- srun osu_xccl_bibw -W 1 D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [836365]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [836366]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)
+1                       0.13
+2                       0.27
+4                       0.53
+8                       1.08
+16                      2.23
+32                      4.50
+64                      8.94
+128                    18.06
+256                    36.06
+512                    73.09
+1024                  146.69
+2048                  284.67
+4096                  570.95
+8192                 1073.77
+16384                1912.83
+32768                3288.48
+65536                5988.06
+131072              11892.66
+262144              23047.60
+524288              39326.86
+1048576             62441.07
+2097152             87108.30
+4194304            114916.14
+-- mpirun osu_xccl_bibw -W 1 D D
+[gpu-1-43:837190] Rank 0 bound to package[0][core:0]
+[gpu-1-43:837190] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)
+1                       0.15
+2                       0.30
+4                       0.60
+8                       1.22
+16                      2.44
+32                      4.74
+64                      9.82
+128                    19.63
+256                    39.02
+512                    79.75
+1024                  157.38
+2048                  314.33
+4096                  609.28
+8192                  893.57
+16384                2104.25
+32768                3627.79
+65536                6505.93
+131072              12898.15
+262144              24557.16
+524288              42244.50
+1048576             65001.87
+2097152             90503.52
+4194304            117074.14
+-- srun osu_xccl_latency D D
+cpu-bind=MASK - gpu-1-43, task  0  0 [838073]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-43, task  1  1 [838074]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)
+1                      13.32
+2                      13.09
+4                      13.00
+8                      12.97
+16                     12.94
+32                     12.95
+64                     12.88
+128                    12.97
+256                    12.91
+512                    12.91
+1024                   12.96
+2048                   13.05
+4096                   13.24
+8192                   13.80
+16384                  14.70
+32768                  18.11
+65536                  20.03
+131072                 20.27
+262144                 21.00
+524288                 24.54
+1048576                31.53
+2097152                45.39
+4194304                63.47
+-- mpirun osu_xccl_latency D D
+[gpu-1-43:838898] Rank 0 bound to package[0][core:0]
+[gpu-1-43:838898] Rank 1 bound to package[2][core:144]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)
+1                      13.26
+2                      13.13
+4                      13.18
+8                      13.06
+16                     13.00
+32                     12.99
+64                     13.01
+128                    13.02
+256                    12.95
+512                    12.95
+1024                   13.01
+2048                   13.10
+4096                   13.28
+8192                   13.76
+16384                  14.84
+32768                  18.14
+65536                  20.12
+131072                 20.27
+262144                 21.08
+524288                 24.56
+1048576                31.59
+2097152                45.41
+4194304                63.44
+
+Job 189410 consumed 0.0 billing hours and 0.1 GPU hours from project nn9997k.
+
+Submitted 2026-02-24T11:24:06; waited 1.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 10.0 minutes
+Elapsed wallclock time:   1.8 minutes
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+189410              144            0.0 %  2026-02-24T11:24:07  105.0 s  0
+189410.batch        144      1     0.0 %  2026-02-24T11:24:07  105.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:10    3.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   10.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:17    2.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   14.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:21    6.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   25.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:32    3.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   30.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:37    3.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   34.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:41    4.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   41.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:48    3.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   47.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:54    2.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   51.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:24:58    6.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   63.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:10    1.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   66.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:13    1.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   68.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:15    2.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   72.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:19    5.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   81.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:28    3.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07   89.0 s  0
+189410.gpubind.sh   144      2     0.0 %  2026-02-24T11:25:36    7.0 s  0
+189410.prted        144      1     0.0 %  2026-02-24T11:24:07  106.0 s  0
+
+Used CPU time:   3.9 CPU seconds
+Unused CPU time: 4.2 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+189410              700.0        
+189410.batch        700.0     0.1
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.5
+189410.prted        700.0     0.5
+189410.gpubind.sh   700.0     0.4
+189410.prted        700.0     0.4
+189410.gpubind.sh   700.0     0.4
+189410.prted        700.0     0.4
+189410.gpubind.sh   700.0     0.4
+189410.prted        700.0     0.4
+189410.gpubind.sh   700.0     0.1
+189410.prted        700.0     0.1
+189410.gpubind.sh   700.0     0.1
+189410.prted        700.0     0.1
+189410.gpubind.sh   700.0     0.1
+189410.prted        700.0     0.1
+189410.gpubind.sh   700.0     1.4
+189410.prted        700.0     1.2
+189410.gpubind.sh   700.0     1.4
+189410.prted        700.0     1.2
+189410.gpubind.sh   700.0     1.4
+189410.prted        700.0     1.2
+
+Job 189410 completed at Tue Feb 24 11:25:55 CET 2026
