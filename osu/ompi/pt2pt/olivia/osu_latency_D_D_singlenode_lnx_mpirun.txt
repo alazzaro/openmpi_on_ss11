@@ -1,0 +1,26 @@
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      10.78              Pass
+2                      10.88              Pass
+4                      10.75              Pass
+8                      10.72              Pass
+16                     10.74              Pass
+32                     10.74              Pass
+64                     10.76              Pass
+128                    10.74              Pass
+256                    10.81              Pass
+512                    10.77              Pass
+1024                   10.81              Pass
+2048                   10.83              Pass
+4096                   11.00              Pass
+8192                   11.22              Pass
+16384                  11.28              Pass
+32768                  11.41              Pass
+65536                  11.58              Pass
+131072                 12.07              Pass
+262144                 13.07              Pass
+524288                 14.94              Pass
+1048576                19.25              Pass
+2097152                27.79              Pass
+4194304                43.84              Pass
