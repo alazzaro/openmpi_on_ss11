@@ -1,3 +1,28 @@
+run_osu_cmd() {
+    local cmd="$1"
+    local osusubdir="$2"
+    local logsuffix="$3"
+
+    # Build logname from original cmd (spaces -> _, remove -)
+    local logname
+    logname=$(echo "$cmd" | sed -e 's/ /_/g' -e 's/-//g')
+
+    # Replace first space in cmd with $OSU_ARGS
+    cmd=$(echo "$cmd" | sed -e "s/ /$OSU_ARGS/")
+
+    # Split cmd into program + args
+    # shellcheck disable=SC2086
+    set -- $cmd
+    local prog="$1"
+    shift
+    local args=("$@")
+    
+    # Full path to the OSU executable
+    local fullprog="$OSU_HOME/$osusubdir/$prog"
+    
+    echo -- srun "$fullprog" "${args[@]}"
+    srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}.txt"
+}
 
 export PE_LD_LIBRARY_PATH=system # Force update of the LD_LIBRARY_PATH, instead of CRAY_LD_LIBRARY_PATH
 
