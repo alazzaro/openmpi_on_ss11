@@ -1,0 +1,26 @@
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       4.87              Pass
+2                       9.94              Pass
+4                      19.30              Pass
+8                      38.86              Pass
+16                     41.65              Pass
+32                     84.01              Pass
+64                    121.45              Pass
+128                   172.26              Pass
+256                   313.05              Pass
+512                   682.49              Pass
+1024                 1341.48              Pass
+2048                 2720.30              Pass
+4096                 5225.27              Pass
+8192                10119.25              Pass
+16384               15981.60              Pass
+32768               22168.98              Pass
+65536               31717.83              Pass
+131072              36968.45              Pass
+262144              44946.38              Pass
+524288              29757.90              Pass
+1048576             21510.01              Pass
+2097152             17840.62              Pass
+4194304             16470.47              Pass

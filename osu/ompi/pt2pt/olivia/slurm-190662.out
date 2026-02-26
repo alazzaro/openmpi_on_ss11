@@ -1,0 +1,172 @@
+Starting job 190662 on gpu-1-[4-5] on Olivia at Thu Feb 26 11:39:14 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_bibw -c -b multiple D D
+cpu-bind=MASK - gpu-1-4, task  0  0 [321480]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-5, task  1  0 [305874]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 1 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)        Validation
+1                       0.13
+2                       0.25
+4                       0.50
+8                       1.01
+16                      2.03
+32                      4.05
+64                      8.12
+128                    15.49
+256                    31.03
+512                    62.00
+1024                  121.54
+2048                  238.75
+4096                  468.30
+8192                  885.85
+16384                1680.26
+32768                2396.20
+65536                3632.67
+131072               7717.09
+262144              10198.47
+524288              14658.33
+1048576             23346.90
+2097152             28533.43
+4194304             35493.27
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_bibw -c -b multiple D D
+[gpu-1-5:306488] Rank 1 bound to package[0][core:0]
+using OMPI envars
+rank 1 local 0 gpu 0 nic cxi0
+[gpu-1-4:322107] Rank 0 bound to package[0][core:0]
+#Using NCCL
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)        Validation
+1                       0.04
+2                       0.08
+4                       0.15
+8                       0.33
+16                      0.65
+32                      1.42
+64                      2.72
+128                     5.17
+256                    10.90
+512                    20.17
+1024                   36.14
+2048                   77.49
+4096                  148.69
+8192                  301.61
+16384                 627.99
+32768                 689.17
+65536                1508.20
+131072               2507.59
+262144               3907.71
+524288               4443.54
+1048576              6791.47
+2097152              7687.24
+4194304             10173.39
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_latency -c D D
+cpu-bind=MASK - gpu-1-4, task  0  0 [322755]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-5, task  1  0 [307116]: mask 0xffffffffffffffffff set
+#Using NCCL
+using SLURM envars
+rank 1 local 0 gpu 0 nic cxi0
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)        Validation
+1                      25.69
+2                      25.49
+4                      25.44
+8                      25.43
+16                     25.03
+32                     25.00
+64                     24.20
+128                    25.01
+256                    24.66
+512                    24.73
+1024                   24.85
+2048                   25.37
+4096                   25.63
+8192                   26.20
+16384                  27.70
+32768                  35.63
+65536                  40.11
+131072                 40.84
+262144                 47.00
+524288                 65.54
+1048576                80.05
+2097152               123.79
+4194304               219.32
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_latency -c D D
+[gpu-1-5:307724] Rank 1 bound to package[0][core:0]
+using OMPI envars
+rank 1 local 0 gpu 0 nic cxi0
+[gpu-1-4:323379] Rank 0 bound to package[0][core:0]
+#Using NCCL
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)        Validation
+1                      72.84
+2                      87.55
+4                      68.87
+8                      63.31
+16                     65.99
+32                     52.68
+64                     65.87
+128                    78.03
+256                    65.97
+512                    70.46
+1024                   73.23
+2048                   72.07
+4096                   91.65
+8192                   72.40
+16384                  74.33
+32768                 124.32
+65536                 337.58
+131072                325.17
+262144                141.28
+524288                221.04
+1048576               314.45
+2097152               519.21
+4194304               809.98
+
+Job 190662 consumed 0.0 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-02-26T11:39:13; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   1.1 minutes
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+190662              144            0.0 %  2026-02-26T11:39:13   63.0 s  0
+190662.batch         72      1     0.0 %  2026-02-26T11:39:13   63.0 s  0
+190662.gpubind.sh   144      2     0.0 %  2026-02-26T11:39:17    6.0 s  0
+190662.prted        144      2     0.0 %  2026-02-26T11:39:13   22.0 s  0
+190662.gpubind.sh   144      2     0.0 %  2026-02-26T11:39:35   11.0 s  0
+190662.prted        144      2     0.0 %  2026-02-26T11:39:13   64.0 s  0
+
+Used CPU time:   1.2 CPU seconds
+Unused CPU time: 2.5 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+190662             1400.0        
+190662.batch        700.0     0.1
+190662.gpubind.sh  1400.0     1.9
+190662.prted       1400.0     1.7
+190662.gpubind.sh  1400.0     1.7
+190662.prted       1400.0     1.7
+
+Job 190662 completed at Thu Feb 26 11:40:19 CET 2026

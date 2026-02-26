@@ -1,0 +1,748 @@
+Starting job 190660 on gpu-1-3 on Olivia at Thu Feb 26 10:21:58 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [295954]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [295955]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.21              Pass
+2                       0.41              Pass
+4                       0.81              Pass
+8                       1.56              Pass
+16                      3.12              Pass
+32                      6.25              Pass
+64                     12.49              Pass
+128                    24.98              Pass
+256                    49.83              Pass
+512                    99.52              Pass
+1024                  198.91              Pass
+2048                  395.76              Pass
+4096                  788.17              Pass
+8192                 1552.53              Pass
+16384                3076.19              Pass
+32768                6160.86              Pass
+65536               11963.47              Pass
+131072              22607.20              Pass
+262144              41451.06              Pass
+524288              70421.54              Pass
+1048576            108563.15              Pass
+2097152            149098.58              Pass
+4194304            186904.63              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+[gpu-1-3:296872] Rank 0 bound to package[0][core:0]
+[gpu-1-3:296872] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.21              Pass
+2                       0.41              Pass
+4                       0.81              Pass
+8                       1.56              Pass
+16                      3.11              Pass
+32                      6.23              Pass
+64                     12.46              Pass
+128                    24.79              Pass
+256                    49.47              Pass
+512                    99.12              Pass
+1024                  197.74              Pass
+2048                  394.41              Pass
+4096                  785.01              Pass
+8192                 1544.82              Pass
+16384                3080.81              Pass
+32768                6005.55              Pass
+65536               11836.48              Pass
+131072              22273.80              Pass
+262144              41075.74              Pass
+524288              70113.24              Pass
+1048576            108373.12              Pass
+2097152            148815.30              Pass
+4194304            186964.29              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [297522]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [297523]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      12.26              Pass
+2                      11.21              Pass
+4                      10.80              Pass
+8                      10.58              Pass
+16                     10.73              Pass
+32                     10.59              Pass
+64                     10.69              Pass
+128                    10.61              Pass
+256                    10.66              Pass
+512                    10.63              Pass
+1024                   10.64              Pass
+2048                   10.74              Pass
+4096                   10.87              Pass
+8192                   11.12              Pass
+16384                  11.10              Pass
+32768                  11.29              Pass
+65536                  11.47              Pass
+131072                 11.93              Pass
+262144                 12.77              Pass
+524288                 14.86              Pass
+1048576                19.26              Pass
+2097152                27.50              Pass
+4194304                43.71              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c D D
+[gpu-1-3:298152] Rank 0 bound to package[0][core:0]
+[gpu-1-3:298152] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      10.78              Pass
+2                      10.88              Pass
+4                      10.75              Pass
+8                      10.72              Pass
+16                     10.74              Pass
+32                     10.74              Pass
+64                     10.76              Pass
+128                    10.74              Pass
+256                    10.81              Pass
+512                    10.77              Pass
+1024                   10.81              Pass
+2048                   10.83              Pass
+4096                   11.00              Pass
+8192                   11.22              Pass
+16384                  11.28              Pass
+32768                  11.41              Pass
+65536                  11.58              Pass
+131072                 12.07              Pass
+262144                 13.07              Pass
+524288                 14.94              Pass
+1048576                19.25              Pass
+2097152                27.79              Pass
+4194304                43.84              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+cpu-bind=MASK - gpu-1-3, task  0  0 [298804]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [298805]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.43              Pass
+2                       2.87              Pass
+4                       5.76              Pass
+8                      11.51              Pass
+16                     22.96              Pass
+32                     46.00              Pass
+64                     91.33              Pass
+128                   182.91              Pass
+256                   235.45              Pass
+512                   477.28              Pass
+1024                  828.82              Pass
+2048                 1375.74              Pass
+4096                 2668.90              Pass
+8192                 9402.02              Pass
+16384               15961.17              Pass
+32768               24495.22              Pass
+65536               33954.72              Pass
+131072              36851.02              Pass
+262144              43223.12              Pass
+524288              30496.95              Pass
+1048576             22341.04              Pass
+2097152             17777.74              Pass
+4194304             16512.67              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+[gpu-1-3:299432] Rank 0 bound to package[0][core:0]
+[gpu-1-3:299432] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.40              Pass
+2                       2.83              Pass
+4                       5.65              Pass
+8                      11.27              Pass
+16                     22.60              Pass
+32                     45.28              Pass
+64                     90.09              Pass
+128                   179.84              Pass
+256                   240.71              Pass
+512                   457.62              Pass
+1024                  839.03              Pass
+2048                 1449.85              Pass
+4096                 2618.96              Pass
+8192                 9116.75              Pass
+16384               15498.94              Pass
+32768               23845.28              Pass
+65536               33438.90              Pass
+131072              37039.36              Pass
+262144              44370.32              Pass
+524288              30079.52              Pass
+1048576             22097.60              Pass
+2097152             17760.97              Pass
+4194304             16448.55              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+cpu-bind=MASK - gpu-1-3, task  0  0 [300369]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [300370]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       1.96              Pass
+2                       2.05              Pass
+4                       2.01              Pass
+8                       2.01              Pass
+16                      1.96              Pass
+32                      1.93              Pass
+64                      1.95              Pass
+128                     2.01              Pass
+256                     4.15              Pass
+512                     3.91              Pass
+1024                    5.03              Pass
+2048                    4.89              Pass
+4096                    5.42              Pass
+8192                    1.99              Pass
+16384                   2.14              Pass
+32768                   2.39              Pass
+65536                   2.72              Pass
+131072                  3.62              Pass
+262144                  5.58              Pass
+524288                 12.68              Pass
+1048576                43.62              Pass
+2097152               113.38              Pass
+4194304               225.37              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+[gpu-1-3:300995] Rank 0 bound to package[0][core:0]
+[gpu-1-3:300995] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       1.93              Pass
+2                       1.96              Pass
+4                       1.96              Pass
+8                       1.94              Pass
+16                      1.87              Pass
+32                      1.88              Pass
+64                      1.92              Pass
+128                     2.08              Pass
+256                     3.93              Pass
+512                     4.15              Pass
+1024                    4.89              Pass
+2048                    4.67              Pass
+4096                    5.12              Pass
+8192                    2.04              Pass
+16384                   2.22              Pass
+32768                   2.41              Pass
+65536                   2.72              Pass
+131072                  3.60              Pass
+262144                  5.61              Pass
+524288                 13.44              Pass
+1048576                45.75              Pass
+2097152               101.59              Pass
+4194304               230.54              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [301932]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [301933]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.33              Pass
+2                       0.65              Pass
+4                       1.31              Pass
+8                       2.59              Pass
+16                      5.19              Pass
+32                     10.36              Pass
+64                     20.71              Pass
+128                    41.71              Pass
+256                    83.04              Pass
+512                   171.60              Pass
+1024                  340.44              Pass
+2048                  672.38              Pass
+4096                 1358.39              Pass
+8192                 2701.80              Pass
+16384                5359.72              Pass
+32768               10625.21              Pass
+65536               21177.98              Pass
+131072              42874.96              Pass
+262144              84554.78              Pass
+524288             129606.43              Pass
+1048576            169968.53              Pass
+2097152            201398.50              Pass
+4194304            223467.55              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+[gpu-1-3:302564] Rank 0 bound to package[0][core:0]
+[gpu-1-3:302564] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.32              Pass
+2                       0.65              Pass
+4                       1.29              Pass
+8                       2.58              Pass
+16                      5.18              Pass
+32                     10.33              Pass
+64                     20.70              Pass
+128                    41.34              Pass
+256                    82.38              Pass
+512                   169.93              Pass
+1024                  338.14              Pass
+2048                  676.59              Pass
+4096                 1352.95              Pass
+8192                 2682.60              Pass
+16384                5330.04              Pass
+32768               10547.70              Pass
+65536               21313.38              Pass
+131072              42621.06              Pass
+262144              83692.32              Pass
+524288             129028.76              Pass
+1048576            169577.54              Pass
+2097152            201898.72              Pass
+4194304            223252.70              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [303229]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [303230]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      11.93              Pass
+2                      11.62              Pass
+4                      11.58              Pass
+8                      11.53              Pass
+16                     11.52              Pass
+32                     11.52              Pass
+64                     11.52              Pass
+128                    11.51              Pass
+256                    11.54              Pass
+512                    11.43              Pass
+1024                   11.50              Pass
+2048                   11.44              Pass
+4096                   11.66              Pass
+8192                   11.92              Pass
+16384                  11.99              Pass
+32768                  12.08              Pass
+65536                  12.40              Pass
+131072                 12.71              Pass
+262144                 13.59              Pass
+524288                 15.59              Pass
+1048576                20.05              Pass
+2097152                28.16              Pass
+4194304                44.21              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c D D
+[gpu-1-3:303853] Rank 0 bound to package[0][core:0]
+[gpu-1-3:303853] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      11.80              Pass
+2                      11.73              Pass
+4                      11.77              Pass
+8                      11.72              Pass
+16                     11.74              Pass
+32                     11.63              Pass
+64                     11.69              Pass
+128                    11.71              Pass
+256                    11.60              Pass
+512                    11.53              Pass
+1024                   11.49              Pass
+2048                   11.72              Pass
+4096                   11.76              Pass
+8192                   12.00              Pass
+16384                  12.10              Pass
+32768                  12.05              Pass
+65536                  12.38              Pass
+131072                 13.02              Pass
+262144                 13.96              Pass
+524288                 15.57              Pass
+1048576                19.82              Pass
+2097152                27.95              Pass
+4194304                44.24              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+cpu-bind=MASK - gpu-1-3, task  0  0 [304499]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [304500]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       4.87              Pass
+2                       9.94              Pass
+4                      19.30              Pass
+8                      38.86              Pass
+16                     41.65              Pass
+32                     84.01              Pass
+64                    121.45              Pass
+128                   172.26              Pass
+256                   313.05              Pass
+512                   682.49              Pass
+1024                 1341.48              Pass
+2048                 2720.30              Pass
+4096                 5225.27              Pass
+8192                10119.25              Pass
+16384               15981.60              Pass
+32768               22168.98              Pass
+65536               31717.83              Pass
+131072              36968.45              Pass
+262144              44946.38              Pass
+524288              29757.90              Pass
+1048576             21510.01              Pass
+2097152             17840.62              Pass
+4194304             16470.47              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+[gpu-1-3:305113] Rank 0 bound to package[0][core:0]
+[gpu-1-3:305113] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       5.42              Pass
+2                      10.10              Pass
+4                      20.38              Pass
+8                      40.00              Pass
+16                     46.49              Pass
+32                     77.62              Pass
+64                    133.57              Pass
+128                   177.15              Pass
+256                   315.56              Pass
+512                   649.31              Pass
+1024                 1383.35              Pass
+2048                 2895.21              Pass
+4096                 5620.36              Pass
+8192                 9308.44              Pass
+16384               18023.54              Pass
+32768               21935.45              Pass
+65536               31428.08              Pass
+131072              37410.55              Pass
+262144              42332.35              Pass
+524288              29843.09              Pass
+1048576             21351.30              Pass
+2097152             17710.83              Pass
+4194304             16417.61              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+cpu-bind=MASK - gpu-1-3, task  0  0 [306036]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [306037]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       0.90              Pass
+2                       0.90              Pass
+4                       0.91              Pass
+8                       0.90              Pass
+16                      1.11              Pass
+32                      1.11              Pass
+64                      1.15              Pass
+128                     1.15              Pass
+256                     1.34              Pass
+512                     2.48              Pass
+1024                    2.48              Pass
+2048                    2.50              Pass
+4096                    2.52              Pass
+8192                    2.56              Pass
+16384                   2.62              Pass
+32768                   3.48              Pass
+65536                   3.93              Pass
+131072                  4.57              Pass
+262144                  6.35              Pass
+524288                 13.10              Pass
+1048576                42.61              Pass
+2097152               100.67              Pass
+4194304               224.14              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+[gpu-1-3:306650] Rank 0 bound to package[0][core:0]
+[gpu-1-3:306650] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       0.87              Pass
+2                       0.89              Pass
+4                       0.89              Pass
+8                       0.89              Pass
+16                      1.11              Pass
+32                      1.09              Pass
+64                      1.14              Pass
+128                     1.25              Pass
+256                     1.34              Pass
+512                     2.50              Pass
+1024                    2.50              Pass
+2048                    2.52              Pass
+4096                    2.53              Pass
+8192                    2.57              Pass
+16384                   2.65              Pass
+32768                   3.55              Pass
+65536                   3.95              Pass
+131072                  4.70              Pass
+262144                  6.69              Pass
+524288                 13.90              Pass
+1048576                43.20              Pass
+2097152               100.27              Pass
+4194304               227.05              Pass
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_bibw -c -b multiple D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [307355]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [307356]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)        Validation
+1                       0.42
+2                       0.85
+4                       1.73
+8                       3.42
+16                      6.94
+32                     14.00
+64                     27.93
+128                    55.92
+256                   113.14
+512                   224.44
+1024                  446.16
+2048                  874.13
+4096                 1603.50
+8192                 2741.90
+16384                4522.88
+32768                7036.86
+65536               12271.31
+131072              24026.39
+262144              45250.70
+524288              67125.45
+1048576             91581.38
+2097152            113512.22
+4194304            139214.74
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_bibw -c -b multiple D D
+[gpu-1-3:307995] Rank 0 bound to package[0][core:0]
+[gpu-1-3:307995] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)        Validation
+1                       0.44
+2                       0.88
+4                       1.77
+8                       3.55
+16                      7.10
+32                     14.17
+64                     28.31
+128                    56.48
+256                   114.42
+512                   226.69
+1024                  449.78
+2048                  882.75
+4096                 1618.84
+8192                 2765.31
+16384                4556.05
+32768                7187.93
+65536               12484.23
+131072              24460.29
+262144              45707.31
+524288              67948.29
+1048576             92641.09
+2097152            114243.41
+4194304            139580.44
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_latency -c D D
+cpu-bind=MASK - gpu-1-3, task  0  0 [308654]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [308655]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)        Validation
+1                      13.94
+2                      13.24
+4                      13.08
+8                      12.94
+16                     12.83
+32                     12.85
+64                     12.83
+128                    12.86
+256                    12.75
+512                    12.76
+1024                   12.81
+2048                   12.89
+4096                   13.08
+8192                   13.66
+16384                  14.52
+32768                  17.88
+65536                  19.75
+131072                 20.00
+262144                 20.72
+524288                 24.26
+1048576                31.29
+2097152                45.06
+4194304                62.97
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//xccl/pt2pt/osu_xccl_latency -c D D
+[gpu-1-3:309293] Rank 0 bound to package[0][core:0]
+[gpu-1-3:309293] Rank 1 bound to package[1][core:72]
+using OMPI envars
+rank 1 local 1 gpu 1 nic cxi1
+using OMPI envars
+rank 0 local 0 gpu 0 nic cxi0
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)        Validation
+1                      13.60
+2                      13.40
+4                      13.37
+8                      13.26
+16                     13.16
+32                     13.16
+64                     12.96
+128                    12.98
+256                    12.94
+512                    12.84
+1024                   12.91
+2048                   12.97
+4096                   13.16
+8192                   13.70
+16384                  14.60
+32768                  18.07
+65536                  19.87
+131072                 20.01
+262144                 20.77
+524288                 24.35
+1048576                31.37
+2097152                45.09
+4194304                63.02
+
+Job 190660 consumed 0.0 billing hours and 0.4 GPU hours from project nn9997k.
+
+Submitted 2026-02-26T10:21:57; waited 1.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   13.2 minutes
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+190660              144            0.0 %  2026-02-26T10:21:58  792.0 s  0
+190660.batch        144      1     0.0 %  2026-02-26T10:21:58  792.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:22:01   52.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  111.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:23:49   58.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  226.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:25:44   45.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  316.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:27:14   39.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  393.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:28:31   50.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  495.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:30:13   56.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  608.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:32:06   44.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  696.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:33:34   36.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  768.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:34:47    4.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  777.0 s  0
+190660.gpubind.sh   144      2     0.0 %  2026-02-26T10:34:55    7.0 s  0
+190660.prted        144      1     0.0 %  2026-02-26T10:21:58  793.0 s  0
+
+Used CPU time:   2.3 CPU seconds
+Unused CPU time: 1.3 CPU days
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+190660              700.0        
+190660.batch        700.0     0.2
+190660.gpubind.sh   700.0     0.6
+190660.prted        700.0     0.5
+190660.gpubind.sh   700.0     0.5
+190660.prted        700.0     0.5
+190660.gpubind.sh   700.0     1.5
+190660.prted        700.0     1.5
+190660.gpubind.sh   700.0     0.5
+190660.prted        700.0     0.5
+190660.gpubind.sh   700.0     0.4
+190660.prted        700.0     0.4
+190660.gpubind.sh   700.0     0.4
+190660.prted        700.0     0.4
+190660.gpubind.sh   700.0     1.1
+190660.prted        700.0     1.1
+190660.gpubind.sh   700.0     0.1
+190660.prted        700.0     0.1
+190660.gpubind.sh   700.0     1.5
+190660.prted        700.0     1.2
+190660.gpubind.sh   700.0     1.4
+190660.prted        700.0     1.2
+
+Job 190660 completed at Thu Feb 26 10:35:13 CET 2026
