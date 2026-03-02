@@ -11,4 +11,7 @@ APP=xthi
 cc -g -fopenmp -o ${APP}_craympi.c.x ${APP}.c
 
 export MPICH_OFI_NIC_POLICY=GPU
+# Take all GPUs
 srun -c $OMP_NUM_THREADS ../select_gpu.sh ./${APP}_craympi.c.x | sort -n -k 4 -k 6
+# Take only 2 GPUs
+#srun -c 14 ../select_gpu.sh ./${APP}_craympi.c.x | sort -n -k 4 -k 6
