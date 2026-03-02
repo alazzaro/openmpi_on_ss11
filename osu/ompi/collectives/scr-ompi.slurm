@@ -53,6 +53,23 @@ if [ "$SLURM_NNODES" == "1" ]; then
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_ob1"
     done
+else
+    # no OpenMPI internal transport, only libfabric. Use CXI directly
+    export FI_SHM_USE_XPMEM=1
+    export FI_CXI_RX_MATCH_MODE=hybrid
+    export FI_PROVIDER=cxi
+    unset FI_LNX_PROV_LINKS
+    export OMPI_MCA_opal_common_ofi_provider_include=cxi
+    export OMPI_MCA_mtl_ofi_av=table
+    export OMPI_MCA_pml=cm
+    export OMPI_MCA_mtl=ofi
+    export PRTE_MCA_ras_base_launch_orted_on_hn=1
+    export PMIX_MCA_gds=^shmem2
+
+    CMDS=("osu_alltoall D D" "osu_allreduce D D" "osu_allgather D D" "osu_alltoall H H" "osu_allreduce H H" "osu_allgather H H")
+    for cmd in "${CMDS[@]}"; do
+	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_cxi"
+    done
 fi
 
 # NCCL

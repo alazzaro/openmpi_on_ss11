@@ -1,0 +1,22 @@
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)        Validation
+4                      20.37              Pass
+8                      20.27              Pass
+16                     27.79              Pass
+32                     27.70              Pass
+64                     27.81              Pass
+128                    30.93              Pass
+256                    33.99              Pass
+512                    35.14              Pass
+1024                   35.90              Pass
+2048                   38.18              Pass
+4096                   43.03              Pass
+8192                   43.41              Pass
+16384                  49.42              Pass
+32768                  68.37              Pass
+65536                  83.39              Pass
+131072                127.89              Pass
+262144                212.96              Pass
+524288                392.00              Pass
+1048576               754.42              Pass

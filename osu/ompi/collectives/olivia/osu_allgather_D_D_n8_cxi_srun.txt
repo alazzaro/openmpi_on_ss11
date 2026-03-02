@@ -1,0 +1,24 @@
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                      13.61              Pass
+2                      13.65              Pass
+4                      13.65              Pass
+8                      13.66              Pass
+16                     14.25              Pass
+32                     17.04              Pass
+64                     18.07              Pass
+128                    18.52              Pass
+256                    18.62              Pass
+512                    19.26              Pass
+1024                   20.24              Pass
+2048                   20.35              Pass
+4096                   24.58              Pass
+8192                   31.17              Pass
+16384                  45.54              Pass
+32768                  72.78              Pass
+65536                 119.38              Pass
+131072                193.13              Pass
+262144                369.94              Pass
+524288                732.74              Pass
+1048576              1770.17              Pass
