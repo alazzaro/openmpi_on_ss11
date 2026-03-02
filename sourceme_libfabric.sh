@@ -21,9 +21,8 @@ case "$USER" in
 	return 0
 	;;
     *)
-        export CUSTOM_INSTALL=1
 	echo "User not recongnized"
-	exit -1
+	return -1
 	;;
 esac
 

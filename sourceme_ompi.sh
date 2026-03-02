@@ -16,10 +16,10 @@ run_osu_cmd() {
     local prog="$1"
     shift
     local args=("$@")
-    
+
     # Full path to the OSU executable
     local fullprog="$OSU_HOME/$osusubdir/$prog"
-    
+
     if [ "${USE_SRUN}" = "1" ]; then
 	echo -- srun "$fullprog" "${args[@]}"
         srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_srun.txt"
@@ -49,7 +49,7 @@ case "$USER" in
 	# seems to be needed. slurm race?
 	sleep 2
 	ml reset
-	ml load NRIS/GPU 
+	ml load NRIS/GPU
 	ml load OpenMPI/5.0.9-GCC-14.3.0
 	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks/
 	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
@@ -58,7 +58,7 @@ case "$USER" in
 	;;
     *)
         echo "User not recongnized"
-        exit -1
+        return -1
         ;;
 esac
 

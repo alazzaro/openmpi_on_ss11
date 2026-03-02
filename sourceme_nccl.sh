@@ -19,6 +19,6 @@ case "$USER" in
 	;;
     *)
         echo "User not recongnized"
-        exit -1
+        return -1
         ;;
 esac

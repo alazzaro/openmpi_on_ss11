@@ -16,10 +16,10 @@ run_osu_cmd() {
     local prog="$1"
     shift
     local args=("$@")
-    
+
     # Full path to the OSU executable
     local fullprog="$OSU_HOME/$osusubdir/$prog"
-    
+
     echo -- srun "$fullprog" "${args[@]}"
     srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}.txt"
 }
@@ -48,7 +48,7 @@ case "$USER" in
 	;;
     *)
         echo "User not recongnized"
-        exit -1
+        return -1
         ;;
 esac
 
