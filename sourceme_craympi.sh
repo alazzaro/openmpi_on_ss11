@@ -42,6 +42,7 @@ case "$USER" in
     marcink)
 	ml reset
 	ml load CrayEnv
+	# ml swap cray-mpich/9.0.1
 	ml load cuda/12.6
 	ml swap PrgEnv-cray PrgEnv-gnu
 	ml swap gcc-native/13.2
