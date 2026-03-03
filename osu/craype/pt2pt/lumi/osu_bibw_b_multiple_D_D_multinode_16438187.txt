@@ -1,0 +1,29 @@
+0 gpu 4 1
+0 gpu 4 1
+
+# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.90              Pass
+2                       3.76              Pass
+4                       7.52              Pass
+8                      15.03              Pass
+16                     30.50              Pass
+32                     61.40              Pass
+64                    123.40              Pass
+128                   246.72              Pass
+256                   469.66              Pass
+512                   943.19              Pass
+1024                 1867.26              Pass
+2048                 3761.01              Pass
+4096                 7592.71              Pass
+8192                15269.71              Pass
+16384               24439.50              Pass
+32768               27853.06              Pass
+65536               32103.81              Pass
+131072              34834.30              Pass
+262144              35690.95              Pass
+524288              34275.69              Pass
+1048576             34236.37              Pass
+2097152             34263.19              Pass
+4194304             34386.34              Pass
