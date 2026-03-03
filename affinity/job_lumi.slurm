@@ -18,7 +18,7 @@ export OMP_NUM_THREADS=7
 export SLURM_CPUS_PER_TASK=$OMP_NUM_THREADS
 # Take only 2 GPUs
 #export OMP_NUM_THREADS=1
-#export export SLURM_CPUS_PER_TASK=14
+#export SLURM_CPUS_PER_TASK=14
 #export GPUSID="4 2"
 
 ./run_ompi.sh
