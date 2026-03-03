@@ -1,3 +1,6 @@
+export ROOT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
+echo "ROOT_DIR = "$ROOT_DIR
+
 case "$USER" in
     lazzaroa)
 	module load PrgEnv-gnu
@@ -17,7 +20,11 @@ case "$USER" in
 	if [ "${CRAY_MPICH_VER}" == "" ]; then
 	    ml load NRIS/GPU
 	    ml load libfabric/2.3.1-GCCcore-14.3.0
+	    return 0
 	fi
+	
+	# with cray mpi use the pre-installed libfabric
+	export PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0/
 	return 0
 	;;
     *)
@@ -26,8 +33,6 @@ case "$USER" in
 	;;
 esac
 
-export ROOT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
-echo "ROOT_DIR = "$ROOT_DIR
 export PREFIX_CXI=$ROOT_DIR/install_cxi # installation directory
 export PREFIX_LIBFABRIC=$ROOT_DIR/install_libfabric # installation directory
 export LIBFABRIC_DIR=$ROOT_DIR/libfabric
