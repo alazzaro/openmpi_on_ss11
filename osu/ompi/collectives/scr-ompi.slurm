@@ -77,15 +77,15 @@ source $ROOT_DIR/sourceme_nccl.sh
 
 # recommended settings
 export HSA_FORCE_FINE_GRAIN_PCIE=1
-export FI_MR_CACHE_MONITOR=userfaultfd
+export FI_MR_CACHE_MONITOR=kdreg2
 export FI_CXI_DISABLE_HOST_REGISTER=1
 export FI_CXI_DEFAULT_CQ_SIZE=131072
 export FI_CXI_RDZV_PROTO=alt_read
 export FI_CXI_RDZV_EAGER_SIZE=0
 export FI_CXI_DEFAULT_TX_SIZE=2048
-export NCCL_CROSS_NIC=1
+#export NCCL_CROSS_NIC=1
 export NCCL_NET_GDR_LEVEL=PHB
-export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+#export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
 export NCCL_NET="AWS Libfabric"
 
 CMDS=("osu_xccl_alltoall" "osu_xccl_allreduce" "osu_xccl_allgather")
