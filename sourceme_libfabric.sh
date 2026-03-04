@@ -24,6 +24,14 @@ export USER_GPUBIND="${GPUBIND:-$ROOT_DIR/select_gpu.sh}"
 #   export USER_GPU_ACCEL="auto"    # Automatic detection (default)
 export USER_GPU_ACCEL="${GPU_ACCEL:-auto}"
 
+# Libfabric installation preference
+# Set to "system", "build", or "auto" (default: "auto" for automatic selection)
+# Examples:
+#   export USER_LIBFABRIC="system" # Use system/module libfabric when available
+#   export USER_LIBFABRIC="build"  # Always build libfabric from source
+#   export USER_LIBFABRIC="auto"   # Automatic selection based on system (default)
+export USER_LIBFABRIC="${USER_LIBFABRIC:-auto}"
+
 # ============================================================================
 # END USER CONFIGURATION SECTION
 # ============================================================================
@@ -132,6 +140,83 @@ case "${USER_GPU_ACCEL}" in
         echo "User preference: Automatic GPU detection"
         ;;
 esac
+
+# Handle libfabric configuration based on user preference and system capabilities
+configure_libfabric() {
+    local use_system_libfabric=false
+    local system_libfabric_path=""
+    
+    # Check for available system libfabric
+    if [[ -n "$CRAY_MPICH_VER" ]] && [[ -d "/opt/cray/libfabric" ]]; then
+        # Cray system with system libfabric
+        local cray_lf_version=$(ls -1 /opt/cray/libfabric/ | sort -V | tail -1)
+        if [[ -n "$cray_lf_version" ]]; then
+            system_libfabric_path="/opt/cray/libfabric/$cray_lf_version"
+        fi
+    elif module avail libfabric &>/dev/null 2>&1; then
+        # System has libfabric module
+        if module list 2>&1 | grep -q libfabric; then
+            # Already loaded, get path from PKG_CONFIG_PATH or LD_LIBRARY_PATH
+            if pkg-config --exists libfabric 2>/dev/null; then
+                system_libfabric_path=$(pkg-config --variable=prefix libfabric)
+            fi
+        elif module load libfabric &>/dev/null 2>&1; then
+            # Try to load and get path
+            if pkg-config --exists libfabric 2>/dev/null; then
+                system_libfabric_path=$(pkg-config --variable=prefix libfabric)
+            fi
+        fi
+    fi
+    
+    # Make decision based on user preference
+    case "${USER_LIBFABRIC}" in
+        "system")
+            if [[ -n "$system_libfabric_path" ]]; then
+                use_system_libfabric=true
+                echo "User preference: Using system libfabric at $system_libfabric_path"
+            else
+                echo "ERROR: System libfabric requested but not found"
+                echo "Available options: build libfabric from source"
+                return 1
+            fi
+            ;;
+        "build")
+            use_system_libfabric=false
+            echo "User preference: Building libfabric from source"
+            ;;
+        "auto")
+            # Auto-detect: prefer system libfabric for certain cases, build for others
+            if [[ "$SYSTEM_CONFIG" == "cray_preinstalled" ]] || [[ "$SYSTEM_CONFIG" == "nris_"* ]]; then
+                if [[ -n "$system_libfabric_path" ]]; then
+                    use_system_libfabric=true
+                    echo "Auto-detected: Using system libfabric at $system_libfabric_path"
+                fi
+            else
+                use_system_libfabric=false
+                echo "Auto-detected: Building libfabric from source for optimal configuration"
+            fi
+            ;;
+        *)
+            echo "WARNING: Invalid USER_LIBFABRIC value '${USER_LIBFABRIC}'. Valid options: system, build, auto"
+            echo "Falling back to automatic detection"
+            use_system_libfabric=false
+            ;;
+    esac
+    
+    # Set PREFIX_LIBFABRIC based on decision
+    if $use_system_libfabric && [[ -n "$system_libfabric_path" ]]; then
+        export PREFIX_LIBFABRIC="$system_libfabric_path"
+        export LIBFABRIC_SOURCE="system"
+        echo "Using system libfabric: $PREFIX_LIBFABRIC"
+    else
+        export PREFIX_LIBFABRIC="$ROOT_DIR/install_libfabric"
+        export LIBFABRIC_SOURCE="build"
+        echo "Will build libfabric at: $PREFIX_LIBFABRIC"
+    fi
+}
+
+# Configure libfabric before setting up the environment
+configure_libfabric
 
 # Initialize XPMEM variables to ensure they're always defined
 export XPMEM_ROOT=""
@@ -278,19 +363,32 @@ case "$SYSTEM_CONFIG" in
         ;;
     "nris_cuda"|"cray_preinstalled") 
         # NRIS system or Cray with pre-installed libfabric
-		if [ "${CRAY_MPICH_VER}" == "" ]; then
-			ml load NRIS/GPU
-			ml load libfabric/2.3.1-GCCcore-14.3.0
-			return 0
-		fi
-		# with cray mpi use the pre-installed libfabric
-		export PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0/
-		return 0
+        if [ "${CRAY_MPICH_VER}" == "" ]; then
+            ml load NRIS/GPU
+            # Only try to load NRIS libfabric if we're supposed to use system libfabric
+            if [[ "$LIBFABRIC_SOURCE" == "system" ]]; then
+                if module avail libfabric/2.3.1-GCCcore-14.3.0 &>/dev/null 2>&1; then
+                    ml load libfabric/2.3.1-GCCcore-14.3.0
+                elif module avail libfabric &>/dev/null 2>&1; then
+                    ml load libfabric
+                fi
+            fi
+            return 0
+        fi
+        # For Cray MPI systems, use the configured libfabric (system or build)
+        return 0
         ;;
     "nris_generic")
         # NRIS system without specific GPU detection
         ml load NRIS/GPU
-        ml load libfabric/2.3.1-GCCcore-14.3.0
+        # Only try to load NRIS libfabric if we're supposed to use system libfabric
+        if [[ "$LIBFABRIC_SOURCE" == "system" ]]; then
+            if module avail libfabric/2.3.1-GCCcore-14.3.0 &>/dev/null 2>&1; then
+                ml load libfabric/2.3.1-GCCcore-14.3.0
+            elif module avail libfabric &>/dev/null 2>&1; then
+                ml load libfabric
+            fi
+        fi
         return 0
         ;;
     "rocm_generic")
@@ -322,13 +420,16 @@ case "$SYSTEM_CONFIG" in
         ;;
 esac
 
-# Summary of configuration
+# Summary of configuration  
 echo "User GPU acceleration preference: ${USER_GPU_ACCEL}"
+echo "User libfabric preference: ${USER_LIBFABRIC}"  
+echo "Libfabric source: ${LIBFABRIC_SOURCE}"
+echo "Libfabric path: ${PREFIX_LIBFABRIC}"
 echo "XPMEM configuration: ${XPMEM_LIBFABRIC:-"(disabled)"}"
 echo "GPU acceleration: ${GPU_LIBFABRIC:-"(disabled)"}"
 
 export PREFIX_CXI=$ROOT_DIR/install_cxi # installation directory
-export PREFIX_LIBFABRIC=$ROOT_DIR/install_libfabric # installation directory
+# PREFIX_LIBFABRIC is already set by configure_libfabric function
 export LIBFABRIC_DIR=$ROOT_DIR/libfabric
 export LIBCXI_DIR=$LIBFABRIC_DIR/libcxi
 
