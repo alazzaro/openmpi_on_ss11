@@ -18,3 +18,4 @@ gpucore.*
 *.o
 *.so
 *.exe
+modulefiles/
