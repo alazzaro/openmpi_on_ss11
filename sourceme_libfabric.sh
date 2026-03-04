@@ -147,12 +147,12 @@ case "$SYSTEM_CONFIG" in
 		module load PrgEnv-gnu
 		module load rocm
 		# Try different XPMEM module variations
-		if module avail cray-xpmem &> /dev/null 2>&1; then
+		if module avail cray-xpmem 2>&1 | grep -q "cray-xpmem"; then
 			module load cray-xpmem
 			XPMEM_ROOT=$(pkg-config --variable=libdir cray-xpmem)
 			XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
 			echo "XPMEM Lib path  = "$XPMEM_ROOT
-		elif module avail xpmem &>/dev/null 2>&1; then
+		elif module avail xpmem 2>&1 | grep -q "xpmem"; then
 			module load xpmem
 			XPMEM_ROOT=$(pkg-config --variable=libdir xpmem)
 			XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
@@ -218,8 +218,9 @@ case "$SYSTEM_CONFIG" in
                 echo "Info: NVIDIA HPC SDK not found - CUDA may only be available on compute nodes"
             fi
         fi
-		# Try different XPMEM module variations with actual loading attempts
-		if module load cray-xpmem &>/dev/null 2>&1; then
+		# Try different XPMEM module variations
+		if module avail cray-xpmem 2>&1 | grep -q "cray-xpmem"; then
+			module load cray-xpmem
 			XPMEM_ROOT=$(pkg-config --variable=libdir cray-xpmem 2>/dev/null)
 			if [[ -n "$XPMEM_ROOT" ]]; then
 				XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
@@ -228,7 +229,8 @@ case "$SYSTEM_CONFIG" in
 				echo "Warning: cray-xpmem loaded but pkg-config failed"
 				XPMEM_LIBFABRIC=""
 			fi
-		elif module load xpmem &>/dev/null 2>&1; then
+		elif module avail xpmem 2>&1 | grep -q "xpmem"; then
+			module load xpmem
 			XPMEM_ROOT=$(pkg-config --variable=libdir xpmem 2>/dev/null)
 			if [[ -n "$XPMEM_ROOT" ]]; then
 				XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"

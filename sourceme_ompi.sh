@@ -33,7 +33,7 @@ run_osu_cmd() {
 }
 
 function change_dir() {
-    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
+    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
     cd $SCRIPT_DIR
 }
 
