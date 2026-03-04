@@ -16,3 +16,5 @@ gpucore.*
 *.o
 *.so
 *.exe
+nccl
+rccl
