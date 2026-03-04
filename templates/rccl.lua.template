@@ -36,9 +36,6 @@ For more information:
 
 ]])
 
--- Set version for conflict resolution  
-set_version(version)
-
 -- Prerequisites and conflicts
 conflict("rccl")
 conflict("nccl")

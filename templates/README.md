@@ -6,7 +6,7 @@ This directory contains module files for the software packages built by the inst
 
 Module files are **automatically generated** from templates when you run the installation scripts. The system uses:
 
-- **Templates**: Located in [templates/](templates/) directory with placeholder variables
+- **Templates**: Located in [templates/](../templates/) directory with placeholder variables
 - **Generator Script**: [`generate_modulefiles.sh`](../generate_modulefiles.sh) substitutes variables 
 - **Integration**: Installation scripts call the generator after successful builds
 

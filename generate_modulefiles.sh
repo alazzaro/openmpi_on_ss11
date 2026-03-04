@@ -5,7 +5,7 @@
 # Set default values if not provided
 ROOT_DIR=${ROOT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd -P)}
 MODULEFILES_DIR="${ROOT_DIR}/modulefiles"
-TEMPLATES_DIR="${ROOT_DIR}/modulefiles/templates"
+TEMPLATES_DIR="${ROOT_DIR}/templates"
 
 # Function to detect version from installed software
 detect_version() {
