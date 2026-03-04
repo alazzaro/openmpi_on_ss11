@@ -9,6 +9,9 @@ set -e
 # 2. with the custom installed libfabric (USE_CPE!=1)
 
 ##### env and modules ###
+if [ -z "$GPU_ACCL" ]; then
+	export GPU_ACCL=rccl
+fi
 
 for USE_CPE in 0 1; do
 #for USE_CPE in 1; do

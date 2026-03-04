@@ -29,17 +29,31 @@ export PE_LD_LIBRARY_PATH=system # Force update of the LD_LIBRARY_PATH, instead 
 export ROOT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
 echo "ROOT_DIR = "$ROOT_DIR
 
-case "$USER" in
-    lazzaroa)
-	module load PrgEnv-gnu
+# Source libfabric config to get SYSTEM_CONFIG
+source sourceme_libfabric.sh
+
+case "$SYSTEM_CONFIG" in
+    "cray_rocm")
+	# Basic modules (PrgEnv-gnu, rocm, xpmem) already loaded by sourceme_libfabric.sh
 	module load libfabric
 	module load cray-mpich/9.0.1
 	module swap craype-x86-rome craype-x86-trento
 	module load craype-accel-amd-gfx90a
-	module load rocm
 	OSU_COMPILE_FLAGS="--enable-rocm"
         ;;
-    marcink)
+    "cray_cuda")
+	# Basic modules (PrgEnv-gnu, cuda, xpmem) already loaded by sourceme_libfabric.sh
+	module load libfabric
+	module load cray-mpich/9.0.1
+	# Try different NVIDIA accelerator module variations
+	if module avail craype-accel-nvidia90 &>/dev/null 2>&1; then
+	    module load craype-accel-nvidia90
+	elif module avail craype-accel-nvidia &>/dev/null 2>&1; then
+	    module load craype-accel-nvidia
+	fi
+	OSU_COMPILE_FLAGS="--enable-cuda"
+        ;;
+    "nris_cuda"|"nris_generic")
 	ml reset
 	ml load CrayEnv
 	# ml swap cray-mpich/9.0.1
@@ -47,12 +61,20 @@ case "$USER" in
 	ml swap PrgEnv-cray PrgEnv-gnu
 	ml swap gcc-native/13.2
 	ml load craype-accel-nvidia90
-	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-craype/libexec/osu-micro-benchmarks/
-	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
-	export LD_LIBRARY_PATH=/cluster/home/marcink/software/nccl/nccl-2.29-craype/lib/:$LD_LIBRARY_PATH
+	# Use configured OSU and GPUBIND paths from sourceme_libfabric.sh
+	export OSU_HOME="$USER_OSU_HOME"
+	export GPUBIND="$USER_GPUBIND"
+	# Try to get NCCL library path from loaded modules
+	if [[ -n "$EBROOTNCCL" ]]; then
+	    export LD_LIBRARY_PATH="$EBROOTNCCL/lib:$LD_LIBRARY_PATH"
+	elif [[ -n "$NCCL_ROOT" ]]; then
+	    export LD_LIBRARY_PATH="$NCCL_ROOT/lib:$LD_LIBRARY_PATH"
+	else
+	    echo "Warning: NCCL library path not found from modules"
+	fi
 	;;
-    *)
-        echo "User not recongnized"
+    "cray_preinstalled"|"cray_generic"|"rocm_generic"|"cuda_generic"|"generic")
+        echo "No Cray MPI configuration available for this system"
         return -1
         ;;
 esac
@@ -60,5 +82,5 @@ esac
 module list
 
 export OSU_INSTALL=$ROOT_DIR/osu/osu-craype/
-export OSU_HOME=$OSU_INSTALL/libexec/osu-micro-benchmarks/
-export GPUBIND=$ROOT_DIR/select_gpu.sh
+export OSU_HOME="${USER_OSU_HOME:-$OSU_INSTALL/libexec/osu-micro-benchmarks/}"
+export GPUBIND="${USER_GPUBIND:-$ROOT_DIR/select_gpu.sh}"

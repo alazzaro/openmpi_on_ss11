@@ -22,13 +22,21 @@ else
     export PREFIX_RCCL=$ROOT_DIR/install_rccl # installation directory
 fi
 
-case "$USER" in
-    lazzaroa)
+case "$SYSTEM_CONFIG" in
+    "cray_rocm"|"rocm_generic")
 	echo ${PREFIX_LIBFABRIC}
 	echo ${PREFIX_RCCL}
 	;;
-    *)
-        echo "User not recongnized"
+    "nris_cuda"|"nris_generic"|"cray_cuda"|"cuda_generic")
+	echo "RCCL not applicable for CUDA systems, use NCCL instead"
+	return -1
+	;;
+    "cray_preinstalled")
+	echo ${PREFIX_LIBFABRIC}
+	echo ${PREFIX_RCCL}
+	;;
+    "cray_generic"|"generic")
+        echo "No RCCL configuration available for this system"
         return -1
         ;;
 esac

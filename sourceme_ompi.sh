@@ -40,33 +40,61 @@ function change_dir() {
 # system-specific - check if your system supports running OpenMPI apps using srun
 export USE_SRUN=0
 
-case "$USER" in
-    lazzaroa)
+OLDDIR=`pwd`
+change_dir
+
+source sourceme_libfabric.sh
+
+case "$SYSTEM_CONFIG" in
+    "cray_rocm")
         XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
         GPU_OMPI="--with-rocm=$ROCM_PATH"
 	OSU_COMPILE_FLAGS="--enable-rocm"
         ;;
-    marcink)
+    "cray_cuda")
+        if [[ -n "$XPMEM_ROOT" ]]; then
+            XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
+        fi
+        if [[ -n "$CUDA_HOME" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_HOME"
+        elif [[ -n "$CUDA_PATH" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-cuda"
+        ;;
+    "nris_cuda"|"nris_generic")
 	# seems to be needed. slurm race?
 	sleep 2
 	ml reset
 	ml load NRIS/GPU
 	ml load OpenMPI/5.0.9-GCC-14.3.0
-	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks/
-	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
+	# Use configured OSU and GPUBIND paths from sourceme_libfabric.sh
+	export OSU_HOME="$USER_OSU_HOME"
+	export GPUBIND="$USER_GPUBIND"
 	export USE_SRUN=1
+	cd $OLDDIR
 	return 0
 	;;
-    *)
-        echo "User not recongnized"
+    "rocm_generic")
+        if [[ -n "$ROCM_PATH" ]]; then
+            GPU_OMPI="--with-rocm=$ROCM_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-rocm"
+        ;;
+    "cuda_generic")
+        if [[ -n "$CUDA_HOME" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_HOME"
+        elif [[ -n "$CUDA_PATH" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-cuda"
+        ;;
+    "cray_preinstalled"|"cray_generic"|"generic")
+        echo "No OpenMPI configuration available for this system"
+        cd $OLDDIR
         return -1
         ;;
 esac
-
-OLDDIR=`pwd`
-change_dir
-
-source sourceme_libfabric.sh
 
 export PREFIX_OMPI=$ROOT_DIR/install_ompi # installation directory
 export OMPI_DIR=$ROOT_DIR/openmpi5
@@ -77,7 +105,7 @@ export PKG_CONFIG_PATH=$PREFIX_OMPI/lib/pkgconfig:$PKG_CONFIG_PATH
 export MANPATH=$PREFIX_OMPI/man:$MANPATH
 
 export OSU_INSTALL=$ROOT_DIR/osu/osu-ompi/
-export OSU_HOME=$OSU_INSTALL/libexec/osu-micro-benchmarks/
-export GPUBIND=$ROOT_DIR/select_gpu.sh
+export OSU_HOME="${USER_OSU_HOME:-$OSU_INSTALL/libexec/osu-micro-benchmarks/}"
+export GPUBIND="${USER_GPUBIND:-$ROOT_DIR/select_gpu.sh}"
 
 cd $OLDDIR
