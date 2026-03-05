@@ -10,11 +10,11 @@ if [ "$OSU_ARGS" == "" ];then
     OSU_ARGS=" -c "
 fi
 
-source $ROOT_DIR/sourceme_craympi.sh
+# Enable Cray-mpich and RCCL
+USE_CPE=1 source $ROOT_DIR/sourceme_rccl.sh
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
-export FI_CXI_RX_MATCH_MODE=hybrid
 #export FI_MR_CACHE_MONITOR=kdreg2 # no performance contribution
 #export GTL_DISABLE_HSA_CACHE=1 # not available in 9.0.1
 #export MPICH_GPU_IPC_ENABLED=0
@@ -32,19 +32,30 @@ echo "============"
 
 env
 
-CMDS=("osu_bibw -b multiple D D" "osu_latency D D" "osu_bibw -b multiple H H" "osu_latency H H")
-#CMDS=("osu_bibw -W 32 -b multiple D D")
-#CMDS=("osu_bibw -b multiple D D")
-#CMDS=("osu_bibw D D")
-#CMDS=("osu_bibw D D" "osu_latency D D" "osu_bibw H H" "osu_latency H H")
-for cmd in "${CMDS[@]}"; do
-    run_osu_cmd "$cmd" "mpi/pt2pt" "_singlenode_$SLURM_JOB_ID"
+for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+    export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_singlenode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
+
+    echo "========"
+    echo $SUFFIX
+    echo "========"
+
+    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    #CMDS=("osu_bibw -W 32 -b multiple D D")
+    #CMDS=("osu_bibw -b multiple D D")
+    #CMDS=("osu_bibw D D")
+    #CMDS=("osu_bibw D D" "osu_latency D D" "osu_bibw H H" "osu_latency H H")
+
+    for cmd in "${CMDS[@]}"; do
+	run_osu_cmd "$cmd" "mpi/pt2pt" "${SUFFIX}"
+    done
+
+    # NCCL/RCCL
+
+    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+    for cmd in "${CMDS[@]}"; do
+	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
+    done
+
 done
-
-# NCCL
-#source $ROOT_DIR/sourceme_nccl.sh
-
-#CMDS=("osu_xccl_bibw -b multiple D D" "osu_xccl_latency D D")
-#for cmd in "${CMDS[@]}"; do
-#    run_osu_cmd "$cmd" "xccl/pt2pt" "_singlenode"
-#done

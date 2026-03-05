@@ -7,7 +7,7 @@
 #SBATCH --exclusive
 #SBATCH --network=single_node_vni
 #SBATCH -o lumi-slurm-%j-p2p_1N.out
-#SBATCH --time=0:20:00
+#SBATCH --time=0:30:00
 
 # Select 2 GPUs
 export GPUSID="4 2"

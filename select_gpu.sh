@@ -29,6 +29,7 @@ if [ "$OMPI_COMM_WORLD_LOCAL_RANK" ]; then
 elif [ "$SLURM_LOCALID" ]; then
     LOCALID=$SLURM_LOCALID
     NTASKS_PER_NODE=$SLURM_NTASKS_PER_NODE
+    echo
 else
     echo "No env variables!"
     return -1
