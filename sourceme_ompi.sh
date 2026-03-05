@@ -8,7 +8,7 @@ run_osu_cmd() {
     logname=$(echo "$cmd" | sed -e 's/ /_/g' -e 's/-//g')
 
     # Replace first space in cmd with $OSU_ARGS
-    cmd=$(echo "$cmd" | sed -e "s/ /$OSU_ARGS/")
+    cmd=$(echo "$cmd $OSU_ARGS")
 
     # Split cmd into program + args
     # shellcheck disable=SC2086
@@ -25,11 +25,11 @@ run_osu_cmd() {
         srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_srun.txt"
     fi
 
-    echo -- mpirun "$fullprog" "${args[@]}"
+    # echo -- mpirun "$fullprog" "${args[@]}"
     # -bind-to core destroys performance with nccl. Loooks like another thread running.
     # gpu-1-62:4117765:4118287 [0] NCCL INFO [Proxy Service] Device 0 CPU core 73
     # gpu-1-62:4117765:4118290 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 74
-    mpirun -bind-to numa -map-by numa --report-bindings $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_mpirun.txt"
+    # mpirun -bind-to numa -map-by numa --report-bindings $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_mpirun.txt"
 }
 
 function change_dir() {
@@ -51,8 +51,10 @@ case "$USER" in
 	sleep 2
 	ml reset
 	ml load NRIS/GPU
-	ml load OpenMPI/5.0.9-GCC-14.3.0
-	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks/
+	# ml load OpenMPI/5.0.9-GCC-14.3.0
+	ml use /cluster/home/marcink/modules/
+	ml load openmpi/6.x-gpu
+	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks/
 	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
 	export USE_SRUN=1
 	return 0
