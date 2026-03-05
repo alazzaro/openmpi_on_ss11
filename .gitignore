@@ -1,7 +1,11 @@
+*~
 libfabric/
 install_cxi/
 install_libfabric/
 openmpi5/
 install_ompi/
+rccl/
+install_rccl/
+install_rccl_cpe/
 core
 gpucore.*

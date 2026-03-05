@@ -1,0 +1,31 @@
+
+0 gpu 4 1
+
+0 gpu 4 1
+
+# OSU MPI-ROCM Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.44              Pass
+2                       2.44              Pass
+4                       2.43              Pass
+8                       2.43              Pass
+16                      2.47              Pass
+32                      2.46              Pass
+64                      2.47              Pass
+128                     2.99              Pass
+256                     3.23              Pass
+512                     3.34              Pass
+1024                    3.53              Pass
+2048                    3.84              Pass
+4096                    4.07              Pass
+8192                    5.04              Pass
+16384                   6.13              Pass
+32768                   9.72              Pass
+65536                  11.10              Pass
+131072                 13.80              Pass
+262144                 19.14              Pass
+524288                 29.97              Pass
+1048576                51.55              Pass
+2097152                94.59              Pass
+4194304               181.05              Pass
