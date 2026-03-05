@@ -85,7 +85,8 @@ done
 source $ROOT_DIR/sourceme_nccl.sh
 
 # tuning
-export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
+export FI_CXI_RDZV_EAGER_SIZE=8192 # has to be 4k+
+export FI_CXI_RDZV_THRESHOLD=32768 # has to be 32k for osu nccl allgather to perform well
                                    # also has some positive effect on allreduce
 
 # recommended settings
