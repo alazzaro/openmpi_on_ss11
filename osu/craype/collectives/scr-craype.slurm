@@ -13,10 +13,14 @@ source $ROOT_DIR/sourceme_craympi.sh
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
-#export FI_LOG_LEVEL=debug
+#export NCCL_DEBUG=INFO
 #export FI_LOG_LEVEL=debug
 
-CMDS=("osu_alltoall D D" "osu_allreduce D D" "osu_allgather D D" "osu_alltoall H H" "osu_allreduce H H" "osu_allgather H H")
+export FI_CXI_RX_MATCH_MODE=hybrid
+export FI_CXI_RDZV_EAGER_SIZE=1024
+export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
+
+CMDS=("osu_alltoall -d cuda" "osu_allreduce -d cuda" "osu_allgather -d cuda" "osu_allreduce" "osu_alltoall" "osu_allgather")
 for cmd in "${CMDS[@]}"; do
     logname=`echo $cmd | sed -e 's/ /_/g' | sed -e 's/-//g'`"_n"${SLURM_NTASKS}".txt"
     echo -- srun $cmd
@@ -26,13 +30,15 @@ done
 # NCCL
 source $ROOT_DIR/sourceme_nccl.sh
 
+export MPICH_GPU_SUPPORT_ENABLED=0
+
 # recommended settings
 export HSA_FORCE_FINE_GRAIN_PCIE=1
 export FI_MR_CACHE_MONITOR=kdreg2
 export FI_CXI_DISABLE_HOST_REGISTER=1
 export FI_CXI_DEFAULT_CQ_SIZE=131072
 export FI_CXI_RDZV_PROTO=alt_read
-export FI_CXI_RDZV_EAGER_SIZE=0
+#export FI_CXI_RDZV_EAGER_SIZE=0
 export FI_CXI_DEFAULT_TX_SIZE=2048
 #export NCCL_CROSS_NIC=1
 export NCCL_NET_GDR_LEVEL=PHB
