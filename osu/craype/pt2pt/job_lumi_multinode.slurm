@@ -7,6 +7,6 @@
 #SBATCH --exclusive
 #SBATCH --network=single_node_vni
 #SBATCH -o lumi-slurm-%j-p2p_2N.out
-#SBATCH --time=0:10:00
+#SBATCH --time=0:30:00
 
 ./run_multinode.sh

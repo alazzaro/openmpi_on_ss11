@@ -32,7 +32,7 @@ echo "============"
 
 env
 
-for FI_CXI_RX_MATCH_MODE in hardware software hydrid; do
+for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="_singlenode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
