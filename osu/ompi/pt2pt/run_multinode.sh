@@ -22,9 +22,8 @@ env
 export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
-#if false; then
 for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
-#for FI_CXI_RX_MATCH_MODE in hybrid; do
+#for FI_CXI_RX_MATCH_MODE in software; do
     export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="multinode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
@@ -47,6 +46,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
         #    export FI_LOG_LEVEL=debug
 
         CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+        #CMDS=("osu_bibw -d rocm D D")
         #CMDS=("osu_bibw -W 32 -b multiple D D")
         #CMDS=("osu_bibw -b multiple D D")
         #CMDS=("osu_bibw D D")
@@ -58,6 +58,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     )
 #    fi
 
+#    if false; then
     (
 	echo "no OpenMPI internal transport, only libfabric. Use CXI directly"
 	export FI_SHM_USE_XPMEM=1
@@ -80,5 +81,5 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     for cmd in "${CMDS[@]}"; do
         run_osu_cmd "$cmd" "xccl/pt2pt" "_${SUFFIX}"
     done
+    #fi
 done
-#fi
