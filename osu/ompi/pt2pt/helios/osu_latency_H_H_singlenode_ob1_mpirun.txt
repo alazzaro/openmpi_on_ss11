@@ -1,0 +1,29 @@
+using OMPI envars
+using OMPI envars
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       0.84              Pass
+2                       0.85              Pass
+4                       0.87              Pass
+8                       0.87              Pass
+16                      1.08              Pass
+32                      1.09              Pass
+64                      1.14              Pass
+128                     1.34              Pass
+256                     1.40              Pass
+512                     2.50              Pass
+1024                    2.51              Pass
+2048                    2.53              Pass
+4096                    2.56              Pass
+8192                    2.61              Pass
+16384                   2.71              Pass
+32768                   3.48              Pass
+65536                   3.78              Pass
+131072                  4.61              Pass
+262144                  6.64              Pass
+524288                 11.89              Pass
+1048576                43.37              Pass
+2097152               106.02              Pass
+4194304               237.82              Pass

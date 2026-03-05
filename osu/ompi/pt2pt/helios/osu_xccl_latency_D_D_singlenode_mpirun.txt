@@ -1,0 +1,29 @@
+using OMPI envars
+using OMPI envars
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)        Validation
+1                      13.83
+2                      13.58
+4                      13.81
+8                      13.61
+16                     13.73
+32                     13.59
+64                     13.40
+128                    13.43
+256                    13.29
+512                    13.36
+1024                   13.36
+2048                   13.49
+4096                   13.68
+8192                   14.27
+16384                  15.38
+32768                  18.31
+65536                  21.14
+131072                 20.94
+262144                 21.03
+524288                 26.12
+1048576                31.59
+2097152                46.77
+4194304                64.81
