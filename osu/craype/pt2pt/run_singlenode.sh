@@ -41,7 +41,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo $SUFFIX
     echo "========"
 
-    CMDS=("osu_bibw -b multiple D D" "osu_latency D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
     #CMDS=("osu_bibw -W 32 -b multiple D D")
     #CMDS=("osu_bibw -b multiple D D")
     #CMDS=("osu_bibw D D")
@@ -53,7 +53,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 
     # NCCL/RCCL
 
-    CMDS=("osu_xccl_bibw -b multiple D D" "osu_xccl_latency D D")
+    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
     done

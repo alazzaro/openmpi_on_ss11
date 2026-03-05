@@ -18,6 +18,12 @@ source $ROOT_DIR/sourceme_ompi.sh
 #export NCCL_DEBUG=INFO
 #export FI_LOG_LEVEL=debug
 
+export FI_CXI_RDZV_EAGER_SIZE=1024
+export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
+
+# this is necessary for device collectives to work on NVIDIA. Otherwise segfault.
+export OMPI_MCA_mtl_ofi_disable_hmem=1
+
 # with LinkX
 export FI_SHM_USE_XPMEM=1
 export FI_CXI_RX_MATCH_MODE=hybrid
@@ -30,7 +36,7 @@ export OMPI_MCA_mtl=ofi
 export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
-CMDS=("osu_alltoall D D" "osu_allreduce D D" "osu_allgather D D" "osu_alltoall H H" "osu_allreduce H H" "osu_allgather H H")
+CMDS=("osu_alltoall -d cuda" "osu_allreduce -d cuda" "osu_allgather -d cuda" "osu_allreduce" "osu_alltoall" "osu_allgather")
 for cmd in "${CMDS[@]}"; do
     run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_lnx"
 done
@@ -49,31 +55,42 @@ if [ "$SLURM_NNODES" == "1" ]; then
     export PRTE_MCA_ras_base_launch_orted_on_hn=1
     export PMIX_MCA_gds=^shmem2
 
-    CMDS=("osu_alltoall D D" "osu_allreduce D D" "osu_allgather D D" "osu_alltoall H H" "osu_allreduce H H" "osu_allgather H H")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_ob1"
     done
-else
-    # no OpenMPI internal transport, only libfabric. Use CXI directly
-    export FI_SHM_USE_XPMEM=1
-    export FI_CXI_RX_MATCH_MODE=hybrid
-    export FI_PROVIDER=cxi
-    unset FI_LNX_PROV_LINKS
-    export OMPI_MCA_opal_common_ofi_provider_include=cxi
-    export OMPI_MCA_mtl_ofi_av=table
-    export OMPI_MCA_pml=cm
-    export OMPI_MCA_mtl=ofi
-    export PRTE_MCA_ras_base_launch_orted_on_hn=1
-    export PMIX_MCA_gds=^shmem2
-
-    CMDS=("osu_alltoall D D" "osu_allreduce D D" "osu_allgather D D" "osu_alltoall H H" "osu_allreduce H H" "osu_allgather H H")
-    for cmd in "${CMDS[@]}"; do
-	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_cxi"
-    done
 fi
+
+# no OpenMPI internal transport, only libfabric. Use CXI directly
+export FI_SHM_USE_XPMEM=1
+export FI_CXI_RX_MATCH_MODE=hybrid
+export FI_PROVIDER=cxi
+unset FI_LNX_PROV_LINKS
+export OMPI_MCA_opal_common_ofi_provider_include=cxi
+export OMPI_MCA_mtl_ofi_av=table
+export OMPI_MCA_pml=cm
+export OMPI_MCA_mtl=ofi
+export PRTE_MCA_ras_base_launch_orted_on_hn=1
+export PMIX_MCA_gds=^shmem2
+
+for cmd in "${CMDS[@]}"; do
+    run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_cxi"
+done
 
 # NCCL
 source $ROOT_DIR/sourceme_nccl.sh
+
+# recommended settings
+export HSA_FORCE_FINE_GRAIN_PCIE=1
+export FI_MR_CACHE_MONITOR=kdreg2
+export FI_CXI_DISABLE_HOST_REGISTER=1
+export FI_CXI_DEFAULT_CQ_SIZE=131072
+export FI_CXI_RDZV_PROTO=alt_read
+#export FI_CXI_RDZV_EAGER_SIZE=0
+export FI_CXI_DEFAULT_TX_SIZE=2048
+#export NCCL_CROSS_NIC=1
+export NCCL_NET_GDR_LEVEL=PHB
+#export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+export NCCL_NET="AWS Libfabric"
 
 CMDS=("osu_xccl_alltoall" "osu_xccl_allreduce" "osu_xccl_allgather")
 for cmd in "${CMDS[@]}"; do

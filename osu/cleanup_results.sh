@@ -4,8 +4,10 @@
 # Apart from the OSU output there are some othe lines (gpu binding logs) that should be removed.
 
 for file in *.txt; do
-  if [[ -f "$file" ]]; then
-    sed -n '/^# /,$p' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
-    echo "Processed: $file"
-  fi
+    if [[ -f "$file" ]]; then
+	sed -n '/^# /,$p' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
+	grep -v "#  Rank" ${file} > "${file}.tmp" && mv "${file}.tmp" "$file"
+	grep -v "^ \.\. "  ${file} > "${file}.tmp" && mv "${file}.tmp" "$file"
+	echo "Processed: $file"
+    fi
 done
