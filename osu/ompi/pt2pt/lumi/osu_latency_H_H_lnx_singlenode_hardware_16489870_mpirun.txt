@@ -1,8 +1,3 @@
-0 cxi 2 2 shm+cxi:cxi2
-0 gpu 4 2
-1 cxi 1 2 shm+cxi:cxi1
-1 gpu 2 2
-
 # OSU MPI Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)        Validation

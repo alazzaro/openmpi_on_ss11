@@ -1,9 +1,3 @@
-0 cxi 2 1 cxi2
-0 gpu 4 1
-0 cxi 2 1 cxi2
-0 gpu 4 1
-#Using RCCL
-#Using RCCL
 # Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
 # Size          Latency (us)        Validation
 1                      35.09

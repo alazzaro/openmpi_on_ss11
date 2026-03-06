@@ -1,8 +1,3 @@
-0 cxi 2 1 shm+cxi:cxi2
-0 gpu 4 1
-0 cxi 2 1 shm+cxi:cxi2
-0 gpu 4 1
-
 # OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size      Bandwidth (MB/s)        Validation
