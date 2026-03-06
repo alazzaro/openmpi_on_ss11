@@ -24,12 +24,12 @@ if [ "$OMPI_COMM_WORLD_LOCAL_RANK" ]; then
 	export FI_CXI_DEVICE_NAME="cxi$CXI"
     fi
 
-    echo $LOCALID cxi $CXI $NTASKS_PER_NODE $FI_LNX_PROV_LINKS $FI_CXI_DEVICE_NAME
+#    echo $LOCALID cxi $CXI $NTASKS_PER_NODE $FI_LNX_PROV_LINKS $FI_CXI_DEVICE_NAME
 
 elif [ "$SLURM_LOCALID" ]; then
     LOCALID=$SLURM_LOCALID
     NTASKS_PER_NODE=$SLURM_NTASKS_PER_NODE
-    echo
+#    echo
 else
     echo "No env variables!"
     return -1
@@ -41,6 +41,6 @@ else
     export HIP_VISIBLE_DEVICES=${GPUSID[$LOCALID]}
 fi
 
-echo $LOCALID gpu $HIP_VISIBLE_DEVICES $NTASKS_PER_NODE
+#echo $LOCALID gpu $HIP_VISIBLE_DEVICES $NTASKS_PER_NODE
 
 exec $*
