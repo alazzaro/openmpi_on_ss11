@@ -3,38 +3,6 @@
 #
 rccl-tests: Version develop_deprecated:40b1b17
 # Using devices
-#  Rank  0 Group  0 Pid 128660 on  nid005751 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  1 Group  0 Pid 128661 on  nid005751 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank  2 Group  0 Pid 128662 on  nid005751 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank  3 Group  0 Pid 128663 on  nid005751 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank  4 Group  0 Pid 128664 on  nid005751 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank  5 Group  0 Pid 128665 on  nid005751 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank  6 Group  0 Pid 128666 on  nid005751 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank  7 Group  0 Pid 128667 on  nid005751 device  0 [0000:c6:00] AMD Instinct MI250X
-#  Rank  8 Group  0 Pid  30406 on  nid005787 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  9 Group  0 Pid  30407 on  nid005787 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank 10 Group  0 Pid  30408 on  nid005787 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank 11 Group  0 Pid  30409 on  nid005787 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank 12 Group  0 Pid  30410 on  nid005787 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank 13 Group  0 Pid  30411 on  nid005787 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank 14 Group  0 Pid  30412 on  nid005787 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank 15 Group  0 Pid  30413 on  nid005787 device  0 [0000:c6:00] AMD Instinct MI250X
-#  Rank 16 Group  0 Pid  84015 on  nid005833 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank 17 Group  0 Pid  84016 on  nid005833 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank 18 Group  0 Pid  84017 on  nid005833 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank 19 Group  0 Pid  84018 on  nid005833 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank 20 Group  0 Pid  84019 on  nid005833 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank 21 Group  0 Pid  84020 on  nid005833 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank 22 Group  0 Pid  84021 on  nid005833 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank 23 Group  0 Pid  84022 on  nid005833 device  0 [0000:c6:00] AMD Instinct MI250X
-#  Rank 24 Group  0 Pid 123627 on  nid006116 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank 25 Group  0 Pid 123628 on  nid006116 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank 26 Group  0 Pid 123629 on  nid006116 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank 27 Group  0 Pid 123630 on  nid006116 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank 28 Group  0 Pid 123631 on  nid006116 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank 29 Group  0 Pid 123632 on  nid006116 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank 30 Group  0 Pid 123633 on  nid006116 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank 31 Group  0 Pid 123634 on  nid006116 device  0 [0000:c6:00] AMD Instinct MI250X
 #
 #                                                              out-of-place                       in-place          
 #       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
