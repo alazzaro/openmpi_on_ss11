@@ -1,0 +1,38 @@
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                      83.90
+8                      63.72
+16                     63.12
+32                     64.66
+64                     38.95
+128                    38.88
+256                    40.29
+512                    41.11
+1024                   43.60
+2048                   47.56
+4096                   50.23
+8192                   50.28
+16384                  54.35
+32768                  70.07
+65536                5590.05
+131072               8332.20
+262144                114.98
+524288                158.27
+1048576               173.80

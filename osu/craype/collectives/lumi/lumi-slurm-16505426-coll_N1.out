@@ -1,0 +1,2131 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) craype-network-ofi                  10) cray-dsmml/0.3.1
+  2) perftools-base/25.03.0              11) cray-libsci/25.03.0
+  3) xpmem/2.11.5-1.3_g73ade43320bc      12) PrgEnv-gnu/8.6.0
+  4) ModuleLabel/label              (S)  13) libfabric/1.22.0
+  5) lumi-tools/24.05               (S)  14) cray-mpich/9.0.1
+  6) init-lumi/0.2                  (S)  15) craype-x86-trento
+  7) cray-python/3.11.7                  16) craype-accel-amd-gfx90a
+  8) gcc-native/14.2                     17) rocm/6.3.4
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+/opt/cray/libfabric/1.22.0
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+============
+#!/bin/bash
+
+for NNODES in 1 2 4 8 16 32 64; do
+#for NNODES in 1 2; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}.out
+#SBATCH --time=0:30:00
+
+export SLURM_CPUS_PER_TASK=7
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable Cray-mpich and RCCL
+USE_CPE=1 source \$ROOT_DIR/sourceme_rccl.sh
+
+export MPICH_GPU_SUPPORT_ENABLED=1
+export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+export MPICH_VERSION_DISPLAY=1
+export GTL_VERSION_DISPLAY=1
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    # Consider validation
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
+
+#    if false; then
+    (
+	CMDS=("osu_alltoall -i 100 -d rocm D D" "osu_allreduce -i 100 -d rocm D D" "osu_allgather -i 100 -d rocm D D" "osu_allreduce -i 100 H H" "osu_alltoall -i 100 H H" "osu_allgather -i 100 H H")
+#  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "\${SUFFIX}"
+        done
+    )
+
+    # No validation available for RCCL
+    OSU_ARGS=" "
+
+    (
+	CMDS=("osu_xccl_alltoall -i 100 -d rocm D D" "osu_xccl_allreduce -i 100 -d rocm D D" "osu_xccl_allgather -i 100 -d rocm D D")
+    	for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "xccl/collective" "\${SUFFIX}"
+     	done
+    )
+#    fi
+
+    echo "RCCL-tests"
+    (
+	unset MPICH_GPU_SUPPORT_ENABLED
+	unset MPICH_SMP_SINGLE_COPY_MODE
+	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- srun \$cmd
+	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	done
+    )
+done
+
+EOF
+
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+MPICH_GPU_SUPPORT_ENABLED=1
+SLURM_MEM_PER_CPU=0
+CRAYPE_LINK_TYPE=dynamic
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/9.0.1/gtl/lib:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+_ModuleTable017_=ZXMvU29mdHdhcmVTdGFjayIsICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjayIsICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9LApzeXN0ZW1CYXNlTVBBVEggPSAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4Oi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL2xtb2QvbW9kdWxlZmlsZXMvQ29yZTovb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQ6L2FwcGwvbHVtaS9tb2R1bGVzL1NvZnR3YXJlU3RhY2s6L2FwcGwvbHVtaS9t
+LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=127817
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/9.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=ID0gIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycy9Nb2R1bGVMYWJlbC9sYWJlbC5sdWEiLApmdWxsTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCmxvYWRPcmRlciA9IDQsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gIk1vZHVsZUxhYmVsL2xhYmVsIiwKd1YgPSAic2xhYmVsLip6ZmluYWwiLAp9LApbIlByZ0Vudi1nbnUiXSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9QcmdFbnYtZ251LzguNi4wLmx1YSIsCmZ1bGxOYW1lID0gIlByZ0Vudi1nbnUvOC42LjAiLApsb2FkT3JkZXIgPSAxMiwKcHJvcFQgPSB7fSwKc3Rh
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.26 15983 193.167.209.164 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:CRAYPE:PERFTOOLS:CRAYPAT:CRAY_ACCEL:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=9.0.1
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLW5ldHdvcmstb2ZpLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJjcmF5cGUteDg2LXRyZW50byJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVm
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid006858
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+SLURM_CPUS_PER_TASK=7
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/36
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+PE_LD_LIBRARY_PATH=system
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=eS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLWFjY2VsLWFtZC1nZng5MGEubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLWFjY2VsLWFtZC1nZng5MGEiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtYWNjZWwtYW1kLWdmeDkwYSIsCndWID0gIk0uKnpmaW5hbCIsCn0sClsiY3JheXBlLW5ldHdvcmstb2ZpIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+ROCM_PATH=/opt/rocm-6.3.4
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+SLURM_JOB_GID=10013986
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/9.0.1/gtl/lib:1;/opt/cray/libfabric/1.22.0/lib64:1;/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid006858
+PE_PKGCONFIG_PRODUCTS=PE_MPICH:PE_LIBSCI:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnMiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1772784567
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/9.0.1/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+_ModuleTable004_=ZS9sbW9kL21vZHVsZWZpbGVzL2NvbXBpbGVyL2dudS8xMi4wL2NyYXktbGlic2NpLzI1LjAzLjAubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1saWJzY2kvMjUuMDMuMCIsCmxvYWRPcmRlciA9IDExLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbGlic2NpIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKWyJjcmF5LW1waWNoIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9k
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PE_MPICH_PKGCONFIG_LIBS=mpich
+OSTYPE=linux
+XDG_SESSION_ID=630995
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=9.0.1
+SLURM_NNODES=1
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+_ModuleTable012_=PSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAwMDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJh
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+CRAY_CPU_TARGET=x86-trento
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1772782767
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:1;/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:1;/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/craype/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+CRAY_TCMALLOC_MEMFS_FORCE=1
+SLURM_JOB_NODELIST=nid006858
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+CRAY_ACCEL_VENDOR=amd
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid006858
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=single_node_vni
+HOST=uan02
+SSH_CLIENT=178.197.255.26 15983 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=8
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-trento/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid006858
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+GTL_VERSION_DISPLAY=1
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_MPICH:1;PE_LIBSCI:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+MPICH_VERSION_DISPLAY=1
+LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=YXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSA4LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImdjYy1uYXRpdmUiLAp3ViA9ICJeMDAwMDAwMTQuMDAwMDAwMDAyLip6ZmluYWwiLAp9LApbImluaXQtbHVtaSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL2FwcGwvbHVtaS9tb2R1bGVzL2Vh
+PE_PKGCONFIG_LIBS=rocm-6.3.4:mpich:libsci_mpi:libsci:dsmml
+CRAY_ACCEL_TARGET=amd_gfx90a
+SLURM_JOBID=16505426
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2FjY2VsID0gImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmNyYXlwZV9uZXR3b3JrID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmdjY19jb21waWxlciA9ICJnY2MtbmF0aXZlIiwKbGlic2NpID0gImNyYXktbGlic2NpIiwKbXBpID0gImNyYXktbXBpY2giLAp9LAptVCA9IHsKTW9kdWxlTGFiZWwgPSB7CmZu
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:libfabric/1.22.0:cray-mpich/9.0.1:craype-x86-trento:craype-accel-amd-gfx90a:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=a0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktcHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZSIsCndWID0gIl4wMDAwMDAwMi4wMDAwMDAwMDcuMDAwMDAwMDM0Lip6ZmluYWwiLAp9LApbImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIl0gPSB7CmZuID0gIi9vcHQvY3Jh
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/mpich/9.0.1/ofi/man:1;/opt/cray/pe/mpich/9.0.1/man/mpich:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=Y2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJQcmdFbnYtZ251IiwKd1YgPSAiXjAwMDAwMDA4LjAwMDAwMDAwNi4qemZpbmFsIiwKfSwKWyJjcmF5LWRzbW1sIl0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvY3JheS1kc21tbC8wLjMuMS5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LWRzbW1sLzAuMy4xIiwKbG9hZE9yZGVyID0gMTAsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheS1kc21tbCIsCndWID0gIl4wMDAwMDAwMC4wMDAwMDAwMDMuMDAwMDAwMDAxLip6ZmluYWwiLAp9LApbImNyYXktbGlic2NpIl0gPSB7CmZuID0gIi9vcHQvY3JheS9w
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/36
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/9.0.1
+_ModuleTable013_=c2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxl
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=1
+_ModuleTable016_=L2NvbXBpbGVyL2dudS8xMi4wIgosICIvYXBwbC9sdW1pL21vZHVsZXMvZWFzeWJ1aWxkL3N5c3RlbSIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvcGVyZnRvb2xzLzI1LjAzLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL25ldC9vZmkvMS4wIiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9MaW51eCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmUiLCAiL29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jcmF5cGUtdGFyZ2V0cy9kZWZhdWx0IgosICIvYXBwbC9sdW1pL21vZHVs
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=YXVsdC9jcmF5cGUteDg2LXRyZW50by5sdWEiLApmdWxsTmFtZSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmxvYWRPcmRlciA9IDE1LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZS14ODYtdHJlbnRvIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9w
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=9.0.1
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=18
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+SLURM_JOB_PARTITION=standard-g
+MPICH_SMP_SINGLE_COPY_MODE=XPMEM
+LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable018_=b2R1bGVzL1N0eWxlTW9kaWZpZXJzOi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjazovb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9Cg==
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=8
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan02
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/mpich/9.0.1/ofi/man:/opt/cray/pe/mpich/9.0.1/man/mpich:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=9.0.1
+XDG_RUNTIME_DIR=/run/user/10013986
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16505426
+_ModuleTable014_=ZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndW
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:1;CRAYPE:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ACCEL:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/9.0.1.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-trento.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-accel-amd-gfx90a.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/libfabric/1.22.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config
+LMOD_SETTARG_FULL_SUPPORT=no
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=c3lidWlsZC9zeXN0ZW1cIikiLAp9LApmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvaW5pdC1MVU1JLVNvZnR3YXJlU3RhY2svaW5pdC1sdW1pLzAuMi5sdWEiLApmdWxsTmFtZSA9ICJpbml0LWx1bWkvMC4yIiwKbG9hZE9yZGVyID0gNiwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiaW5pdC1sdW1pIiwKd1YgPSAiMDAwMDAwMDAwLjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKbGliZmFicmljID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMvbGliZmFicmljLzEuMjIuMCIsCmZ1bGxOYW1lID0gImxpYmZhYnJpYy8xLjIyLjAiLApsb2FkT3JkZXIgPSAxMywKcHJvcFQg
+PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;mpich:1;libsci_mpi:1;libsci:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=L21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wL2NyYXktbXBpY2gvOS4wLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1tcGljaC85LjAuMSIsCmxvYWRPcmRlciA9IDE0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2gvOS4wLjEiLAp3ViA9ICIwMDAwMDAwMDkuMDAwMDAwMDAwLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA3LApwcm9wVCA9IHt9LApzdGFj
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n8_hardware_16505426
+========
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [128199]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128200]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128201]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128203]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128204]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128205]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128206]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128207]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       4.93
+2                       4.66
+4                       4.64
+8                       4.46
+16                      5.31
+32                      5.24
+64                      5.94
+128                     8.03
+256                     7.87
+512                     9.69
+1024                   23.22
+2048                   23.99
+4096                   23.75
+8192                   62.46
+16384                  63.01
+32768                  66.01
+65536                 150.73
+131072                162.16
+262144                187.76
+524288                251.44
+1048576               356.27
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [128329]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128330]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128331]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128332]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128333]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128334]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128335]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128336]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.56
+8                       2.61
+16                      2.47
+32                      2.50
+64                      2.62
+128                     2.94
+256                     7.19
+512                     7.08
+1024                    9.68
+2048                   11.30
+4096                   13.88
+8192                   41.24
+16384                 112.40
+32768                 132.54
+65536                 144.01
+131072                147.89
+262144                155.21
+524288                185.54
+1048576               241.22
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [128412]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128413]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128414]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128415]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128416]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128417]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128418]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128419]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.39
+2                       3.07
+4                       2.93
+8                       3.12
+16                      3.33
+32                      3.42
+64                      3.57
+128                     4.05
+256                     8.49
+512                    12.03
+1024                   15.96
+2048                   20.74
+4096                   27.72
+8192                   45.44
+16384                  45.59
+32768                  49.06
+65536                  55.27
+131072                 68.36
+262144                 95.06
+524288                148.70
+1048576               245.93
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [128558]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128559]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128560]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128561]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128562]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128563]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128564]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128565]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.56
+8                       2.68
+16                      2.45
+32                      2.50
+64                      2.59
+128                     2.93
+256                     3.51
+512                     6.51
+1024                    8.43
+2048                    9.86
+4096                   11.23
+8192                   15.98
+16384                  23.60
+32768                  32.43
+65536                  48.80
+131072                 83.14
+262144                150.91
+524288                278.24
+1048576               560.58
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [128633]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128634]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128635]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128636]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128637]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128638]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128639]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128640]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       5.42
+2                       4.58
+4                       4.62
+8                       4.42
+16                      5.38
+32                      5.33
+64                      5.85
+128                     9.32
+256                     7.92
+512                     9.44
+1024                   11.18
+2048                   10.46
+4096                   11.42
+8192                   13.70
+16384                  16.35
+32768                  22.87
+65536                  42.16
+131072                 67.15
+262144                122.22
+524288                185.10
+1048576               364.50
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [128723]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128724]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128725]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128726]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128727]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128728]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128729]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128730]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.48
+2                       3.06
+4                       2.82
+8                       3.10
+16                      3.34
+32                      3.40
+64                      3.60
+128                     4.05
+256                     5.55
+512                     6.92
+1024                    8.05
+2048                   10.29
+4096                   13.34
+8192                   19.73
+16384                  30.98
+32768                  56.46
+65536                 114.11
+131072                215.84
+262144                424.82
+524288                821.74
+1048576              1669.02
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [128799]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [128800]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [128801]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [128802]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [128803]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [128804]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [128805]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [128806]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      27.47
+2                      26.83
+4                      26.85
+8                      26.99
+16                     26.88
+32                     27.20
+64                     27.39
+128                    27.17
+256                    27.35
+512                    28.00
+1024                   28.36
+2048                   28.79
+4096                   30.51
+8192                   31.32
+16384                  34.67
+32768                  41.97
+65536                  43.08
+131072                 50.20
+262144                 67.56
+524288                101.50
+1048576               169.37
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [129021]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129022]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129023]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129024]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129025]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129026]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129027]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129028]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                      34.86
+8                      33.12
+16                     33.18
+32                     34.81
+64                     38.76
+128                    43.93
+256                    43.93
+512                    44.53
+1024                   44.80
+2048                   45.39
+4096                   46.55
+8192                   47.90
+16384                  49.05
+32768                  49.15
+65536                  48.54
+131072                 49.27
+262144                 92.69
+524288                115.82
+1048576               127.14
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [129164]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129165]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129166]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129167]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129168]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129169]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129170]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129171]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      34.76
+2                      33.87
+4                      33.58
+8                      33.74
+16                     33.81
+32                     33.65
+64                     33.84
+128                    33.98
+256                    33.91
+512                    33.95
+1024                   34.57
+2048                   37.39
+4096                   37.69
+8192                   37.74
+16384                  38.05
+32768                  39.29
+65536                  59.15
+131072                 61.62
+262144                 67.95
+524288                 82.85
+1048576               116.70
+RCCL-tests
+-- srun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [129352]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129353]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129354]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129355]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129356]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129357]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129358]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129359]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 129352 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 129353 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 129354 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 129355 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 129356 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 129357 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 129358 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 129359 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     2.04    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+         128            16     uint8    none      -1    12.89    0.01    0.01      0    11.73    0.01    0.01    N/A
+         256            32     uint8    none      -1    12.06    0.02    0.02      0    11.57    0.02    0.02    N/A
+         512            64     uint8    none      -1    11.75    0.04    0.04      0    12.10    0.04    0.04    N/A
+        1024           128     uint8    none      -1    11.63    0.09    0.08      0    11.59    0.09    0.08    N/A
+        2048           256     uint8    none      -1    11.81    0.17    0.15      0    11.79    0.17    0.15    N/A
+        4096           512     uint8    none      -1    12.14    0.34    0.30      0    11.42    0.36    0.31    N/A
+        8192          1024     uint8    none      -1    11.76    0.70    0.61      0    12.20    0.67    0.59    N/A
+       16384          2048     uint8    none      -1    12.57    1.30    1.14      0    12.58    1.30    1.14    N/A
+       32768          4096     uint8    none      -1    14.89    2.20    1.93      0    14.55    2.25    1.97    N/A
+       65536          8192     uint8    none      -1    15.15    4.33    3.79      0    14.62    4.48    3.92    N/A
+      131072         16384     uint8    none      -1    18.53    7.07    6.19      0    18.84    6.96    6.09    N/A
+      262144         32768     uint8    none      -1    26.44    9.91    8.67      0    26.34    9.95    8.71    N/A
+      524288         65536     uint8    none      -1    26.68   19.65   17.20      0    26.03   20.14   17.62    N/A
+     1048576        131072     uint8    none      -1    31.83   32.94   28.83      0    32.15   32.61   28.54    N/A
+     2097152        262144     uint8    none      -1    49.83   42.09   36.83      0    50.19   41.78   36.56    N/A
+     4194304        524288     uint8    none      -1    84.39   49.70   43.49      0    84.37   49.71   43.50    N/A
+     8388608       1048576     uint8    none      -1    155.3   54.00   47.25      0    153.7   54.56   47.74    N/A
+    16777216       2097152     uint8    none      -1    262.3   63.96   55.97      0    263.1   63.76   55.79    N/A
+    33554432       4194304     uint8    none      -1    481.1   69.75   61.03      0    480.7   69.81   61.08    N/A
+    67108864       8388608     uint8    none      -1    921.1   72.86   63.75      0    920.9   72.87   63.76    N/A
+   134217728      16777216     uint8    none      -1   1801.0   74.53   65.21      0   1801.7   74.49   65.18    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 15.8082 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16505426.10
+cpu-bind=MASK - nid006858, task  0  0 [129525]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129526]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129527]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129528]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129529]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129530]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129531]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129532]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 129525 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 129526 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 129527 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 129528 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 129529 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 129530 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 129531 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 129532 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1     uint8     sum      -1    43.78    0.00    0.00      0    27.51    0.00    0.00      0
+           2             2     uint8     sum      -1    30.18    0.00    0.00      0    26.68    0.00    0.00      0
+           4             4     uint8     sum      -1    26.87    0.00    0.00      0    21.21    0.00    0.00      0
+           8             8     uint8     sum      -1    21.16    0.00    0.00      0    21.95    0.00    0.00      0
+          16            16     uint8     sum      -1    21.14    0.00    0.00      0    21.41    0.00    0.00      0
+          32            32     uint8     sum      -1    23.40    0.00    0.00      0    22.59    0.00    0.00      0
+          64            64     uint8     sum      -1    26.21    0.00    0.00      0    27.12    0.00    0.00      0
+         128           128     uint8     sum      -1    32.69    0.00    0.01      0    32.99    0.00    0.01      0
+         256           256     uint8     sum      -1    32.58    0.01    0.01      0    32.39    0.01    0.01      0
+         512           512     uint8     sum      -1    33.62    0.02    0.03      0    32.54    0.02    0.03      0
+        1024          1024     uint8     sum      -1    32.48    0.03    0.06      0    33.19    0.03    0.05      0
+        2048          2048     uint8     sum      -1    33.10    0.06    0.11      0    33.17    0.06    0.11      0
+        4096          4096     uint8     sum      -1    34.22    0.12    0.21      0    33.64    0.12    0.21      0
+        8192          8192     uint8     sum      -1    35.23    0.23    0.41      0    34.73    0.24    0.41      0
+       16384         16384     uint8     sum      -1    38.00    0.43    0.75      0    38.59    0.42    0.74      0
+       32768         32768     uint8     sum      -1    38.02    0.86    1.51      0    37.96    0.86    1.51      0
+       65536         65536     uint8     sum      -1    38.99    1.68    2.94      0    38.29    1.71    2.99      0
+      131072        131072     uint8     sum      -1    38.36    3.42    5.98      0    38.15    3.44    6.01      0
+      262144        262144     uint8     sum      -1    74.91    3.50    6.12      0    73.90    3.55    6.21      0
+      524288        524288     uint8     sum      -1    99.11    5.29    9.26      0    98.89    5.30    9.28      0
+     1048576       1048576     uint8     sum      -1    111.3    9.42   16.49      0    110.6    9.48   16.59      0
+     2097152       2097152     uint8     sum      -1    135.4   15.49   27.10      0    135.6   15.47   27.07      0
+     4194304       4194304     uint8     sum      -1    185.3   22.63   39.61      0    186.2   22.53   39.43      0
+     8388608       8388608     uint8     sum      -1    288.8   29.04   50.83      0    287.4   29.19   51.08      0
+    16777216      16777216     uint8     sum      -1    300.3   55.87   97.77      0    296.3   56.62   99.08      0
+    33554432      33554432     uint8     sum      -1    518.1   64.77  113.34      0    504.0   66.58  116.51      0
+    67108864      67108864     uint8     sum      -1    958.8   69.99  122.48      0    925.9   72.48  126.84      0
+   134217728     134217728     uint8     sum      -1   1844.7   72.76  127.33      0   1769.4   75.85  132.74      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 22.4873 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [129733]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129734]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129735]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129736]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129737]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129738]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129739]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129740]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 129733 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 129734 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 129735 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 129736 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 129737 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 129738 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 129739 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 129740 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     1.31    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         128            16     uint8    none      -1    24.91    0.01    0.00      0    25.78    0.00    0.00      0
+         256            32     uint8    none      -1    27.67    0.01    0.01      0    26.51    0.01    0.01      0
+         512            64     uint8    none      -1    25.82    0.02    0.02      0    22.39    0.02    0.02      0
+        1024           128     uint8    none      -1    22.01    0.05    0.04      0    21.79    0.05    0.04      0
+        2048           256     uint8    none      -1    22.21    0.09    0.08      0    22.10    0.09    0.08      0
+        4096           512     uint8    none      -1    22.62    0.18    0.16      0    22.01    0.19    0.16      0
+        8192          1024     uint8    none      -1    22.28    0.37    0.32      0    23.05    0.36    0.31      0
+       16384          2048     uint8    none      -1    24.88    0.66    0.58      0    24.50    0.67    0.59      0
+       32768          4096     uint8    none      -1    25.70    1.28    1.12      0    25.06    1.31    1.14      0
+       65536          8192     uint8    none      -1    25.84    2.54    2.22      0    25.17    2.60    2.28      0
+      131072         16384     uint8    none      -1    25.74    5.09    4.46      0    25.93    5.06    4.42      0
+      262144         32768     uint8    none      -1    26.01   10.08    8.82      0    25.97   10.09    8.83      0
+      524288         65536     uint8    none      -1    44.41   11.81   10.33      0    42.48   12.34   10.80      0
+     1048576        131072     uint8    none      -1    45.44   23.08   20.19      0    45.27   23.16   20.27      0
+     2097152        262144     uint8    none      -1    51.54   40.69   35.61      0    51.90   40.40   35.35      0
+     4194304        524288     uint8    none      -1    67.01   62.59   54.77      0    66.42   63.15   55.26      0
+     8388608       1048576     uint8    none      -1    102.6   81.80   71.57      0    101.3   82.83   72.48      0
+    16777216       2097152     uint8    none      -1    158.7  105.75   92.53      0    157.8  106.31   93.02      0
+    33554432       4194304     uint8    none      -1    273.8  122.57  107.25      0    270.7  123.97  108.47      0
+    67108864       8388608     uint8    none      -1    502.4  133.57  116.88      0    502.6  133.53  116.84      0
+   134217728      16777216     uint8    none      -1    967.0  138.80  121.45      0    967.9  138.67  121.34      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 23.2162 
+#
+# Collective test concluded: all_gather_perf
+
+========
+_n8_software_16505426
+========
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [129898]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [129899]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [129900]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [129901]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [129902]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [129903]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [129904]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [129905]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       5.37
+2                       4.64
+4                       4.65
+8                       4.43
+16                      5.36
+32                      5.40
+64                      5.89
+128                     8.49
+256                     8.03
+512                     9.86
+1024                   22.37
+2048                   24.00
+4096                   25.40
+8192                   61.87
+16384                  66.53
+32768                  65.58
+65536                 168.40
+131072                178.63
+262144                205.93
+524288                260.50
+1048576               366.33
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [130025]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130026]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130027]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130028]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130029]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130030]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130031]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130032]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.75
+8                       2.53
+16                      2.52
+32                      2.53
+64                      2.63
+128                     2.83
+256                     6.71
+512                     7.03
+1024                    9.64
+2048                   10.82
+4096                   14.28
+8192                   41.04
+16384                 113.88
+32768                 132.39
+65536                 145.04
+131072                146.02
+262144                154.18
+524288                185.36
+1048576               241.55
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 -d rocm D D
+srun: Step created for StepId=16505426.14
+cpu-bind=MASK - nid006858, task  0  0 [130119]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130120]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130121]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130122]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130123]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130124]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130125]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130126]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.10
+2                       2.94
+4                       2.87
+8                       3.04
+16                      3.28
+32                      3.38
+64                      3.53
+128                     4.07
+256                     8.11
+512                    11.81
+1024                   14.81
+2048                   20.96
+4096                   27.34
+8192                   46.41
+16384                  47.07
+32768                  49.88
+65536                  56.61
+131072                 69.44
+262144                 95.90
+524288                149.18
+1048576               246.05
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [130202]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130203]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130204]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130205]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130206]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130207]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130208]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130209]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.59
+8                       2.59
+16                      2.47
+32                      2.46
+64                      2.55
+128                     2.82
+256                     3.44
+512                     7.07
+1024                    8.48
+2048                   10.42
+4096                   12.62
+8192                   18.31
+16384                  25.67
+32768                  33.16
+65536                  50.46
+131072                114.97
+262144                147.83
+524288                282.15
+1048576               571.66
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [130293]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130294]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130295]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130296]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130297]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130298]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130299]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130300]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       5.41
+2                       4.71
+4                       4.61
+8                       4.42
+16                      5.40
+32                      5.25
+64                      5.92
+128                     8.14
+256                     7.73
+512                     9.53
+1024                   10.48
+2048                   10.60
+4096                   11.65
+8192                   12.84
+16384                  16.03
+32768                  23.54
+65536                  40.82
+131072                 65.80
+262144                120.63
+524288                177.58
+1048576               420.32
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [130369]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130370]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130371]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130372]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130373]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130374]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130375]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130376]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.38
+2                       2.94
+4                       2.85
+8                       3.04
+16                      3.24
+32                      3.34
+64                      3.55
+128                     4.03
+256                     5.66
+512                     6.67
+1024                    8.01
+2048                    9.69
+4096                   13.39
+8192                   18.39
+16384                  30.20
+32768                  56.06
+65536                 112.14
+131072                214.69
+262144                415.09
+524288                824.46
+1048576              1635.22
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -i 100 -d rocm D D
+srun: Step created for StepId=16505426.18
+cpu-bind=MASK - nid006858, task  0  0 [130520]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130521]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130522]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130523]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130524]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130525]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130526]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130527]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      29.53
+2                      29.86
+4                      30.05
+8                      30.26
+16                     30.10
+32                     30.13
+64                     30.52
+128                    29.67
+256                    29.88
+512                    29.69
+1024                   27.81
+2048                   28.29
+4096                   30.07
+8192                   31.01
+16384                  34.44
+32768                  41.88
+65536                  42.15
+131072                 49.22
+262144                 67.14
+524288                101.04
+1048576               168.86
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [130667]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130668]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130669]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130670]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130671]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130672]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130673]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130674]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                      34.43
+8                      33.22
+16                     33.00
+32                     34.92
+64                     38.62
+128                    43.94
+256                    43.91
+512                    44.38
+1024                   44.79
+2048                   45.53
+4096                   46.83
+8192                   48.20
+16384                  49.38
+32768                  48.70
+65536                  48.68
+131072                 49.26
+262144                 92.62
+524288                115.37
+1048576               127.60
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [130842]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [130843]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [130844]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [130845]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [130846]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [130847]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [130848]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [130849]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      34.47
+2                      33.46
+4                      33.45
+8                      33.64
+16                     33.59
+32                     33.55
+64                     33.69
+128                    33.80
+256                    33.74
+512                    33.90
+1024                   34.40
+2048                   37.28
+4096                   37.93
+8192                   37.71
+16384                  37.91
+32768                  39.18
+65536                  59.12
+131072                 61.47
+262144                 67.96
+524288                 82.85
+1048576               116.08
+RCCL-tests
+-- srun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [131010]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [131011]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [131012]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [131013]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [131014]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [131015]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [131016]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [131017]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 131010 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 131011 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 131012 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 131013 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 131014 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 131015 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 131016 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 131017 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     1.09    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+         128            16     uint8    none      -1    12.98    0.01    0.01      0    11.73    0.01    0.01    N/A
+         256            32     uint8    none      -1    11.99    0.02    0.02      0    11.42    0.02    0.02    N/A
+         512            64     uint8    none      -1    11.68    0.04    0.04      0    12.01    0.04    0.04    N/A
+        1024           128     uint8    none      -1    11.45    0.09    0.08      0    11.62    0.09    0.08    N/A
+        2048           256     uint8    none      -1    11.53    0.18    0.16      0    11.64    0.18    0.15    N/A
+        4096           512     uint8    none      -1    12.06    0.34    0.30      0    11.36    0.36    0.32    N/A
+        8192          1024     uint8    none      -1    11.45    0.72    0.63      0    12.18    0.67    0.59    N/A
+       16384          2048     uint8    none      -1    12.49    1.31    1.15      0    12.45    1.32    1.15    N/A
+       32768          4096     uint8    none      -1    14.75    2.22    1.94      0    14.28    2.29    2.01    N/A
+       65536          8192     uint8    none      -1    15.00    4.37    3.82      0    14.45    4.53    3.97    N/A
+      131072         16384     uint8    none      -1    18.30    7.16    6.27      0    18.70    7.01    6.13    N/A
+      262144         32768     uint8    none      -1    26.41    9.93    8.69      0    26.32    9.96    8.71    N/A
+      524288         65536     uint8    none      -1    26.53   19.76   17.29      0    25.96   20.20   17.67    N/A
+     1048576        131072     uint8    none      -1    31.68   33.10   28.97      0    32.04   32.73   28.63    N/A
+     2097152        262144     uint8    none      -1    49.57   42.30   37.02      0    50.23   41.75   36.53    N/A
+     4194304        524288     uint8    none      -1    84.15   49.84   43.61      0    84.35   49.72   43.51    N/A
+     8388608       1048576     uint8    none      -1    154.5   54.30   47.51      0    153.4   54.69   47.85    N/A
+    16777216       2097152     uint8    none      -1    262.6   63.89   55.90      0    262.4   63.95   55.96    N/A
+    33554432       4194304     uint8    none      -1    479.9   69.92   61.18      0    480.6   69.82   61.09    N/A
+    67108864       8388608     uint8    none      -1    918.2   73.09   63.95      0    918.3   73.08   63.94    N/A
+   134217728      16777216     uint8    none      -1   1805.2   74.35   65.06      0   1801.1   74.52   65.21    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 15.8422 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [963]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [964]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [965]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [966]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [967]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [968]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [969]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [970]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid    963 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid    964 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid    965 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid    966 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid    967 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid    968 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid    969 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid    970 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1     uint8     sum      -1    53.08    0.00    0.00      0    28.96    0.00    0.00      0
+           2             2     uint8     sum      -1    30.51    0.00    0.00      0    27.27    0.00    0.00      0
+           4             4     uint8     sum      -1    26.02    0.00    0.00      0    21.50    0.00    0.00      0
+           8             8     uint8     sum      -1    21.24    0.00    0.00      0    21.98    0.00    0.00      0
+          16            16     uint8     sum      -1    21.18    0.00    0.00      0    21.41    0.00    0.00      0
+          32            32     uint8     sum      -1    23.84    0.00    0.00      0    22.97    0.00    0.00      0
+          64            64     uint8     sum      -1    26.46    0.00    0.00      0    27.09    0.00    0.00      0
+         128           128     uint8     sum      -1    32.83    0.00    0.01      0    33.49    0.00    0.01      0
+         256           256     uint8     sum      -1    33.26    0.01    0.01      0    32.80    0.01    0.01      0
+         512           512     uint8     sum      -1    33.58    0.02    0.03      0    32.51    0.02    0.03      0
+        1024          1024     uint8     sum      -1    32.68    0.03    0.05      0    33.37    0.03    0.05      0
+        2048          2048     uint8     sum      -1    33.40    0.06    0.11      0    33.22    0.06    0.11      0
+        4096          4096     uint8     sum      -1    34.19    0.12    0.21      0    33.82    0.12    0.21      0
+        8192          8192     uint8     sum      -1    35.79    0.23    0.40      0    35.09    0.23    0.41      0
+       16384         16384     uint8     sum      -1    38.26    0.43    0.75      0    38.77    0.42    0.74      0
+       32768         32768     uint8     sum      -1    38.95    0.84    1.47      0    38.21    0.86    1.50      0
+       65536         65536     uint8     sum      -1    38.75    1.69    2.96      0    38.42    1.71    2.99      0
+      131072        131072     uint8     sum      -1    38.42    3.41    5.97      0    38.26    3.43    5.99      0
+      262144        262144     uint8     sum      -1    75.54    3.47    6.07      0    73.95    3.54    6.20      0
+      524288        524288     uint8     sum      -1    99.21    5.28    9.25      0    99.23    5.28    9.25      0
+     1048576       1048576     uint8     sum      -1    111.5    9.41   16.46      0    110.8    9.46   16.56      0
+     2097152       2097152     uint8     sum      -1    135.4   15.49   27.11      0    135.6   15.47   27.07      0
+     4194304       4194304     uint8     sum      -1    185.2   22.65   39.64      0    185.9   22.57   39.49      0
+     8388608       8388608     uint8     sum      -1    288.8   29.04   50.82      0    287.3   29.20   51.09      0
+    16777216      16777216     uint8     sum      -1    301.1   55.72   97.51      0    296.5   56.58   99.02      0
+    33554432      33554432     uint8     sum      -1    517.4   64.85  113.49      0    504.1   66.56  116.48      0
+    67108864      67108864     uint8     sum      -1    958.0   70.05  122.59      0    926.4   72.44  126.77      0
+   134217728     134217728     uint8     sum      -1   1843.5   72.80  127.41      0   1775.1   75.61  132.32      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 22.4759 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [1202]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1203]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1204]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1206]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1209]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1213]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1214]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1215]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid   1202 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid   1203 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid   1204 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid   1206 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid   1209 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid   1213 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid   1214 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid   1215 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     1.33    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.15    0.00    0.00      0
+           0             0     uint8    none      -1     0.15    0.00    0.00      0     0.15    0.00    0.00      0
+           0             0     uint8    none      -1     0.15    0.00    0.00      0     0.15    0.00    0.00      0
+           0             0     uint8    none      -1     0.15    0.00    0.00      0     0.15    0.00    0.00      0
+         128            16     uint8    none      -1    24.83    0.01    0.00      0    24.99    0.01    0.00      0
+         256            32     uint8    none      -1    27.83    0.01    0.01      0    25.21    0.01    0.01      0
+         512            64     uint8    none      -1    25.02    0.02    0.02      0    22.31    0.02    0.02      0
+        1024           128     uint8    none      -1    21.90    0.05    0.04      0    21.82    0.05    0.04      0
+        2048           256     uint8    none      -1    21.98    0.09    0.08      0    22.00    0.09    0.08      0
+        4096           512     uint8    none      -1    22.53    0.18    0.16      0    21.74    0.19    0.16      0
+        8192          1024     uint8    none      -1    22.49    0.36    0.32      0    22.83    0.36    0.31      0
+       16384          2048     uint8    none      -1    24.82    0.66    0.58      0    24.55    0.67    0.58      0
+       32768          4096     uint8    none      -1    25.66    1.28    1.12      0    24.76    1.32    1.16      0
+       65536          8192     uint8    none      -1    25.93    2.53    2.21      0    25.14    2.61    2.28      0
+      131072         16384     uint8    none      -1    25.58    5.12    4.48      0    25.84    5.07    4.44      0
+      262144         32768     uint8    none      -1    26.22   10.00    8.75      0    25.93   10.11    8.85      0
+      524288         65536     uint8    none      -1    44.86   11.69   10.23      0    42.60   12.31   10.77      0
+     1048576        131072     uint8    none      -1    45.41   23.09   20.21      0    45.14   23.23   20.33      0
+     2097152        262144     uint8    none      -1    51.24   40.93   35.81      0    51.55   40.69   35.60      0
+     4194304        524288     uint8    none      -1    66.99   62.61   54.79      0    66.43   63.14   55.25      0
+     8388608       1048576     uint8    none      -1    102.4   81.96   71.71      0    101.7   82.52   72.20      0
+    16777216       2097152     uint8    none      -1    159.2  105.37   92.20      0    157.9  106.27   92.99      0
+    33554432       4194304     uint8    none      -1    273.4  122.73  107.39      0    271.3  123.68  108.22      0
+    67108864       8388608     uint8    none      -1    503.4  133.32  116.66      0    501.9  133.70  116.98      0
+   134217728      16777216     uint8    none      -1    966.3  138.90  121.54      0    969.5  138.44  121.13      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 23.2091 
+#
+# Collective test concluded: all_gather_perf
+
+========
+_n8_hybrid_16505426
+========
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [1397]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1398]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1399]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1400]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1401]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1402]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1403]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1404]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       5.40
+2                       4.67
+4                       4.67
+8                       4.48
+16                      5.35
+32                      5.35
+64                      6.13
+128                     8.24
+256                     7.94
+512                     9.68
+1024                   22.86
+2048                   23.55
+4096                   25.37
+8192                   62.31
+16384                  61.33
+32768                  61.32
+65536                 136.35
+131072                147.59
+262144                174.92
+524288                237.74
+1048576               352.41
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [1641]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1642]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1643]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1644]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1645]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1646]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1647]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1648]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.77
+8                       2.57
+16                      2.51
+32                      2.52
+64                      2.59
+128                     2.88
+256                     6.45
+512                     6.93
+1024                    9.29
+2048                   11.28
+4096                   13.37
+8192                   40.85
+16384                 111.05
+32768                 131.11
+65536                 141.14
+131072                142.74
+262144                151.77
+524288                185.49
+1048576               239.33
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [1727]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1728]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1729]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1730]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1731]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1732]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1733]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1734]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.26
+2                       2.96
+4                       2.89
+8                       3.08
+16                      3.29
+32                      3.33
+64                      3.55
+128                     4.01
+256                     7.90
+512                    11.03
+1024                   15.56
+2048                   20.94
+4096                   27.93
+8192                   46.07
+16384                  46.88
+32768                  49.50
+65536                  55.38
+131072                 68.04
+262144                 94.60
+524288                149.93
+1048576               246.28
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [1842]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1843]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1844]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1845]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1846]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1847]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1848]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1849]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                       2.52
+8                       2.52
+16                      2.48
+32                      2.54
+64                      2.61
+128                     2.90
+256                     3.45
+512                     6.50
+1024                    8.81
+2048                    9.86
+4096                   12.02
+8192                   17.81
+16384                  24.78
+32768                  32.22
+65536                  50.69
+131072                 82.49
+262144                148.43
+524288                280.11
+1048576               572.23
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [1919]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [1920]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [1921]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [1922]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [1923]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [1924]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [1925]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [1926]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       5.05
+2                       4.62
+4                       4.60
+8                       4.41
+16                      5.39
+32                      5.51
+64                      5.85
+128                     8.30
+256                     7.85
+512                     9.48
+1024                   10.32
+2048                   10.29
+4096                   11.42
+8192                   12.41
+16384                  16.18
+32768                  22.61
+65536                  41.32
+131072                 67.88
+262144                123.51
+524288                179.95
+1048576               412.85
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 H H
+cpu-bind=MASK - nid006858, task  0  0 [2009]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2010]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2011]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2012]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2013]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2014]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2015]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2016]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       3.33
+2                       3.15
+4                       2.85
+8                       3.10
+16                      3.36
+32                      3.37
+64                      3.68
+128                     4.09
+256                     5.45
+512                     6.68
+1024                    7.77
+2048                    9.81
+4096                   13.14
+8192                   20.17
+16384                  30.60
+32768                  51.55
+65536                 110.15
+131072                212.30
+262144                412.35
+524288                808.14
+1048576              1655.81
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [2134]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2135]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2136]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2137]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2138]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2139]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2140]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2141]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      27.39
+2                      26.83
+4                      26.83
+8                      26.93
+16                     26.75
+32                     27.08
+64                     27.02
+128                    27.27
+256                    27.15
+512                    27.31
+1024                   27.61
+2048                   28.49
+4096                   30.19
+8192                   31.14
+16384                  34.56
+32768                  41.82
+65536                  42.47
+131072                 49.86
+262144                 67.24
+524288                101.07
+1048576               168.82
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [2299]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2302]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2304]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2306]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2308]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2312]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2313]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2314]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                      34.88
+8                      32.99
+16                     35.54
+32                     34.74
+64                     38.03
+128                    43.71
+256                    43.77
+512                    44.26
+1024                   44.33
+2048                   45.21
+4096                   46.30
+8192                   47.86
+16384                  48.96
+32768                  48.17
+65536                  48.34
+131072                 49.35
+262144                 92.80
+524288                115.55
+1048576               127.27
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid006858, task  0  0 [2517]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2518]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2519]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2520]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2521]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2522]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2523]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2524]: mask 0xfe00000000000000fe00000000000000 set
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      34.12
+2                      33.29
+4                      33.39
+8                      33.45
+16                     33.45
+32                     33.42
+64                     33.57
+128                    33.70
+256                    33.63
+512                    33.79
+1024                   34.56
+2048                   37.39
+4096                   37.70
+8192                   37.65
+16384                  37.89
+32768                  39.17
+65536                  58.65
+131072                 61.25
+262144                 67.55
+524288                 82.79
+1048576               116.63
+RCCL-tests
+-- srun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [2677]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2678]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2679]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2680]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2681]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2682]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2683]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2684]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid   2677 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid   2678 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid   2679 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid   2680 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid   2681 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid   2682 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid   2683 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid   2684 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     1.94    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+         128            16     uint8    none      -1    13.22    0.01    0.01      0    11.84    0.01    0.01    N/A
+         256            32     uint8    none      -1    12.64    0.02    0.02      0    11.62    0.02    0.02    N/A
+         512            64     uint8    none      -1    12.55    0.04    0.04      0    12.35    0.04    0.04    N/A
+        1024           128     uint8    none      -1    12.00    0.09    0.07      0    11.73    0.09    0.08    N/A
+        2048           256     uint8    none      -1    12.49    0.16    0.14      0    11.92    0.17    0.15    N/A
+        4096           512     uint8    none      -1    12.98    0.32    0.28      0    11.48    0.36    0.31    N/A
+        8192          1024     uint8    none      -1    12.49    0.66    0.57      0    12.41    0.66    0.58    N/A
+       16384          2048     uint8    none      -1    13.25    1.24    1.08      0    12.72    1.29    1.13    N/A
+       32768          4096     uint8    none      -1    15.52    2.11    1.85      0    14.36    2.28    2.00    N/A
+       65536          8192     uint8    none      -1    15.74    4.16    3.64      0    14.53    4.51    3.95    N/A
+      131072         16384     uint8    none      -1    18.96    6.91    6.05      0    18.79    6.97    6.10    N/A
+      262144         32768     uint8    none      -1    26.68    9.83    8.60      0    26.35    9.95    8.70    N/A
+      524288         65536     uint8    none      -1    26.70   19.63   17.18      0    25.78   20.34   17.80    N/A
+     1048576        131072     uint8    none      -1    32.00   32.77   28.67      0    32.03   32.74   28.65    N/A
+     2097152        262144     uint8    none      -1    49.71   42.19   36.92      0    50.02   41.92   36.68    N/A
+     4194304        524288     uint8    none      -1    84.26   49.78   43.56      0    84.53   49.62   43.42    N/A
+     8388608       1048576     uint8    none      -1    154.7   54.24   47.46      0    154.0   54.48   47.67    N/A
+    16777216       2097152     uint8    none      -1    261.8   64.07   56.07      0    262.7   63.86   55.88    N/A
+    33554432       4194304     uint8    none      -1    481.2   69.74   61.02      0    480.9   69.77   61.05    N/A
+    67108864       8388608     uint8    none      -1    920.8   72.88   63.77      0    917.8   73.12   63.98    N/A
+   134217728      16777216     uint8    none      -1   1803.8   74.41   65.11      0   1800.6   74.54   65.22    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 15.8124 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [2872]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [2873]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [2874]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [2875]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [2876]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [2877]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [2878]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [2879]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid   2872 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid   2873 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid   2874 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid   2875 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid   2876 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid   2877 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid   2878 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid   2879 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1     uint8     sum      -1    61.15    0.00    0.00      0    27.62    0.00    0.00      0
+           2             2     uint8     sum      -1    32.35    0.00    0.00      0    28.12    0.00    0.00      0
+           4             4     uint8     sum      -1    26.09    0.00    0.00      0    21.10    0.00    0.00      0
+           8             8     uint8     sum      -1    21.11    0.00    0.00      0    21.77    0.00    0.00      0
+          16            16     uint8     sum      -1    21.13    0.00    0.00      0    21.32    0.00    0.00      0
+          32            32     uint8     sum      -1    23.32    0.00    0.00      0    22.70    0.00    0.00      0
+          64            64     uint8     sum      -1    26.23    0.00    0.00      0    26.95    0.00    0.00      0
+         128           128     uint8     sum      -1    32.89    0.00    0.01      0    33.14    0.00    0.01      0
+         256           256     uint8     sum      -1    33.13    0.01    0.01      0    32.54    0.01    0.01      0
+         512           512     uint8     sum      -1    33.39    0.02    0.03      0    32.33    0.02    0.03      0
+        1024          1024     uint8     sum      -1    32.58    0.03    0.05      0    33.50    0.03    0.05      0
+        2048          2048     uint8     sum      -1    33.18    0.06    0.11      0    33.17    0.06    0.11      0
+        4096          4096     uint8     sum      -1    34.49    0.12    0.21      0    33.81    0.12    0.21      0
+        8192          8192     uint8     sum      -1    35.43    0.23    0.40      0    34.83    0.24    0.41      0
+       16384         16384     uint8     sum      -1    38.32    0.43    0.75      0    38.90    0.42    0.74      0
+       32768         32768     uint8     sum      -1    38.35    0.85    1.50      0    38.46    0.85    1.49      0
+       65536         65536     uint8     sum      -1    38.74    1.69    2.96      0    38.12    1.72    3.01      0
+      131072        131072     uint8     sum      -1    38.23    3.43    6.00      0    38.28    3.42    5.99      0
+      262144        262144     uint8     sum      -1    75.29    3.48    6.09      0    73.88    3.55    6.21      0
+      524288        524288     uint8     sum      -1    99.39    5.27    9.23      0    99.37    5.28    9.23      0
+     1048576       1048576     uint8     sum      -1    111.8    9.38   16.41      0    111.0    9.45   16.53      0
+     2097152       2097152     uint8     sum      -1    135.3   15.50   27.13      0    135.7   15.45   27.04      0
+     4194304       4194304     uint8     sum      -1    185.1   22.66   39.66      0    186.2   22.53   39.42      0
+     8388608       8388608     uint8     sum      -1    287.9   29.13   50.98      0    287.5   29.17   51.05      0
+    16777216      16777216     uint8     sum      -1    300.3   55.87   97.76      0    296.7   56.54   98.95      0
+    33554432      33554432     uint8     sum      -1    516.7   64.94  113.64      0    504.7   66.49  116.36      0
+    67108864      67108864     uint8     sum      -1    957.8   70.06  122.61      0    925.6   72.51  126.88      0
+   134217728     134217728     uint8     sum      -1   1843.7   72.80  127.40      0   1776.4   75.56  132.22      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 22.4809 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid006858, task  0  0 [3039]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006858, task  1  1 [3040]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006858, task  2  2 [3041]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006858, task  3  3 [3042]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006858, task  4  4 [3043]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006858, task  5  5 [3044]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006858, task  6  6 [3045]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006858, task  7  7 [3046]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid   3039 on  nid006858 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid   3040 on  nid006858 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid   3041 on  nid006858 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid   3042 on  nid006858 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid   3043 on  nid006858 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid   3044 on  nid006858 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid   3045 on  nid006858 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid   3046 on  nid006858 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     1.16    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.15    0.00    0.00      0     0.15    0.00    0.00      0
+           0             0     uint8    none      -1     0.15    0.00    0.00      0     0.15    0.00    0.00      0
+         128            16     uint8    none      -1    24.69    0.01    0.00      0    24.88    0.01    0.00      0
+         256            32     uint8    none      -1    27.97    0.01    0.01      0    26.08    0.01    0.01      0
+         512            64     uint8    none      -1    25.44    0.02    0.02      0    22.38    0.02    0.02      0
+        1024           128     uint8    none      -1    21.99    0.05    0.04      0    21.76    0.05    0.04      0
+        2048           256     uint8    none      -1    21.97    0.09    0.08      0    21.76    0.09    0.08      0
+        4096           512     uint8    none      -1    22.65    0.18    0.16      0    21.75    0.19    0.16      0
+        8192          1024     uint8    none      -1    22.44    0.37    0.32      0    22.94    0.36    0.31      0
+       16384          2048     uint8    none      -1    24.80    0.66    0.58      0    24.49    0.67    0.59      0
+       32768          4096     uint8    none      -1    25.48    1.29    1.13      0    24.63    1.33    1.16      0
+       65536          8192     uint8    none      -1    25.95    2.53    2.21      0    25.01    2.62    2.29      0
+      131072         16384     uint8    none      -1    25.65    5.11    4.47      0    25.77    5.09    4.45      0
+      262144         32768     uint8    none      -1    26.38    9.94    8.69      0    26.11   10.04    8.79      0
+      524288         65536     uint8    none      -1    45.00   11.65   10.19      0    42.70   12.28   10.74      0
+     1048576        131072     uint8    none      -1    45.55   23.02   20.14      0    45.36   23.11   20.23      0
+     2097152        262144     uint8    none      -1    51.63   40.62   35.54      0    51.35   40.84   35.73      0
+     4194304        524288     uint8    none      -1    67.17   62.44   54.64      0    66.31   63.25   55.35      0
+     8388608       1048576     uint8    none      -1    102.7   81.71   71.50      0    101.5   82.68   72.34      0
+    16777216       2097152     uint8    none      -1    158.5  105.86   92.63      0    158.3  105.95   92.71      0
+    33554432       4194304     uint8    none      -1    273.0  122.90  107.54      0    271.0  123.81  108.34      0
+    67108864       8388608     uint8    none      -1    504.9  132.92  116.30      0    503.7  133.23  116.58      0
+   134217728      16777216     uint8    none      -1    968.8  138.54  121.22      0    969.3  138.47  121.17      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 23.1877 
+#
+# Collective test concluded: all_gather_perf
+

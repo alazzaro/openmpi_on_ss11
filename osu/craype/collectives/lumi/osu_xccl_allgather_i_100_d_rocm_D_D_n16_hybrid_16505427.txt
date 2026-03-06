@@ -1,0 +1,40 @@
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      61.08
+2                      58.60
+4                      58.28
+8                      58.53
+16                     58.49
+32                     58.47
+64                     58.82
+128                    59.86
+256                    60.07
+512                    61.00
+1024                   63.27
+2048                   68.35
+4096                   83.35
+8192                   86.01
+16384                 196.82
+32768                 424.66
+65536               18306.04
+131072              16881.24
+262144               1131.20
+524288                432.88
+1048576               510.89

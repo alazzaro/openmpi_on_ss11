@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1 2; do
+for NNODES in 1 2 4 8 16 32 64; do
+#for NNODES in 1 2; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
 #SBATCH --ntasks-per-node=8
@@ -48,7 +48,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo "========"
 
     # Consider validation
-    OSU_ARGS=" -c "
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
 
 #    if false; then
     (
