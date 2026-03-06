@@ -56,9 +56,16 @@ if [ "$SLURM_NNODES" == "1" ]; then
     export PRTE_MCA_ras_base_launch_orted_on_hn=1
     export PMIX_MCA_gds=^shmem2
 
+    # improves things for large messages with ompi 6
+    export OMPI_MCA_coll_accelerator_alltoall_thresh=10485760
+    export OMPI_MCA_coll_accelerator_allgather_thresh=10485760
+
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_ob1"
     done
+
+    unset OMPI_MCA_coll_accelerator_alltoall_thresh
+    unset OMPI_MCA_coll_accelerator_allgather_thresh
 fi
 
 # no OpenMPI internal transport, only libfabric. Use CXI directly
