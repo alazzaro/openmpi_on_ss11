@@ -1,0 +1,32 @@
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      30.98
+2                      30.86
+4                      30.87
+8                      30.91
+16                     30.90
+32                     30.91
+64                     31.03
+128                    31.06
+256                    31.13
+512                    31.32
+1024                   31.58
+2048                   32.49
+4096                   34.11
+8192                   35.00
+16384                  38.58
+32768                  45.50
+65536                  44.77
+131072                 51.78
+262144                 69.53
+524288                103.47
+1048576               172.08

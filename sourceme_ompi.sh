@@ -8,7 +8,7 @@ run_osu_cmd() {
     logname=$(echo "$cmd" | sed -e 's/ /_/g' -e 's/-//g')
 
     # Replace first space in cmd with $OSU_ARGS
-    cmd=$(echo "$cmd $OSU_ARGS")
+    cmd=$(echo "$cmd" | sed -e "s/ /$OSU_ARGS/")
 
     # Split cmd into program + args
     # shellcheck disable=SC2086

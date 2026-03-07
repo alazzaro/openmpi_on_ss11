@@ -1,0 +1,3143 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                      9) cray-python/3.11.7
+  2) libfabric/1.22.0                    10) gcc-native/14.2
+  3) craype-network-ofi                  11) craype/2.7.34
+  4) perftools-base/25.03.0              12) cray-dsmml/0.3.1
+  5) xpmem/2.11.5-1.3_g73ade43320bc      13) cray-mpich/8.1.32
+  6) ModuleLabel/label              (S)  14) cray-libsci/25.03.0
+  7) lumi-tools/24.05               (S)  15) PrgEnv-gnu/8.6.0
+  8) init-lumi/0.2                  (S)  16) rocm/6.3.4
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+ROCM_PATH = /opt/rocm-6.3.4
+XPMEM Lib path  = /usr/lib64
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+~/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+============
+#!/bin/bash
+
+for NNODES in 1 2 4 8 16 32 64; do
+#for NNODES in 4; do
+#for NNODES in 64; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}.out
+#SBATCH --time=0:30:00
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable OpenMPI and RCCL
+USE_CPE=0 source \$ROOT_DIR/sourceme_rccl.sh
+
+# LUMI Binding
+export BINDING="--bind-to core --map-by L3cache:pe=7 --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind"
+
+export PRTE_MCA_ras_base_launch_orted_on_hn=1
+export PMIX_MCA_gds=^shmem2
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+for FI_CXI_RX_MATCH_MODE in software hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    # Consider validation
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
+
+#    if false; then
+    if [ "\${FI_CXI_RX_MATCH_MODE}" == "software" ]; then
+    (
+        echo "with LinkX"
+
+        export FI_SHM_USE_XPMEM=1
+        export FI_PROVIDER=lnx
+        export FI_LNX_PROV_LINKS=shm+cxi # changed in the binding script
+        export OMPI_MCA_opal_common_ofi_provider_include=lnx
+        export OMPI_MCA_mtl_ofi_av=table
+        export OMPI_MCA_pml=cm
+        export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_smsc=xpmem
+	export OMPI_MCA_mtl_ofi_disable_hmem=1 # avoid error on multiple nodes
+
+	CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+#  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
+        done
+    )
+    fi # only software
+#    fi
+
+    (
+        echo "no OpenMPI internal transport, only libfabric. Use CXI directly"
+
+        export FI_SHM_USE_XPMEM=1
+	export FI_PROVIDER=cxi
+    	unset FI_LNX_PROV_LINKS
+    	export OMPI_MCA_opal_common_ofi_provider_include=cxi
+    	export OMPI_MCA_mtl_ofi_av=table
+    	export OMPI_MCA_pml=cm
+    	export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_smsc=xpmem
+
+        CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+#       CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "mpi/collective" "_cxi\${SUFFIX}"
+        done
+    )
+
+    if [ "\${FI_CXI_RX_MATCH_MODE}" == "hybrid" ]; then
+    (
+
+        # No validation available for RCCL
+    	OSU_ARGS=" "
+
+	CMDS=("osu_xccl_alltoall -d rocm D D" "osu_xccl_allreduce -d rocm D D" "osu_xccl_allgather -d rocm D D")
+    	for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "xccl/collective" "\${SUFFIX}"
+     	done
+    )
+
+#    if false; then
+    (
+        echo "RCCL-tests"
+
+	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- mpirun \$cmd
+	    mpirun \${BINDING} --report-bindings \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	done
+    )
+#    fi
+
+    fi # only hybrid
+
+done
+
+if [ "${NNODES}" == "1" ]; then
+(
+    echo "with OpenMPI internal transport"
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${SLURM_JOB_ID}"
+
+    unset FI_SHM_USE_XPMEM
+    unset FI_PROVIDER
+    unset FI_CXI_RX_MATCH_MODE
+    unset FI_LNX_PROV_LINKS
+    unset OMPI_MCA_opal_common_ofi_provider_include
+    unset OMPI_MCA_mtl_ofi_av
+    export OMPI_MCA_pml=ob1
+    # CUDA
+    #  export OMPI_MCA_btl=vader,smcuda,self
+    # ROCM
+    export OMPI_MCA_btl=vader,sm,self
+    unset OMPI_MCA_mtl
+    export OMPI_MCA_smsc=xpmem # Only OpenMPI
+
+    CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+    for cmd in "\${CMDS[@]}"; do
+        run_osu_cmd "\$cmd" "mpi/collective" "_ob1\${SUFFIX}"
+    done
+)
+fi # single node
+
+EOF
+
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+SLURM_MEM_PER_CPU=0
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64:/opt/cray/libfabric/1.22.0/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+LIBFABRIC_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric
+_ModuleTable017_=YXBwbC9sdW1pL21vZHVsZXMvU29mdHdhcmVTdGFjazovYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnM6L2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrOi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0K
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=9414
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/8.1.32/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=TGFiZWwvbGFiZWwubHVhIiwKZnVsbE5hbWUgPSAiTW9kdWxlTGFiZWwvbGFiZWwiLApsb2FkT3JkZXIgPSA2LApwcm9wVCA9IHsKbG1vZCA9IHsKc3RpY2t5ID0gMSwKfSwKfSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCndWID0gInNsYWJlbC4qemZpbmFsIiwKfSwKWyJQcmdFbnYtZ251Il0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvUHJnRW52LWdudS84LjYuMC5sdWEiLApmdWxsTmFtZSA9ICJQcmdFbnYtZ251LzguNi4wIiwKbG9hZE9yZGVyID0gMTUsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAi
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.23 16071 193.167.209.164 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE:CRAYPE_X86_ROME:PERFTOOLS:CRAYPAT:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=8.1.32
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib
+PMIX_MCA_gds=^shmem2
+c=gnu
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLXg4Ni1yb21lLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS14ODYtcm9tZSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLXg4Ni1yb21lIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9s
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005793
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/68
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=ZWZpbGVzL25ldC9vZmkvMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdC9jcmF5cGUtbmV0d29yay1vZmkubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtbmV0d29yay1vZmkiLAp3ViA9ICJNLip6ZmluYWwiLAp9LApbImNyYXlwZS14ODYtcm9tZSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMFwiKSIsCn0sCmZu
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+PRTE_MCA_ras_base_launch_orted_on_hn=1
+ROCM_PATH=/opt/rocm-6.3.4
+OMPI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/openmpi5
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+CFLAGS=-g -O -Wno-error=maybe-uninitialized -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+SLURM_JOB_GID=10013986
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1;/opt/cray/libfabric/1.22.0/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1
+BINDING=--bind-to core --map-by L3cache:pe=7 --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005793
+PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:PE_MPICH:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ci9nbnUvMTIuMCIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0iCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4IiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9sbW9kL21vZHVsZWZpbGVzL0NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1772836017
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/8.1.32/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+_ModuleTable004_=YnNjaS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gImNyYXktbGlic2NpLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAxNCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5LWxpYnNjaSIsCndWID0gIl4wMDAwMDAyNS4wMDAwMDAwMDMuKnpmaW5hbCIsCn0sClsiY3JheS1tcGljaCJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21uZXQvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1w
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8(x8)
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PREFIX_CXI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi
+PE_MPICH_PKGCONFIG_LIBS=mpich
+USE_SRUN=0
+OSTYPE=linux
+CC=gcc-14
+XDG_SESSION_ID=642151
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=8.1.32
+SLURM_NNODES=8
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+CXXFLAGS=-g -O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+_ModuleTable012_=MDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJhc2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSA0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFs
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+CRAY_CPU_TARGET=x86-rome
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1772834217
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+SLURM_JOB_NODELIST=nid[005793,005896,005951,006014,006216,006226,006255,006758]
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid[005793,005896,005951,006014,006216,006226,006255,006758]
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+LIBCXI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric/libcxi
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=single_node_vni
+HOST=uan02
+SSH_CLIENT=178.197.255.23 16071 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=64
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-rome/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56(x8)
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid005793
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:1;PE_MPICH:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+FCFLAGS=-O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=bmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9hcHBsL2x1bWkvbW9kdWxlcy9lYXN5YnVpbGQvc3lzdGVtXCIpIiwKfSwKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrL2luaXQtbHVtaS8wLjIubHVhIiwKZnVsbE5hbWUgPSAiaW5pdC1sdW1pLzAuMiIsCmxvYWRPcmRlciA9IDgsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImluaXQtbHVtaSIsCndWID0gIjAwMDAwMDAwMC4wMDAwMDAwMDIuKnpmaW5hbCIsCn0sCmxpYmZhYnJpYyA9IHsKZm4gPSAiL29wdC9jcmF5L21vZHVsZWZpbGVzL2xpYmZhYnJpYy8xLjIyLjAiLApmdWxsTmFt
+PE_PKGCONFIG_LIBS=rocm-6.3.4:libsci_mpi:libsci:mpich:dsmml
+SLURM_JOBID=16529880
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXJvbWUiLApjcmF5cGVfbmV0d29yayA9ICJjcmF5cGUtbmV0d29yay1vZmkiLApnY2NfY29tcGlsZXIgPSAiZ2NjLW5hdGl2ZSIsCmxpYnNjaSA9ICJjcmF5LWxpYnNjaSIsCm1waSA9ICJjcmF5LW1waWNoIiwKfSwKbVQgPSB7Ck1vZHVsZUxhYmVsID0gewpmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMvTW9kdWxl
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-x86-rome:libfabric/1.22.0:craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-mpich/8.1.32:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+FC=gfortran-14
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=cHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSAxMSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUiLAp3ViA9ICJeMDAwMDAwMDIuMDAwMDAwMDA3LjAwMDAwMDAzNC4qemZpbmFsIiwKfSwKWyJjcmF5cGUtbmV0d29yay1vZmkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/mpich/8.1.32/ofi/man:1;/opt/cray/pe/mpich/8.1.32/man/mpich:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=UHJnRW52LWdudSIsCndWID0gIl4wMDAwMDAwOC4wMDAwMDAwMDYuKnpmaW5hbCIsCn0sClsiY3JheS1kc21tbCJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktZHNtbWwvMC4zLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1kc21tbC8wLjMuMSIsCmxvYWRPcmRlciA9IDEyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktZHNtbWwiLAp3ViA9ICJeMDAwMDAwMDAuMDAwMDAwMDAzLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LWxpYnNjaSJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxlci9nbnUvMTIuMC9jcmF5LWxp
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/68
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/8.1.32
+_ModuleTable013_=IiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+CXX=g++-14
+SLURM_JOB_NUM_NODES=8
+_ModuleTable016_=L2NyYXlwZS10YXJnZXRzL2RlZmF1bHQiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9Tb2Z0d2FyZVN0YWNrIiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycyIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrIiwgIi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0sCnN5c3RlbUJhc2VNUEFUSCA9ICIvb3B0L2NyYXkvcGUvbW9kdWxlZmlsZXMvTGludXg6L29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdDov
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=bW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSAxMCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJnY2MtbmF0aXZlIiwKd1YgPSAiXjAwMDAwMDE0LjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKWyJpbml0LWx1bWkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBl
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=8.1.32
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=17
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+SLURM_JOB_PARTITION=standard-g
+LMOD_FAMILY_COMPILER=gcc-native
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=64
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan02
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/mpich/8.1.32/ofi/man:/opt/cray/pe/mpich/8.1.32/man/mpich:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CPPFLAGS=-I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=8.1.32
+XDG_RUNTIME_DIR=/run/user/10013986
+PREFIX_OMPI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi
+LDFLAGS=-g -O -L/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib -L/opt/rocm-6.3.4/lib
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/8.1.32/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16529880
+_ModuleTable014_=IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndWID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9taXhfY29tcGlsZXJzIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxl
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE:1;CRAYPE_X86_ROME:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-rome.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/8.1.32.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config:/opt/cray/libfabric/1.22.0/lib64/pkgconfig
+LMOD_SETTARG_FULL_SUPPORT=no
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=ZSA9ICJsaWJmYWJyaWMvMS4yMi4wIiwKbG9hZE9yZGVyID0gMiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNywKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAw
+PREFIX_LIBFABRIC=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;libsci_mpi:1;libsci:1;mpich:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=aWNoLzguMS4zMi5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LW1waWNoLzguMS4zMiIsCmxvYWRPcmRlciA9IDEzLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2giLAp3ViA9ICJeMDAwMDAwMDguMDAwMDAwMDAxLjAwMDAwMDAzMi4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXkt
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n64_software_16529880
+========
+with LinkX
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid005793:09586] Rank 0 bound to package[0][core:0-6]
+[nid005793:09586] Rank 1 bound to package[0][core:7-13]
+[nid005793:09586] Rank 2 bound to package[0][core:14-20]
+[nid005793:09586] Rank 3 bound to package[0][core:21-27]
+[nid005793:09586] Rank 4 bound to package[0][core:28-34]
+[nid005793:09586] Rank 5 bound to package[0][core:35-41]
+[nid005793:09586] Rank 7 bound to package[0][core:49-55]
+[nid005793:09586] Rank 6 bound to package[0][core:42-48]
+[nid006758:38237] Rank 56 bound to package[0][core:0-6]
+[nid006758:38237] Rank 57 bound to package[0][core:7-13]
+[nid006758:38237] Rank 58 bound to package[0][core:14-20]
+[nid006758:38237] Rank 59 bound to package[0][core:21-27]
+[nid005896:71032] Rank 9 bound to package[0][core:7-13]
+[nid005896:71032] Rank 8 bound to package[0][core:0-6]
+[nid005896:71032] Rank 10 bound to package[0][core:14-20]
+[nid006758:38237] Rank 60 bound to package[0][core:28-34]
+[nid006758:38237] Rank 61 bound to package[0][core:35-41]
+[nid006758:38237] Rank 62 bound to package[0][core:42-48]
+[nid006758:38237] Rank 63 bound to package[0][core:49-55]
+[nid006255:127865] Rank 48 bound to package[0][core:0-6]
+[nid006255:127865] Rank 49 bound to package[0][core:7-13]
+[nid006255:127865] Rank 50 bound to package[0][core:14-20]
+[nid006255:127865] Rank 51 bound to package[0][core:21-27]
+[nid006255:127865] Rank 52 bound to package[0][core:28-34]
+[nid006226:108502] Rank 40 bound to package[0][core:0-6]
+[nid006226:108502] Rank 45 bound to package[0][core:35-41]
+[nid006255:127865] Rank 53 bound to package[0][core:35-41]
+[nid006255:127865] Rank 55 bound to package[0][core:49-55]
+[nid005896:71032] Rank 11 bound to package[0][core:21-27]
+[nid005896:71032] Rank 13 bound to package[0][core:35-41]
+[nid005896:71032] Rank 14 bound to package[0][core:42-48]
+[nid006255:127865] Rank 54 bound to package[0][core:42-48]
+[nid005896:71032] Rank 15 bound to package[0][core:49-55]
+[nid005896:71032] Rank 12 bound to package[0][core:28-34]
+[nid006226:108502] Rank 41 bound to package[0][core:7-13]
+[nid006226:108502] Rank 43 bound to package[0][core:21-27]
+[nid006226:108502] Rank 44 bound to package[0][core:28-34]
+[nid006226:108502] Rank 47 bound to package[0][core:49-55]
+[nid006226:108502] Rank 42 bound to package[0][core:14-20]
+[nid006226:108502] Rank 46 bound to package[0][core:42-48]
+[nid006014:19724] Rank 24 bound to package[0][core:0-6]
+[nid006014:19724] Rank 25 bound to package[0][core:7-13]
+[nid006014:19724] Rank 26 bound to package[0][core:14-20]
+[nid006014:19724] Rank 27 bound to package[0][core:21-27]
+[nid006014:19724] Rank 29 bound to package[0][core:35-41]
+[nid006014:19724] Rank 28 bound to package[0][core:28-34]
+[nid006014:19724] Rank 31 bound to package[0][core:49-55]
+[nid006014:19724] Rank 30 bound to package[0][core:42-48]
+[nid006216:85399] Rank 34 bound to package[0][core:14-20]
+[nid006216:85399] Rank 35 bound to package[0][core:21-27]
+[nid006216:85399] Rank 32 bound to package[0][core:0-6]
+[nid006216:85399] Rank 33 bound to package[0][core:7-13]
+[nid006216:85399] Rank 37 bound to package[0][core:35-41]
+[nid006216:85399] Rank 36 bound to package[0][core:28-34]
+[nid006216:85399] Rank 39 bound to package[0][core:49-55]
+[nid006216:85399] Rank 38 bound to package[0][core:42-48]
+[nid005951:25465] Rank 16 bound to package[0][core:0-6]
+[nid005951:25465] Rank 17 bound to package[0][core:7-13]
+[nid005951:25465] Rank 18 bound to package[0][core:14-20]
+[nid005951:25465] Rank 19 bound to package[0][core:21-27]
+[nid005951:25465] Rank 20 bound to package[0][core:28-34]
+[nid005951:25465] Rank 22 bound to package[0][core:42-48]
+[nid005951:25465] Rank 21 bound to package[0][core:35-41]
+[nid005951:25465] Rank 23 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    2459.75
+2                    2494.10
+4                    2497.85
+8                    2513.18
+16                   2617.62
+32                   2666.74
+64                   2682.79
+128                  2698.88
+256                  2705.06
+512                  2748.54
+1024                 1749.73
+2048                 1795.94
+4096                 1839.93
+8192                 1933.58
+16384                2102.41
+32768                2439.26
+65536                3078.95
+131072              14228.61
+262144              11317.83
+524288              14415.04
+1048576             26420.81
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid005896:72045] Rank 8 bound to package[0][core:0-6]
+[nid005896:72045] Rank 10 bound to package[0][core:14-20]
+[nid005896:72045] Rank 9 bound to package[0][core:7-13]
+[nid005896:72045] Rank 11 bound to package[0][core:21-27]
+[nid005896:72045] Rank 12 bound to package[0][core:28-34]
+[nid005896:72045] Rank 13 bound to package[0][core:35-41]
+[nid005896:72045] Rank 14 bound to package[0][core:42-48]
+[nid005896:72045] Rank 15 bound to package[0][core:49-55]
+[nid006226:109570] Rank 40 bound to package[0][core:0-6]
+[nid006226:109570] Rank 41 bound to package[0][core:7-13]
+[nid006226:109570] Rank 42 bound to package[0][core:14-20]
+[nid006226:109570] Rank 43 bound to package[0][core:21-27]
+[nid006216:86437] Rank 32 bound to package[0][core:0-6]
+[nid006216:86437] Rank 33 bound to package[0][core:7-13]
+[nid005793:09796] Rank 0 bound to package[0][core:0-6]
+[nid005793:09796] Rank 1 bound to package[0][core:7-13]
+[nid006216:86437] Rank 34 bound to package[0][core:14-20]
+[nid006216:86437] Rank 35 bound to package[0][core:21-27]
+[nid005793:09796] Rank 2 bound to package[0][core:14-20]
+[nid006226:109570] Rank 44 bound to package[0][core:28-34]
+[nid006226:109570] Rank 46 bound to package[0][core:42-48]
+[nid006226:109570] Rank 47 bound to package[0][core:49-55]
+[nid006216:86437] Rank 36 bound to package[0][core:28-34]
+[nid006226:109570] Rank 45 bound to package[0][core:35-41]
+[nid005793:09796] Rank 3 bound to package[0][core:21-27]
+[nid006758:53331] Rank 56 bound to package[0][core:0-6]
+[nid006758:53331] Rank 58 bound to package[0][core:14-20]
+[nid006216:86437] Rank 38 bound to package[0][core:42-48]
+[nid005793:09796] Rank 4 bound to package[0][core:28-34]
+[nid005793:09796] Rank 5 bound to package[0][core:35-41]
+[nid005793:09796] Rank 6 bound to package[0][core:42-48]
+[nid006758:53331] Rank 57 bound to package[0][core:7-13]
+[nid006758:53331] Rank 59 bound to package[0][core:21-27]
+[nid006758:53331] Rank 60 bound to package[0][core:28-34]
+[nid005793:09796] Rank 7 bound to package[0][core:49-55]
+[nid006216:86437] Rank 37 bound to package[0][core:35-41]
+[nid006216:86437] Rank 39 bound to package[0][core:49-55]
+[nid006758:53331] Rank 61 bound to package[0][core:35-41]
+[nid006758:53331] Rank 62 bound to package[0][core:42-48]
+[nid006758:53331] Rank 63 bound to package[0][core:49-55]
+[nid006255:128039] Rank 48 bound to package[0][core:0-6]
+[nid006255:128039] Rank 50 bound to package[0][core:14-20]
+[nid006014:19883] Rank 24 bound to package[0][core:0-6]
+[nid006255:128039] Rank 49 bound to package[0][core:7-13]
+[nid006014:19883] Rank 25 bound to package[0][core:7-13]
+[nid006014:19883] Rank 26 bound to package[0][core:14-20]
+[nid005951:25639] Rank 16 bound to package[0][core:0-6]
+[nid005951:25639] Rank 17 bound to package[0][core:7-13]
+[nid005951:25639] Rank 18 bound to package[0][core:14-20]
+[nid006255:128039] Rank 51 bound to package[0][core:21-27]
+[nid006255:128039] Rank 52 bound to package[0][core:28-34]
+[nid006255:128039] Rank 53 bound to package[0][core:35-41]
+[nid006014:19883] Rank 27 bound to package[0][core:21-27]
+[nid005951:25639] Rank 19 bound to package[0][core:21-27]
+[nid006255:128039] Rank 54 bound to package[0][core:42-48]
+[nid006014:19883] Rank 28 bound to package[0][core:28-34]
+[nid006255:128039] Rank 55 bound to package[0][core:49-55]
+[nid005951:25639] Rank 20 bound to package[0][core:28-34]
+[nid006014:19883] Rank 31 bound to package[0][core:49-55]
+[nid005951:25639] Rank 21 bound to package[0][core:35-41]
+[nid006014:19883] Rank 29 bound to package[0][core:35-41]
+[nid005951:25639] Rank 22 bound to package[0][core:42-48]
+[nid006014:19883] Rank 30 bound to package[0][core:42-48]
+[nid005951:25639] Rank 23 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                     221.79
+8                     225.65
+16                    225.11
+32                    286.51
+64                    282.82
+128                   286.04
+256                   288.69
+512                   290.68
+1024                  294.03
+2048                  309.86
+4096                  313.56
+8192                  323.32
+16384                 341.34
+32768                 423.73
+65536                 547.22
+131072                975.08
+262144               1954.92
+524288               3915.85
+1048576              7872.64
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid006014:20041] Rank 24 bound to package[0][core:0-6]
+[nid006014:20041] Rank 25 bound to package[0][core:7-13]
+[nid006014:20041] Rank 26 bound to package[0][core:14-20]
+[nid006014:20041] Rank 27 bound to package[0][core:21-27]
+[nid006014:20041] Rank 28 bound to package[0][core:28-34]
+[nid006014:20041] Rank 29 bound to package[0][core:35-41]
+[nid005896:72382] Rank 8 bound to package[0][core:0-6]
+[nid006014:20041] Rank 30 bound to package[0][core:42-48]
+[nid005896:72382] Rank 10 bound to package[0][core:14-20]
+[nid006014:20041] Rank 31 bound to package[0][core:49-55]
+[nid006216:86727] Rank 32 bound to package[0][core:0-6]
+[nid006216:86727] Rank 34 bound to package[0][core:14-20]
+[nid005896:72382] Rank 9 bound to package[0][core:7-13]
+[nid005896:72382] Rank 12 bound to package[0][core:28-34]
+[nid005896:72382] Rank 11 bound to package[0][core:21-27]
+[nid006216:86727] Rank 33 bound to package[0][core:7-13]
+[nid006216:86727] Rank 35 bound to package[0][core:21-27]
+[nid006216:86727] Rank 36 bound to package[0][core:28-34]
+[nid005896:72382] Rank 13 bound to package[0][core:35-41]
+[nid005896:72382] Rank 14 bound to package[0][core:42-48]
+[nid005896:72382] Rank 15 bound to package[0][core:49-55]
+[nid006216:86727] Rank 39 bound to package[0][core:49-55]
+[nid006216:86727] Rank 38 bound to package[0][core:42-48]
+[nid006216:86727] Rank 37 bound to package[0][core:35-41]
+[nid006758:53651] Rank 56 bound to package[0][core:0-6]
+[nid006758:53651] Rank 57 bound to package[0][core:7-13]
+[nid006758:53651] Rank 58 bound to package[0][core:14-20]
+[nid006758:53651] Rank 59 bound to package[0][core:21-27]
+[nid005793:10000] Rank 1 bound to package[0][core:7-13]
+[nid005793:10000] Rank 2 bound to package[0][core:14-20]
+[nid005793:10000] Rank 3 bound to package[0][core:21-27]
+[nid006758:53651] Rank 60 bound to package[0][core:28-34]
+[nid005793:10000] Rank 0 bound to package[0][core:0-6]
+[nid005951:25796] Rank 16 bound to package[0][core:0-6]
+[nid006758:53651] Rank 61 bound to package[0][core:35-41]
+[nid005951:25796] Rank 17 bound to package[0][core:7-13]
+[nid005793:10000] Rank 5 bound to package[0][core:35-41]
+[nid006758:53651] Rank 62 bound to package[0][core:42-48]
+[nid006226:109918] Rank 40 bound to package[0][core:0-6]
+[nid006226:109918] Rank 41 bound to package[0][core:7-13]
+[nid006226:109918] Rank 42 bound to package[0][core:14-20]
+[nid006758:53651] Rank 63 bound to package[0][core:49-55]
+[nid005793:10000] Rank 4 bound to package[0][core:28-34]
+[nid005951:25796] Rank 18 bound to package[0][core:14-20]
+[nid005793:10000] Rank 6 bound to package[0][core:42-48]
+[nid006226:109918] Rank 43 bound to package[0][core:21-27]
+[nid005793:10000] Rank 7 bound to package[0][core:49-55]
+[nid005951:25796] Rank 19 bound to package[0][core:21-27]
+[nid006226:109918] Rank 44 bound to package[0][core:28-34]
+[nid005951:25796] Rank 21 bound to package[0][core:35-41]
+[nid006255:128197] Rank 48 bound to package[0][core:0-6]
+[nid006255:128197] Rank 49 bound to package[0][core:7-13]
+[nid006226:109918] Rank 46 bound to package[0][core:42-48]
+[nid006255:128197] Rank 50 bound to package[0][core:14-20]
+[nid006226:109918] Rank 45 bound to package[0][core:35-41]
+[nid006226:109918] Rank 47 bound to package[0][core:49-55]
+[nid005951:25796] Rank 20 bound to package[0][core:28-34]
+[nid005951:25796] Rank 23 bound to package[0][core:49-55]
+[nid005951:25796] Rank 22 bound to package[0][core:42-48]
+[nid006255:128197] Rank 51 bound to package[0][core:21-27]
+[nid006255:128197] Rank 52 bound to package[0][core:28-34]
+[nid006255:128197] Rank 53 bound to package[0][core:35-41]
+[nid006255:128197] Rank 54 bound to package[0][core:42-48]
+[nid006255:128197] Rank 55 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     190.92
+2                     192.23
+4                     193.42
+8                     193.13
+16                    195.83
+32                    198.26
+64                    204.49
+128                   218.02
+256                   219.37
+512                   269.37
+1024                  313.60
+2048                  403.75
+4096                  571.09
+8192                  879.28
+16384                2404.96
+32768               16320.45
+65536               22669.51
+131072              31005.35
+262144              53327.98
+524288             142932.07
+1048576            301812.93
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid006216:88531] Rank 33 bound to package[0][core:7-13]
+[nid006216:88531] Rank 34 bound to package[0][core:14-20]
+[nid006216:88531] Rank 35 bound to package[0][core:21-27]
+[nid006758:55451] Rank 56 bound to package[0][core:0-6]
+[nid006758:55451] Rank 57 bound to package[0][core:7-13]
+[nid006216:88531] Rank 32 bound to package[0][core:0-6]
+[nid006758:55451] Rank 58 bound to package[0][core:14-20]
+[nid006216:88531] Rank 36 bound to package[0][core:28-34]
+[nid006216:88531] Rank 37 bound to package[0][core:35-41]
+[nid006216:88531] Rank 38 bound to package[0][core:42-48]
+[nid006758:55451] Rank 61 bound to package[0][core:35-41]
+[nid006216:88531] Rank 39 bound to package[0][core:49-55]
+[nid006758:55451] Rank 60 bound to package[0][core:28-34]
+[nid006758:55451] Rank 59 bound to package[0][core:21-27]
+[nid006758:55451] Rank 63 bound to package[0][core:49-55]
+[nid006758:55451] Rank 62 bound to package[0][core:42-48]
+[nid005951:25988] Rank 17 bound to package[0][core:7-13]
+[nid006255:128372] Rank 48 bound to package[0][core:0-6]
+[nid005951:25988] Rank 18 bound to package[0][core:14-20]
+[nid006226:111739] Rank 40 bound to package[0][core:0-6]
+[nid006226:111739] Rank 42 bound to package[0][core:14-20]
+[nid006226:111739] Rank 41 bound to package[0][core:7-13]
+[nid006255:128372] Rank 49 bound to package[0][core:7-13]
+[nid005951:25988] Rank 19 bound to package[0][core:21-27]
+[nid006226:111739] Rank 43 bound to package[0][core:21-27]
+[nid006255:128372] Rank 50 bound to package[0][core:14-20]
+[nid006014:20212] Rank 24 bound to package[0][core:0-6]
+[nid006014:20212] Rank 25 bound to package[0][core:7-13]
+[nid006014:20212] Rank 26 bound to package[0][core:14-20]
+[nid006014:20212] Rank 27 bound to package[0][core:21-27]
+[nid006014:20212] Rank 28 bound to package[0][core:28-34]
+[nid006014:20212] Rank 29 bound to package[0][core:35-41]
+[nid006014:20212] Rank 30 bound to package[0][core:42-48]
+[nid006014:20212] Rank 31 bound to package[0][core:49-55]
+[nid005793:10223] Rank 1 bound to package[0][core:7-13]
+[nid005896:74345] Rank 8 bound to package[0][core:0-6]
+[nid005896:74345] Rank 9 bound to package[0][core:7-13]
+[nid005896:74345] Rank 10 bound to package[0][core:14-20]
+[nid005951:25988] Rank 16 bound to package[0][core:0-6]
+[nid006255:128372] Rank 51 bound to package[0][core:21-27]
+[nid006226:111739] Rank 44 bound to package[0][core:28-34]
+[nid005793:10223] Rank 0 bound to package[0][core:0-6]
+[nid005896:74345] Rank 11 bound to package[0][core:21-27]
+[nid005951:25988] Rank 20 bound to package[0][core:28-34]
+[nid006226:111739] Rank 46 bound to package[0][core:42-48]
+[nid005793:10223] Rank 2 bound to package[0][core:14-20]
+[nid005793:10223] Rank 3 bound to package[0][core:21-27]
+[nid005793:10223] Rank 5 bound to package[0][core:35-41]
+[nid005793:10223] Rank 4 bound to package[0][core:28-34]
+[nid005793:10223] Rank 7 bound to package[0][core:49-55]
+[nid005793:10223] Rank 6 bound to package[0][core:42-48]
+[nid005896:74345] Rank 12 bound to package[0][core:28-34]
+[nid006255:128372] Rank 52 bound to package[0][core:28-34]
+[nid006226:111739] Rank 45 bound to package[0][core:35-41]
+[nid006226:111739] Rank 47 bound to package[0][core:49-55]
+[nid005896:74345] Rank 13 bound to package[0][core:35-41]
+[nid006255:128372] Rank 53 bound to package[0][core:35-41]
+[nid006255:128372] Rank 55 bound to package[0][core:49-55]
+[nid006255:128372] Rank 54 bound to package[0][core:42-48]
+[nid005896:74345] Rank 14 bound to package[0][core:42-48]
+[nid005951:25988] Rank 21 bound to package[0][core:35-41]
+[nid005951:25988] Rank 22 bound to package[0][core:42-48]
+[nid005896:74345] Rank 15 bound to package[0][core:49-55]
+[nid005951:25988] Rank 23 bound to package[0][core:49-55]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      25.55
+8                      25.29
+16                     25.27
+32                     45.59
+64                     45.91
+128                    48.29
+256                    51.93
+512                    54.45
+1024                   55.91
+2048                   68.09
+4096                   64.51
+8192                   67.40
+16384                  77.50
+32768                 103.99
+65536                 149.49
+131072                249.00
+262144                446.87
+524288                836.74
+1048576              1638.29
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid006216:88748] Rank 33 bound to package[0][core:7-13]
+[nid006216:88748] Rank 34 bound to package[0][core:14-20]
+[nid006014:20356] Rank 24 bound to package[0][core:0-6]
+[nid005951:26137] Rank 16 bound to package[0][core:0-6]
+[nid006014:20356] Rank 25 bound to package[0][core:7-13]
+[nid006216:88748] Rank 32 bound to package[0][core:0-6]
+[nid005951:26137] Rank 18 bound to package[0][core:14-20]
+[nid006014:20356] Rank 27 bound to package[0][core:21-27]
+[nid006216:88748] Rank 36 bound to package[0][core:28-34]
+[nid005951:26137] Rank 17 bound to package[0][core:7-13]
+[nid006014:20356] Rank 26 bound to package[0][core:14-20]
+[nid005951:26137] Rank 19 bound to package[0][core:21-27]
+[nid005896:74517] Rank 9 bound to package[0][core:7-13]
+[nid005896:74517] Rank 10 bound to package[0][core:14-20]
+[nid006216:88748] Rank 35 bound to package[0][core:21-27]
+[nid005951:26137] Rank 20 bound to package[0][core:28-34]
+[nid005896:74517] Rank 11 bound to package[0][core:21-27]
+[nid006014:20356] Rank 31 bound to package[0][core:49-55]
+[nid006216:88748] Rank 39 bound to package[0][core:49-55]
+[nid006216:88748] Rank 37 bound to package[0][core:35-41]
+[nid005951:26137] Rank 21 bound to package[0][core:35-41]
+[nid005951:26137] Rank 23 bound to package[0][core:49-55]
+[nid005951:26137] Rank 22 bound to package[0][core:42-48]
+[nid005896:74517] Rank 12 bound to package[0][core:28-34]
+[nid006216:88748] Rank 38 bound to package[0][core:42-48]
+[nid006014:20356] Rank 29 bound to package[0][core:35-41]
+[nid006014:20356] Rank 28 bound to package[0][core:28-34]
+[nid006014:20356] Rank 30 bound to package[0][core:42-48]
+[nid005896:74517] Rank 13 bound to package[0][core:35-41]
+[nid005896:74517] Rank 14 bound to package[0][core:42-48]
+[nid005896:74517] Rank 8 bound to package[0][core:0-6]
+[nid005896:74517] Rank 15 bound to package[0][core:49-55]
+[nid006226:111897] Rank 41 bound to package[0][core:7-13]
+[nid006226:111897] Rank 42 bound to package[0][core:14-20]
+[nid006226:111897] Rank 43 bound to package[0][core:21-27]
+[nid006226:111897] Rank 40 bound to package[0][core:0-6]
+[nid006255:128515] Rank 48 bound to package[0][core:0-6]
+[nid005793:10409] Rank 0 bound to package[0][core:0-6]
+[nid006226:111897] Rank 44 bound to package[0][core:28-34]
+[nid006226:111897] Rank 45 bound to package[0][core:35-41]
+[nid006226:111897] Rank 46 bound to package[0][core:42-48]
+[nid006226:111897] Rank 47 bound to package[0][core:49-55]
+[nid006255:128515] Rank 49 bound to package[0][core:7-13]
+[nid005793:10409] Rank 1 bound to package[0][core:7-13]
+[nid006255:128515] Rank 50 bound to package[0][core:14-20]
+[nid005793:10409] Rank 2 bound to package[0][core:14-20]
+[nid005793:10409] Rank 3 bound to package[0][core:21-27]
+[nid006255:128515] Rank 51 bound to package[0][core:21-27]
+[nid005793:10409] Rank 4 bound to package[0][core:28-34]
+[nid006255:128515] Rank 52 bound to package[0][core:28-34]
+[nid005793:10409] Rank 5 bound to package[0][core:35-41]
+[nid006255:128515] Rank 53 bound to package[0][core:35-41]
+[nid005793:10409] Rank 7 bound to package[0][core:49-55]
+[nid006255:128515] Rank 54 bound to package[0][core:42-48]
+[nid005793:10409] Rank 6 bound to package[0][core:42-48]
+[nid006255:128515] Rank 55 bound to package[0][core:49-55]
+[nid006758:55669] Rank 56 bound to package[0][core:0-6]
+[nid006758:55669] Rank 57 bound to package[0][core:7-13]
+[nid006758:55669] Rank 58 bound to package[0][core:14-20]
+[nid006758:55669] Rank 59 bound to package[0][core:21-27]
+[nid006758:55669] Rank 61 bound to package[0][core:35-41]
+[nid006758:55669] Rank 60 bound to package[0][core:28-34]
+[nid006758:55669] Rank 63 bound to package[0][core:49-55]
+[nid006758:55669] Rank 62 bound to package[0][core:42-48]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      71.07
+2                      70.91
+4                      71.66
+8                      84.15
+16                     84.72
+32                     88.46
+64                     90.54
+128                    89.52
+256                    97.93
+512                   109.05
+1024                   91.29
+2048                  103.13
+4096                  111.53
+8192                  131.34
+16384                 194.98
+32768                 277.08
+65536                 494.76
+131072                949.80
+262144               2938.76
+524288               5106.75
+1048576              9343.92
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid006014:20497] Rank 24 bound to package[0][core:0-6]
+[nid006014:20497] Rank 25 bound to package[0][core:7-13]
+[nid006014:20497] Rank 26 bound to package[0][core:14-20]
+[nid006014:20497] Rank 27 bound to package[0][core:21-27]
+[nid006014:20497] Rank 28 bound to package[0][core:28-34]
+[nid006014:20497] Rank 29 bound to package[0][core:35-41]
+[nid006014:20497] Rank 30 bound to package[0][core:42-48]
+[nid006014:20497] Rank 31 bound to package[0][core:49-55]
+[nid006255:128660] Rank 48 bound to package[0][core:0-6]
+[nid006255:128660] Rank 49 bound to package[0][core:7-13]
+[nid005951:26285] Rank 16 bound to package[0][core:0-6]
+[nid005951:26285] Rank 18 bound to package[0][core:14-20]
+[nid005951:26285] Rank 17 bound to package[0][core:7-13]
+[nid005951:26285] Rank 19 bound to package[0][core:21-27]
+[nid005951:26285] Rank 20 bound to package[0][core:28-34]
+[nid005951:26285] Rank 21 bound to package[0][core:35-41]
+[nid005951:26285] Rank 23 bound to package[0][core:49-55]
+[nid005951:26285] Rank 22 bound to package[0][core:42-48]
+[nid006255:128660] Rank 51 bound to package[0][core:21-27]
+[nid006758:55908] Rank 56 bound to package[0][core:0-6]
+[nid006226:112143] Rank 40 bound to package[0][core:0-6]
+[nid006255:128660] Rank 50 bound to package[0][core:14-20]
+[nid006255:128660] Rank 52 bound to package[0][core:28-34]
+[nid006255:128660] Rank 53 bound to package[0][core:35-41]
+[nid006255:128660] Rank 54 bound to package[0][core:42-48]
+[nid006226:112143] Rank 41 bound to package[0][core:7-13]
+[nid006226:112143] Rank 43 bound to package[0][core:21-27]
+[nid006226:112143] Rank 42 bound to package[0][core:14-20]
+[nid006216:88986] Rank 33 bound to package[0][core:7-13]
+[nid006226:112143] Rank 46 bound to package[0][core:42-48]
+[nid006226:112143] Rank 44 bound to package[0][core:28-34]
+[nid006226:112143] Rank 45 bound to package[0][core:35-41]
+[nid006255:128660] Rank 55 bound to package[0][core:49-55]
+[nid006226:112143] Rank 47 bound to package[0][core:49-55]
+[nid006216:88986] Rank 34 bound to package[0][core:14-20]
+[nid006758:55908] Rank 57 bound to package[0][core:7-13]
+[nid006216:88986] Rank 32 bound to package[0][core:0-6]
+[nid006758:55908] Rank 58 bound to package[0][core:14-20]
+[nid006216:88986] Rank 37 bound to package[0][core:35-41]
+[nid005896:74777] Rank 8 bound to package[0][core:0-6]
+[nid005896:74777] Rank 9 bound to package[0][core:7-13]
+[nid005896:74777] Rank 10 bound to package[0][core:14-20]
+[nid006216:88986] Rank 38 bound to package[0][core:42-48]
+[nid006216:88986] Rank 35 bound to package[0][core:21-27]
+[nid006216:88986] Rank 39 bound to package[0][core:49-55]
+[nid006758:55908] Rank 59 bound to package[0][core:21-27]
+[nid006758:55908] Rank 60 bound to package[0][core:28-34]
+[nid006758:55908] Rank 61 bound to package[0][core:35-41]
+[nid006216:88986] Rank 36 bound to package[0][core:28-34]
+[nid006758:55908] Rank 62 bound to package[0][core:42-48]
+[nid006758:55908] Rank 63 bound to package[0][core:49-55]
+[nid005896:74777] Rank 13 bound to package[0][core:35-41]
+[nid005896:74777] Rank 11 bound to package[0][core:21-27]
+[nid005896:74777] Rank 12 bound to package[0][core:28-34]
+[nid005896:74777] Rank 14 bound to package[0][core:42-48]
+[nid005896:74777] Rank 15 bound to package[0][core:49-55]
+[nid005793:10618] Rank 0 bound to package[0][core:0-6]
+[nid005793:10618] Rank 1 bound to package[0][core:7-13]
+[nid005793:10618] Rank 2 bound to package[0][core:14-20]
+[nid005793:10618] Rank 3 bound to package[0][core:21-27]
+[nid005793:10618] Rank 4 bound to package[0][core:28-34]
+[nid005793:10618] Rank 5 bound to package[0][core:35-41]
+[nid005793:10618] Rank 6 bound to package[0][core:42-48]
+[nid005793:10618] Rank 7 bound to package[0][core:49-55]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      21.45
+2                      21.48
+4                      22.20
+8                      24.27
+16                     27.33
+32                     29.33
+64                     31.54
+128                    39.28
+256                    36.70
+512                    39.56
+1024                   58.82
+2048                   83.37
+4096                  119.33
+8192                  175.67
+16384                 294.56
+32768                 540.28
+65536                1031.09
+131072               2021.90
+262144               4186.99
+524288               9091.69
+1048576             21381.93
+no OpenMPI internal transport, only libfabric. Use CXI directly
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid006255:128870] Rank 48 bound to package[0][core:0-6]
+[nid006216:89364] Rank 32 bound to package[0][core:0-6]
+[nid006216:89364] Rank 33 bound to package[0][core:7-13]
+[nid006255:128870] Rank 50 bound to package[0][core:14-20]
+[nid006216:89364] Rank 34 bound to package[0][core:14-20]
+[nid006255:128870] Rank 49 bound to package[0][core:7-13]
+[nid006216:89364] Rank 35 bound to package[0][core:21-27]
+[nid006255:128870] Rank 51 bound to package[0][core:21-27]
+[nid006255:128870] Rank 52 bound to package[0][core:28-34]
+[nid006255:128870] Rank 53 bound to package[0][core:35-41]
+[nid006255:128870] Rank 54 bound to package[0][core:42-48]
+[nid006255:128870] Rank 55 bound to package[0][core:49-55]
+[nid006216:89364] Rank 36 bound to package[0][core:28-34]
+[nid006216:89364] Rank 37 bound to package[0][core:35-41]
+[nid006216:89364] Rank 38 bound to package[0][core:42-48]
+[nid006216:89364] Rank 39 bound to package[0][core:49-55]
+[nid006758:56297] Rank 56 bound to package[0][core:0-6]
+[nid006758:56297] Rank 58 bound to package[0][core:14-20]
+[nid006758:56297] Rank 60 bound to package[0][core:28-34]
+[nid005793:10858] Rank 0 bound to package[0][core:0-6]
+[nid005793:10858] Rank 1 bound to package[0][core:7-13]
+[nid005793:10858] Rank 2 bound to package[0][core:14-20]
+[nid005793:10858] Rank 3 bound to package[0][core:21-27]
+[nid005951:26497] Rank 16 bound to package[0][core:0-6]
+[nid005951:26497] Rank 18 bound to package[0][core:14-20]
+[nid006758:56297] Rank 59 bound to package[0][core:21-27]
+[nid005793:10858] Rank 4 bound to package[0][core:28-34]
+[nid005951:26497] Rank 17 bound to package[0][core:7-13]
+[nid006014:20711] Rank 25 bound to package[0][core:7-13]
+[nid005793:10858] Rank 5 bound to package[0][core:35-41]
+[nid006758:56297] Rank 57 bound to package[0][core:7-13]
+[nid006758:56297] Rank 61 bound to package[0][core:35-41]
+[nid006758:56297] Rank 62 bound to package[0][core:42-48]
+[nid006014:20711] Rank 24 bound to package[0][core:0-6]
+[nid005896:75130] Rank 8 bound to package[0][core:0-6]
+[nid006758:56297] Rank 63 bound to package[0][core:49-55]
+[nid005793:10858] Rank 7 bound to package[0][core:49-55]
+[nid005951:26497] Rank 19 bound to package[0][core:21-27]
+[nid005951:26497] Rank 20 bound to package[0][core:28-34]
+[nid005951:26497] Rank 21 bound to package[0][core:35-41]
+[nid006014:20711] Rank 27 bound to package[0][core:21-27]
+[nid005793:10858] Rank 6 bound to package[0][core:42-48]
+[nid005896:75130] Rank 10 bound to package[0][core:14-20]
+[nid005951:26497] Rank 22 bound to package[0][core:42-48]
+[nid006014:20711] Rank 26 bound to package[0][core:14-20]
+[nid005896:75130] Rank 9 bound to package[0][core:7-13]
+[nid005951:26497] Rank 23 bound to package[0][core:49-55]
+[nid006014:20711] Rank 28 bound to package[0][core:28-34]
+[nid005896:75130] Rank 11 bound to package[0][core:21-27]
+[nid006014:20711] Rank 29 bound to package[0][core:35-41]
+[nid006014:20711] Rank 30 bound to package[0][core:42-48]
+[nid005896:75130] Rank 12 bound to package[0][core:28-34]
+[nid006014:20711] Rank 31 bound to package[0][core:49-55]
+[nid005896:75130] Rank 13 bound to package[0][core:35-41]
+[nid005896:75130] Rank 14 bound to package[0][core:42-48]
+[nid005896:75130] Rank 15 bound to package[0][core:49-55]
+[nid006226:112517] Rank 40 bound to package[0][core:0-6]
+[nid006226:112517] Rank 41 bound to package[0][core:7-13]
+[nid006226:112517] Rank 44 bound to package[0][core:28-34]
+[nid006226:112517] Rank 43 bound to package[0][core:21-27]
+[nid006226:112517] Rank 42 bound to package[0][core:14-20]
+[nid006226:112517] Rank 45 bound to package[0][core:35-41]
+[nid006226:112517] Rank 46 bound to package[0][core:42-48]
+[nid006226:112517] Rank 47 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    2490.42
+2                    2599.00
+4                    2605.71
+8                    2641.05
+16                   2664.87
+32                   2676.09
+64                   2686.12
+128                  2699.44
+256                 13332.35
+512                  4935.86
+1024                   87.31
+2048                   96.27
+4096                  103.90
+8192                 1046.84
+16384                1058.41
+32768                1115.02
+65536                1116.07
+131072               1119.70
+262144               4303.58
+524288               5783.80
+1048576              9019.62
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid006226:113685] Rank 40 bound to package[0][core:0-6]
+[nid006226:113685] Rank 41 bound to package[0][core:7-13]
+[nid005951:26696] Rank 16 bound to package[0][core:0-6]
+[nid006226:113685] Rank 42 bound to package[0][core:14-20]
+[nid005951:26696] Rank 17 bound to package[0][core:7-13]
+[nid006226:113685] Rank 44 bound to package[0][core:28-34]
+[nid005951:26696] Rank 19 bound to package[0][core:21-27]
+[nid005951:26696] Rank 18 bound to package[0][core:14-20]
+[nid006226:113685] Rank 43 bound to package[0][core:21-27]
+[nid005951:26696] Rank 21 bound to package[0][core:35-41]
+[nid006226:113685] Rank 45 bound to package[0][core:35-41]
+[nid006226:113685] Rank 46 bound to package[0][core:42-48]
+[nid005951:26696] Rank 20 bound to package[0][core:28-34]
+[nid006226:113685] Rank 47 bound to package[0][core:49-55]
+[nid005951:26696] Rank 23 bound to package[0][core:49-55]
+[nid005951:26696] Rank 22 bound to package[0][core:42-48]
+[nid006014:20923] Rank 24 bound to package[0][core:0-6]
+[nid006014:20923] Rank 25 bound to package[0][core:7-13]
+[nid006014:20923] Rank 26 bound to package[0][core:14-20]
+[nid006014:20923] Rank 27 bound to package[0][core:21-27]
+[nid006014:20923] Rank 28 bound to package[0][core:28-34]
+[nid006014:20923] Rank 29 bound to package[0][core:35-41]
+[nid006014:20923] Rank 30 bound to package[0][core:42-48]
+[nid006014:20923] Rank 31 bound to package[0][core:49-55]
+[nid006216:90459] Rank 32 bound to package[0][core:0-6]
+[nid006758:57429] Rank 56 bound to package[0][core:0-6]
+[nid006216:90459] Rank 33 bound to package[0][core:7-13]
+[nid006216:90459] Rank 34 bound to package[0][core:14-20]
+[nid006216:90459] Rank 35 bound to package[0][core:21-27]
+[nid006216:90459] Rank 36 bound to package[0][core:28-34]
+[nid006216:90459] Rank 37 bound to package[0][core:35-41]
+[nid006216:90459] Rank 39 bound to package[0][core:49-55]
+[nid006216:90459] Rank 38 bound to package[0][core:42-48]
+[nid006758:57429] Rank 58 bound to package[0][core:14-20]
+[nid006758:57429] Rank 60 bound to package[0][core:28-34]
+[nid006758:57429] Rank 59 bound to package[0][core:21-27]
+[nid005896:76284] Rank 8 bound to package[0][core:0-6]
+[nid005896:76284] Rank 9 bound to package[0][core:7-13]
+[nid005896:76284] Rank 11 bound to package[0][core:21-27]
+[nid006255:129068] Rank 48 bound to package[0][core:0-6]
+[nid006758:57429] Rank 57 bound to package[0][core:7-13]
+[nid006758:57429] Rank 61 bound to package[0][core:35-41]
+[nid005896:76284] Rank 10 bound to package[0][core:14-20]
+[nid006255:129068] Rank 50 bound to package[0][core:14-20]
+[nid006758:57429] Rank 62 bound to package[0][core:42-48]
+[nid006758:57429] Rank 63 bound to package[0][core:49-55]
+[nid006255:129068] Rank 49 bound to package[0][core:7-13]
+[nid006255:129068] Rank 52 bound to package[0][core:28-34]
+[nid006255:129068] Rank 53 bound to package[0][core:35-41]
+[nid006255:129068] Rank 51 bound to package[0][core:21-27]
+[nid006255:129068] Rank 54 bound to package[0][core:42-48]
+[nid005793:11103] Rank 0 bound to package[0][core:0-6]
+[nid006255:129068] Rank 55 bound to package[0][core:49-55]
+[nid005793:11103] Rank 1 bound to package[0][core:7-13]
+[nid005896:76284] Rank 12 bound to package[0][core:28-34]
+[nid005896:76284] Rank 14 bound to package[0][core:42-48]
+[nid005793:11103] Rank 2 bound to package[0][core:14-20]
+[nid005896:76284] Rank 13 bound to package[0][core:35-41]
+[nid005896:76284] Rank 15 bound to package[0][core:49-55]
+[nid005793:11103] Rank 3 bound to package[0][core:21-27]
+[nid005793:11103] Rank 5 bound to package[0][core:35-41]
+[nid005793:11103] Rank 7 bound to package[0][core:49-55]
+[nid005793:11103] Rank 4 bound to package[0][core:28-34]
+[nid005793:11103] Rank 6 bound to package[0][core:42-48]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      48.40
+8                      49.72
+16                     49.73
+32                     71.27
+64                     70.48
+128                    74.67
+256                    76.15
+512                    80.83
+1024                  121.44
+2048                   94.62
+4096                   96.34
+8192                 6066.87
+16384                8315.27
+32768               10170.96
+65536                9736.80
+131072               6957.95
+262144              10439.21
+524288              21728.18
+1048576             37795.15
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid005951:26865] Rank 16 bound to package[0][core:0-6]
+[nid005951:26865] Rank 17 bound to package[0][core:7-13]
+[nid006758:58147] Rank 58 bound to package[0][core:14-20]
+[nid006758:58147] Rank 61 bound to package[0][core:35-41]
+[nid005951:26865] Rank 18 bound to package[0][core:14-20]
+[nid006758:58147] Rank 59 bound to package[0][core:21-27]
+[nid006014:21095] Rank 24 bound to package[0][core:0-6]
+[nid005951:26865] Rank 19 bound to package[0][core:21-27]
+[nid006758:58147] Rank 57 bound to package[0][core:7-13]
+[nid006014:21095] Rank 26 bound to package[0][core:14-20]
+[nid006014:21095] Rank 25 bound to package[0][core:7-13]
+[nid005951:26865] Rank 20 bound to package[0][core:28-34]
+[nid005951:26865] Rank 21 bound to package[0][core:35-41]
+[nid005951:26865] Rank 22 bound to package[0][core:42-48]
+[nid005951:26865] Rank 23 bound to package[0][core:49-55]
+[nid006014:21095] Rank 27 bound to package[0][core:21-27]
+[nid006014:21095] Rank 28 bound to package[0][core:28-34]
+[nid005793:11324] Rank 0 bound to package[0][core:0-6]
+[nid005793:11324] Rank 2 bound to package[0][core:14-20]
+[nid006216:91163] Rank 32 bound to package[0][core:0-6]
+[nid006216:91163] Rank 33 bound to package[0][core:7-13]
+[nid006758:58147] Rank 63 bound to package[0][core:49-55]
+[nid006758:58147] Rank 56 bound to package[0][core:0-6]
+[nid006758:58147] Rank 60 bound to package[0][core:28-34]
+[nid006758:58147] Rank 62 bound to package[0][core:42-48]
+[nid005793:11324] Rank 1 bound to package[0][core:7-13]
+[nid006014:21095] Rank 29 bound to package[0][core:35-41]
+[nid006014:21095] Rank 31 bound to package[0][core:49-55]
+[nid006014:21095] Rank 30 bound to package[0][core:42-48]
+[nid005793:11324] Rank 3 bound to package[0][core:21-27]
+[nid005793:11324] Rank 4 bound to package[0][core:28-34]
+[nid005793:11324] Rank 6 bound to package[0][core:42-48]
+[nid005793:11324] Rank 5 bound to package[0][core:35-41]
+[nid005793:11324] Rank 7 bound to package[0][core:49-55]
+[nid006216:91163] Rank 34 bound to package[0][core:14-20]
+[nid006216:91163] Rank 36 bound to package[0][core:28-34]
+[nid006216:91163] Rank 35 bound to package[0][core:21-27]
+[nid006216:91163] Rank 37 bound to package[0][core:35-41]
+[nid006216:91163] Rank 38 bound to package[0][core:42-48]
+[nid006216:91163] Rank 39 bound to package[0][core:49-55]
+[nid006255:129236] Rank 48 bound to package[0][core:0-6]
+[nid006255:129236] Rank 49 bound to package[0][core:7-13]
+[nid005896:76955] Rank 8 bound to package[0][core:0-6]
+[nid005896:76955] Rank 10 bound to package[0][core:14-20]
+[nid006255:129236] Rank 50 bound to package[0][core:14-20]
+[nid006255:129236] Rank 51 bound to package[0][core:21-27]
+[nid006255:129236] Rank 52 bound to package[0][core:28-34]
+[nid006255:129236] Rank 53 bound to package[0][core:35-41]
+[nid006255:129236] Rank 54 bound to package[0][core:42-48]
+[nid006226:114349] Rank 40 bound to package[0][core:0-6]
+[nid006255:129236] Rank 55 bound to package[0][core:49-55]
+[nid005896:76955] Rank 9 bound to package[0][core:7-13]
+[nid005896:76955] Rank 11 bound to package[0][core:21-27]
+[nid006226:114349] Rank 41 bound to package[0][core:7-13]
+[nid005896:76955] Rank 12 bound to package[0][core:28-34]
+[nid006226:114349] Rank 43 bound to package[0][core:21-27]
+[nid005896:76955] Rank 13 bound to package[0][core:35-41]
+[nid006226:114349] Rank 45 bound to package[0][core:35-41]
+[nid005896:76955] Rank 14 bound to package[0][core:42-48]
+[nid005896:76955] Rank 15 bound to package[0][core:49-55]
+[nid006226:114349] Rank 44 bound to package[0][core:28-34]
+[nid006226:114349] Rank 42 bound to package[0][core:14-20]
+[nid006226:114349] Rank 46 bound to package[0][core:42-48]
+[nid006226:114349] Rank 47 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      65.29
+2                      65.35
+4                      66.28
+8                      66.77
+16                     67.57
+32                     68.85
+64                     86.69
+128                  2617.69
+256                  3807.45
+512                  4403.01
+1024                 4612.48
+2048                 1678.41
+4096                  391.87
+8192                  355.71
+16384                 509.64
+32768                 800.46
+65536                1376.81
+131072               2548.40
+262144               4900.05
+524288              10038.09
+1048576             20112.26
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid005793:11559] Rank 0 bound to package[0][core:0-6]
+[nid005793:11559] Rank 1 bound to package[0][core:7-13]
+[nid005793:11559] Rank 2 bound to package[0][core:14-20]
+[nid005793:11559] Rank 4 bound to package[0][core:28-34]
+[nid005793:11559] Rank 3 bound to package[0][core:21-27]
+[nid005793:11559] Rank 5 bound to package[0][core:35-41]
+[nid005793:11559] Rank 7 bound to package[0][core:49-55]
+[nid005793:11559] Rank 6 bound to package[0][core:42-48]
+[nid006014:21269] Rank 24 bound to package[0][core:0-6]
+[nid006014:21269] Rank 25 bound to package[0][core:7-13]
+[nid005896:77866] Rank 10 bound to package[0][core:14-20]
+[nid006014:21269] Rank 29 bound to package[0][core:35-41]
+[nid006255:129406] Rank 48 bound to package[0][core:0-6]
+[nid005896:77866] Rank 9 bound to package[0][core:7-13]
+[nid005951:27035] Rank 16 bound to package[0][core:0-6]
+[nid005951:27035] Rank 18 bound to package[0][core:14-20]
+[nid006014:21269] Rank 26 bound to package[0][core:14-20]
+[nid006255:129406] Rank 49 bound to package[0][core:7-13]
+[nid006255:129406] Rank 50 bound to package[0][core:14-20]
+[nid006255:129406] Rank 51 bound to package[0][core:21-27]
+[nid005896:77866] Rank 11 bound to package[0][core:21-27]
+[nid006255:129406] Rank 52 bound to package[0][core:28-34]
+[nid006255:129406] Rank 53 bound to package[0][core:35-41]
+[nid005951:27035] Rank 17 bound to package[0][core:7-13]
+[nid006255:129406] Rank 54 bound to package[0][core:42-48]
+[nid005951:27035] Rank 20 bound to package[0][core:28-34]
+[nid006255:129406] Rank 55 bound to package[0][core:49-55]
+[nid005896:77866] Rank 13 bound to package[0][core:35-41]
+[nid005951:27035] Rank 19 bound to package[0][core:21-27]
+[nid005951:27035] Rank 23 bound to package[0][core:49-55]
+[nid005896:77866] Rank 8 bound to package[0][core:0-6]
+[nid006758:59001] Rank 56 bound to package[0][core:0-6]
+[nid005951:27035] Rank 22 bound to package[0][core:42-48]
+[nid006758:59001] Rank 58 bound to package[0][core:14-20]
+[nid005951:27035] Rank 21 bound to package[0][core:35-41]
+[nid006014:21269] Rank 28 bound to package[0][core:28-34]
+[nid006014:21269] Rank 31 bound to package[0][core:49-55]
+[nid006014:21269] Rank 30 bound to package[0][core:42-48]
+[nid006216:92026] Rank 32 bound to package[0][core:0-6]
+[nid006216:92026] Rank 34 bound to package[0][core:14-20]
+[nid006226:115264] Rank 40 bound to package[0][core:0-6]
+[nid006014:21269] Rank 27 bound to package[0][core:21-27]
+[nid006226:115264] Rank 42 bound to package[0][core:14-20]
+[nid005896:77866] Rank 12 bound to package[0][core:28-34]
+[nid006758:59001] Rank 57 bound to package[0][core:7-13]
+[nid006758:59001] Rank 59 bound to package[0][core:21-27]
+[nid006758:59001] Rank 60 bound to package[0][core:28-34]
+[nid006758:59001] Rank 61 bound to package[0][core:35-41]
+[nid006758:59001] Rank 62 bound to package[0][core:42-48]
+[nid006758:59001] Rank 63 bound to package[0][core:49-55]
+[nid006216:92026] Rank 33 bound to package[0][core:7-13]
+[nid005896:77866] Rank 15 bound to package[0][core:49-55]
+[nid005896:77866] Rank 14 bound to package[0][core:42-48]
+[nid006216:92026] Rank 36 bound to package[0][core:28-34]
+[nid006216:92026] Rank 35 bound to package[0][core:21-27]
+[nid006216:92026] Rank 37 bound to package[0][core:35-41]
+[nid006216:92026] Rank 38 bound to package[0][core:42-48]
+[nid006216:92026] Rank 39 bound to package[0][core:49-55]
+[nid006226:115264] Rank 41 bound to package[0][core:7-13]
+[nid006226:115264] Rank 43 bound to package[0][core:21-27]
+[nid006226:115264] Rank 44 bound to package[0][core:28-34]
+[nid006226:115264] Rank 46 bound to package[0][core:42-48]
+[nid006226:115264] Rank 47 bound to package[0][core:49-55]
+[nid006226:115264] Rank 45 bound to package[0][core:35-41]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      33.66
+8                      34.53
+16                     34.18
+32                     53.85
+64                     53.18
+128                    57.54
+256                    60.44
+512                    62.97
+1024                   99.30
+2048                   75.44
+4096                   76.66
+8192                   79.82
+16384                  90.55
+32768                 131.71
+65536                 174.15
+131072                270.22
+262144                463.76
+524288                831.43
+1048576              1559.13
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid005951:27182] Rank 19 bound to package[0][core:21-27]
+[nid005951:27182] Rank 16 bound to package[0][core:0-6]
+[nid005951:27182] Rank 17 bound to package[0][core:7-13]
+[nid005951:27182] Rank 18 bound to package[0][core:14-20]
+[nid005951:27182] Rank 20 bound to package[0][core:28-34]
+[nid005951:27182] Rank 21 bound to package[0][core:35-41]
+[nid005951:27182] Rank 22 bound to package[0][core:42-48]
+[nid005951:27182] Rank 23 bound to package[0][core:49-55]
+[nid006014:21409] Rank 24 bound to package[0][core:0-6]
+[nid006014:21409] Rank 25 bound to package[0][core:7-13]
+[nid006255:129549] Rank 49 bound to package[0][core:7-13]
+[nid006226:115450] Rank 40 bound to package[0][core:0-6]
+[nid006014:21409] Rank 26 bound to package[0][core:14-20]
+[nid006255:129549] Rank 50 bound to package[0][core:14-20]
+[nid006255:129549] Rank 48 bound to package[0][core:0-6]
+[nid006226:115450] Rank 41 bound to package[0][core:7-13]
+[nid006226:115450] Rank 42 bound to package[0][core:14-20]
+[nid006014:21409] Rank 27 bound to package[0][core:21-27]
+[nid006014:21409] Rank 28 bound to package[0][core:28-34]
+[nid006014:21409] Rank 29 bound to package[0][core:35-41]
+[nid006255:129549] Rank 51 bound to package[0][core:21-27]
+[nid006014:21409] Rank 30 bound to package[0][core:42-48]
+[nid006255:129549] Rank 52 bound to package[0][core:28-34]
+[nid006014:21409] Rank 31 bound to package[0][core:49-55]
+[nid006226:115450] Rank 43 bound to package[0][core:21-27]
+[nid006226:115450] Rank 44 bound to package[0][core:28-34]
+[nid006226:115450] Rank 46 bound to package[0][core:42-48]
+[nid006226:115450] Rank 45 bound to package[0][core:35-41]
+[nid006255:129549] Rank 54 bound to package[0][core:42-48]
+[nid006226:115450] Rank 47 bound to package[0][core:49-55]
+[nid006255:129549] Rank 55 bound to package[0][core:49-55]
+[nid006255:129549] Rank 53 bound to package[0][core:35-41]
+[nid006216:92263] Rank 32 bound to package[0][core:0-6]
+[nid006216:92263] Rank 34 bound to package[0][core:14-20]
+[nid006216:92263] Rank 35 bound to package[0][core:21-27]
+[nid006216:92263] Rank 33 bound to package[0][core:7-13]
+[nid005896:78028] Rank 8 bound to package[0][core:0-6]
+[nid006758:59222] Rank 56 bound to package[0][core:0-6]
+[nid006216:92263] Rank 36 bound to package[0][core:28-34]
+[nid006758:59222] Rank 57 bound to package[0][core:7-13]
+[nid005896:78028] Rank 9 bound to package[0][core:7-13]
+[nid006216:92263] Rank 37 bound to package[0][core:35-41]
+[nid005793:11751] Rank 0 bound to package[0][core:0-6]
+[nid005793:11751] Rank 2 bound to package[0][core:14-20]
+[nid006758:59222] Rank 58 bound to package[0][core:14-20]
+[nid006216:92263] Rank 39 bound to package[0][core:49-55]
+[nid006216:92263] Rank 38 bound to package[0][core:42-48]
+[nid005793:11751] Rank 1 bound to package[0][core:7-13]
+[nid005793:11751] Rank 4 bound to package[0][core:28-34]
+[nid006758:59222] Rank 59 bound to package[0][core:21-27]
+[nid005896:78028] Rank 10 bound to package[0][core:14-20]
+[nid005896:78028] Rank 11 bound to package[0][core:21-27]
+[nid005896:78028] Rank 12 bound to package[0][core:28-34]
+[nid005896:78028] Rank 13 bound to package[0][core:35-41]
+[nid005896:78028] Rank 14 bound to package[0][core:42-48]
+[nid005793:11751] Rank 3 bound to package[0][core:21-27]
+[nid005896:78028] Rank 15 bound to package[0][core:49-55]
+[nid006758:59222] Rank 61 bound to package[0][core:35-41]
+[nid006758:59222] Rank 60 bound to package[0][core:28-34]
+[nid006758:59222] Rank 62 bound to package[0][core:42-48]
+[nid006758:59222] Rank 63 bound to package[0][core:49-55]
+[nid005793:11751] Rank 5 bound to package[0][core:35-41]
+[nid005793:11751] Rank 6 bound to package[0][core:42-48]
+[nid005793:11751] Rank 7 bound to package[0][core:49-55]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      74.05
+2                      74.08
+4                      76.13
+8                      88.22
+16                     88.84
+32                     97.62
+64                     91.71
+128                    93.94
+256                    98.46
+512                   108.21
+1024                   80.57
+2048                   93.89
+4096                   99.70
+8192                  134.94
+16384                 202.61
+32768                 312.21
+65536                 555.10
+131072               1095.89
+262144               2977.32
+524288               5230.67
+1048576              9691.12
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid006014:21552] Rank 24 bound to package[0][core:0-6]
+[nid006255:129692] Rank 48 bound to package[0][core:0-6]
+[nid006014:21552] Rank 26 bound to package[0][core:14-20]
+[nid006255:129692] Rank 49 bound to package[0][core:7-13]
+[nid006014:21552] Rank 25 bound to package[0][core:7-13]
+[nid006255:129692] Rank 50 bound to package[0][core:14-20]
+[nid006014:21552] Rank 27 bound to package[0][core:21-27]
+[nid006255:129692] Rank 52 bound to package[0][core:28-34]
+[nid006014:21552] Rank 28 bound to package[0][core:28-34]
+[nid006014:21552] Rank 29 bound to package[0][core:35-41]
+[nid006014:21552] Rank 30 bound to package[0][core:42-48]
+[nid006255:129692] Rank 51 bound to package[0][core:21-27]
+[nid006255:129692] Rank 54 bound to package[0][core:42-48]
+[nid006014:21552] Rank 31 bound to package[0][core:49-55]
+[nid006255:129692] Rank 53 bound to package[0][core:35-41]
+[nid006255:129692] Rank 55 bound to package[0][core:49-55]
+[nid005793:11947] Rank 0 bound to package[0][core:0-6]
+[nid005793:11947] Rank 1 bound to package[0][core:7-13]
+[nid005793:11947] Rank 2 bound to package[0][core:14-20]
+[nid005793:11947] Rank 3 bound to package[0][core:21-27]
+[nid005951:27330] Rank 16 bound to package[0][core:0-6]
+[nid005951:27330] Rank 17 bound to package[0][core:7-13]
+[nid005951:27330] Rank 18 bound to package[0][core:14-20]
+[nid005793:11947] Rank 4 bound to package[0][core:28-34]
+[nid005896:78345] Rank 8 bound to package[0][core:0-6]
+[nid005951:27330] Rank 19 bound to package[0][core:21-27]
+[nid005951:27330] Rank 21 bound to package[0][core:35-41]
+[nid005896:78345] Rank 10 bound to package[0][core:14-20]
+[nid006216:92501] Rank 32 bound to package[0][core:0-6]
+[nid006216:92501] Rank 33 bound to package[0][core:7-13]
+[nid005793:11947] Rank 6 bound to package[0][core:42-48]
+[nid005793:11947] Rank 5 bound to package[0][core:35-41]
+[nid005793:11947] Rank 7 bound to package[0][core:49-55]
+[nid006216:92501] Rank 34 bound to package[0][core:14-20]
+[nid006216:92501] Rank 35 bound to package[0][core:21-27]
+[nid005951:27330] Rank 22 bound to package[0][core:42-48]
+[nid005951:27330] Rank 20 bound to package[0][core:28-34]
+[nid005896:78345] Rank 9 bound to package[0][core:7-13]
+[nid005951:27330] Rank 23 bound to package[0][core:49-55]
+[nid006216:92501] Rank 36 bound to package[0][core:28-34]
+[nid005896:78345] Rank 11 bound to package[0][core:21-27]
+[nid005896:78345] Rank 12 bound to package[0][core:28-34]
+[nid005896:78345] Rank 13 bound to package[0][core:35-41]
+[nid005896:78345] Rank 15 bound to package[0][core:49-55]
+[nid005896:78345] Rank 14 bound to package[0][core:42-48]
+[nid006226:115725] Rank 40 bound to package[0][core:0-6]
+[nid006226:115725] Rank 41 bound to package[0][core:7-13]
+[nid006216:92501] Rank 37 bound to package[0][core:35-41]
+[nid006216:92501] Rank 38 bound to package[0][core:42-48]
+[nid006216:92501] Rank 39 bound to package[0][core:49-55]
+[nid006226:115725] Rank 43 bound to package[0][core:21-27]
+[nid006226:115725] Rank 42 bound to package[0][core:14-20]
+[nid006226:115725] Rank 44 bound to package[0][core:28-34]
+[nid006226:115725] Rank 46 bound to package[0][core:42-48]
+[nid006758:59754] Rank 56 bound to package[0][core:0-6]
+[nid006226:115725] Rank 45 bound to package[0][core:35-41]
+[nid006226:115725] Rank 47 bound to package[0][core:49-55]
+[nid006758:59754] Rank 57 bound to package[0][core:7-13]
+[nid006758:59754] Rank 58 bound to package[0][core:14-20]
+[nid006758:59754] Rank 60 bound to package[0][core:28-34]
+[nid006758:59754] Rank 59 bound to package[0][core:21-27]
+[nid006758:59754] Rank 62 bound to package[0][core:42-48]
+[nid006758:59754] Rank 61 bound to package[0][core:35-41]
+[nid006758:59754] Rank 63 bound to package[0][core:49-55]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      29.85
+2                      30.00
+4                      31.68
+8                      33.96
+16                     36.73
+32                     39.50
+64                     54.43
+128                    50.36
+256                    47.96
+512                    53.07
+1024                   70.94
+2048                   99.63
+4096                  148.12
+8192                  228.12
+16384                 378.73
+32768                 676.16
+65536                1275.15
+131072               2474.78
+262144               4973.33
+524288              10210.59
+1048576             20537.81
+========
+_n64_hybrid_16529880
+========
+no OpenMPI internal transport, only libfabric. Use CXI directly
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid006758:60089] Rank 56 bound to package[0][core:0-6]
+[nid006758:60089] Rank 58 bound to package[0][core:14-20]
+[nid006758:60089] Rank 59 bound to package[0][core:21-27]
+[nid006758:60089] Rank 60 bound to package[0][core:28-34]
+[nid006758:60089] Rank 57 bound to package[0][core:7-13]
+[nid006758:60089] Rank 62 bound to package[0][core:42-48]
+[nid006758:60089] Rank 63 bound to package[0][core:49-55]
+[nid006758:60089] Rank 61 bound to package[0][core:35-41]
+[nid005951:27481] Rank 16 bound to package[0][core:0-6]
+[nid006014:21698] Rank 25 bound to package[0][core:7-13]
+[nid005951:27481] Rank 17 bound to package[0][core:7-13]
+[nid006216:92822] Rank 32 bound to package[0][core:0-6]
+[nid006216:92822] Rank 33 bound to package[0][core:7-13]
+[nid006014:21698] Rank 26 bound to package[0][core:14-20]
+[nid005951:27481] Rank 18 bound to package[0][core:14-20]
+[nid006216:92822] Rank 34 bound to package[0][core:14-20]
+[nid006014:21698] Rank 27 bound to package[0][core:21-27]
+[nid005951:27481] Rank 19 bound to package[0][core:21-27]
+[nid006014:21698] Rank 28 bound to package[0][core:28-34]
+[nid006216:92822] Rank 35 bound to package[0][core:21-27]
+[nid005951:27481] Rank 20 bound to package[0][core:28-34]
+[nid006216:92822] Rank 37 bound to package[0][core:35-41]
+[nid006216:92822] Rank 38 bound to package[0][core:42-48]
+[nid006226:116028] Rank 40 bound to package[0][core:0-6]
+[nid006216:92822] Rank 36 bound to package[0][core:28-34]
+[nid006216:92822] Rank 39 bound to package[0][core:49-55]
+[nid006255:129862] Rank 48 bound to package[0][core:0-6]
+[nid006255:129862] Rank 49 bound to package[0][core:7-13]
+[nid006255:129862] Rank 50 bound to package[0][core:14-20]
+[nid006226:116028] Rank 41 bound to package[0][core:7-13]
+[nid006226:116028] Rank 44 bound to package[0][core:28-34]
+[nid006226:116028] Rank 42 bound to package[0][core:14-20]
+[nid005951:27481] Rank 21 bound to package[0][core:35-41]
+[nid005951:27481] Rank 23 bound to package[0][core:49-55]
+[nid005951:27481] Rank 22 bound to package[0][core:42-48]
+[nid006014:21698] Rank 24 bound to package[0][core:0-6]
+[nid006014:21698] Rank 29 bound to package[0][core:35-41]
+[nid006014:21698] Rank 30 bound to package[0][core:42-48]
+[nid006014:21698] Rank 31 bound to package[0][core:49-55]
+[nid006255:129862] Rank 51 bound to package[0][core:21-27]
+[nid006226:116028] Rank 43 bound to package[0][core:21-27]
+[nid005793:12146] Rank 0 bound to package[0][core:0-6]
+[nid005793:12146] Rank 1 bound to package[0][core:7-13]
+[nid005793:12146] Rank 2 bound to package[0][core:14-20]
+[nid006255:129862] Rank 54 bound to package[0][core:42-48]
+[nid006226:116028] Rank 45 bound to package[0][core:35-41]
+[nid006226:116028] Rank 46 bound to package[0][core:42-48]
+[nid006226:116028] Rank 47 bound to package[0][core:49-55]
+[nid005793:12146] Rank 3 bound to package[0][core:21-27]
+[nid006255:129862] Rank 52 bound to package[0][core:28-34]
+[nid006255:129862] Rank 53 bound to package[0][core:35-41]
+[nid006255:129862] Rank 55 bound to package[0][core:49-55]
+[nid005793:12146] Rank 7 bound to package[0][core:49-55]
+[nid005896:78622] Rank 8 bound to package[0][core:0-6]
+[nid005896:78622] Rank 9 bound to package[0][core:7-13]
+[nid005896:78622] Rank 12 bound to package[0][core:28-34]
+[nid005896:78622] Rank 10 bound to package[0][core:14-20]
+[nid005896:78622] Rank 11 bound to package[0][core:21-27]
+[nid005896:78622] Rank 13 bound to package[0][core:35-41]
+[nid005896:78622] Rank 14 bound to package[0][core:42-48]
+[nid005896:78622] Rank 15 bound to package[0][core:49-55]
+[nid005793:12146] Rank 6 bound to package[0][core:42-48]
+[nid005793:12146] Rank 5 bound to package[0][core:35-41]
+[nid005793:12146] Rank 4 bound to package[0][core:28-34]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    3000.80
+2                    3111.56
+4                    3165.67
+8                    3131.82
+16                   3103.62
+32                   2676.24
+64                   2720.24
+128                  2740.10
+256                  8850.69
+512                  5473.40
+1024                   95.42
+2048                   98.57
+4096                   96.58
+8192                  113.80
+16384                 159.99
+32768                 267.42
+65536                 489.07
+131072               1009.99
+262144               2278.26
+524288               3949.53
+1048576              7619.25
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid006255:130035] Rank 48 bound to package[0][core:0-6]
+[nid006255:130035] Rank 49 bound to package[0][core:7-13]
+[nid006255:130035] Rank 51 bound to package[0][core:21-27]
+[nid006255:130035] Rank 50 bound to package[0][core:14-20]
+[nid006226:117306] Rank 40 bound to package[0][core:0-6]
+[nid006255:130035] Rank 52 bound to package[0][core:28-34]
+[nid006226:117306] Rank 41 bound to package[0][core:7-13]
+[nid006226:117306] Rank 42 bound to package[0][core:14-20]
+[nid006226:117306] Rank 43 bound to package[0][core:21-27]
+[nid006226:117306] Rank 44 bound to package[0][core:28-34]
+[nid006226:117306] Rank 45 bound to package[0][core:35-41]
+[nid006226:117306] Rank 46 bound to package[0][core:42-48]
+[nid006226:117306] Rank 47 bound to package[0][core:49-55]
+[nid006255:130035] Rank 53 bound to package[0][core:35-41]
+[nid006255:130035] Rank 54 bound to package[0][core:42-48]
+[nid006255:130035] Rank 55 bound to package[0][core:49-55]
+[nid006216:94068] Rank 32 bound to package[0][core:0-6]
+[nid006216:94068] Rank 33 bound to package[0][core:7-13]
+[nid006216:94068] Rank 35 bound to package[0][core:21-27]
+[nid005951:27651] Rank 16 bound to package[0][core:0-6]
+[nid005951:27651] Rank 17 bound to package[0][core:7-13]
+[nid006216:94068] Rank 34 bound to package[0][core:14-20]
+[nid005951:27651] Rank 18 bound to package[0][core:14-20]
+[nid005951:27651] Rank 20 bound to package[0][core:28-34]
+[nid006216:94068] Rank 36 bound to package[0][core:28-34]
+[nid006758:61294] Rank 57 bound to package[0][core:7-13]
+[nid006758:61294] Rank 60 bound to package[0][core:28-34]
+[nid006216:94068] Rank 37 bound to package[0][core:35-41]
+[nid005951:27651] Rank 19 bound to package[0][core:21-27]
+[nid005951:27651] Rank 22 bound to package[0][core:42-48]
+[nid006216:94068] Rank 38 bound to package[0][core:42-48]
+[nid005896:79881] Rank 8 bound to package[0][core:0-6]
+[nid005896:79881] Rank 9 bound to package[0][core:7-13]
+[nid006216:94068] Rank 39 bound to package[0][core:49-55]
+[nid005951:27651] Rank 21 bound to package[0][core:35-41]
+[nid005951:27651] Rank 23 bound to package[0][core:49-55]
+[nid005896:79881] Rank 10 bound to package[0][core:14-20]
+[nid006014:21869] Rank 24 bound to package[0][core:0-6]
+[nid005896:79881] Rank 11 bound to package[0][core:21-27]
+[nid005896:79881] Rank 13 bound to package[0][core:35-41]
+[nid006758:61294] Rank 59 bound to package[0][core:21-27]
+[nid006758:61294] Rank 56 bound to package[0][core:0-6]
+[nid006758:61294] Rank 58 bound to package[0][core:14-20]
+[nid006758:61294] Rank 62 bound to package[0][core:42-48]
+[nid006758:61294] Rank 63 bound to package[0][core:49-55]
+[nid006758:61294] Rank 61 bound to package[0][core:35-41]
+[nid005793:12388] Rank 0 bound to package[0][core:0-6]
+[nid005793:12388] Rank 1 bound to package[0][core:7-13]
+[nid005793:12388] Rank 2 bound to package[0][core:14-20]
+[nid005793:12388] Rank 3 bound to package[0][core:21-27]
+[nid005793:12388] Rank 4 bound to package[0][core:28-34]
+[nid005793:12388] Rank 5 bound to package[0][core:35-41]
+[nid005793:12388] Rank 7 bound to package[0][core:49-55]
+[nid005793:12388] Rank 6 bound to package[0][core:42-48]
+[nid006014:21869] Rank 25 bound to package[0][core:7-13]
+[nid006014:21869] Rank 28 bound to package[0][core:28-34]
+[nid006014:21869] Rank 26 bound to package[0][core:14-20]
+[nid006014:21869] Rank 27 bound to package[0][core:21-27]
+[nid006014:21869] Rank 29 bound to package[0][core:35-41]
+[nid006014:21869] Rank 31 bound to package[0][core:49-55]
+[nid006014:21869] Rank 30 bound to package[0][core:42-48]
+[nid005896:79881] Rank 15 bound to package[0][core:49-55]
+[nid005896:79881] Rank 12 bound to package[0][core:28-34]
+[nid005896:79881] Rank 14 bound to package[0][core:42-48]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      51.53
+8                      52.91
+16                     52.92
+32                     70.28
+64                     69.00
+128                    73.83
+256                    74.21
+512                    77.29
+1024                   79.95
+2048                   83.69
+4096                   88.71
+8192                  154.33
+16384                 490.21
+32768                 625.59
+65536                 627.66
+131072               3512.38
+262144               7835.41
+524288               5719.54
+1048576              7740.72
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid006758:61589] Rank 56 bound to package[0][core:0-6]
+[nid006758:61589] Rank 57 bound to package[0][core:7-13]
+[nid006758:61589] Rank 58 bound to package[0][core:14-20]
+[nid006758:61589] Rank 59 bound to package[0][core:21-27]
+[nid006758:61589] Rank 60 bound to package[0][core:28-34]
+[nid006216:94315] Rank 32 bound to package[0][core:0-6]
+[nid006216:94315] Rank 33 bound to package[0][core:7-13]
+[nid006216:94315] Rank 35 bound to package[0][core:21-27]
+[nid006216:94315] Rank 34 bound to package[0][core:14-20]
+[nid006216:94315] Rank 36 bound to package[0][core:28-34]
+[nid006758:61589] Rank 61 bound to package[0][core:35-41]
+[nid006758:61589] Rank 62 bound to package[0][core:42-48]
+[nid006758:61589] Rank 63 bound to package[0][core:49-55]
+[nid006216:94315] Rank 37 bound to package[0][core:35-41]
+[nid006216:94315] Rank 39 bound to package[0][core:49-55]
+[nid006216:94315] Rank 38 bound to package[0][core:42-48]
+[nid006226:117583] Rank 40 bound to package[0][core:0-6]
+[nid006226:117583] Rank 41 bound to package[0][core:7-13]
+[nid006226:117583] Rank 42 bound to package[0][core:14-20]
+[nid006226:117583] Rank 43 bound to package[0][core:21-27]
+[nid006226:117583] Rank 44 bound to package[0][core:28-34]
+[nid006226:117583] Rank 45 bound to package[0][core:35-41]
+[nid006226:117583] Rank 47 bound to package[0][core:49-55]
+[nid006226:117583] Rank 46 bound to package[0][core:42-48]
+[nid005896:80153] Rank 8 bound to package[0][core:0-6]
+[nid005896:80153] Rank 10 bound to package[0][core:14-20]
+[nid005896:80153] Rank 9 bound to package[0][core:7-13]
+[nid005896:80153] Rank 11 bound to package[0][core:21-27]
+[nid006014:22034] Rank 24 bound to package[0][core:0-6]
+[nid006014:22034] Rank 25 bound to package[0][core:7-13]
+[nid005951:27815] Rank 17 bound to package[0][core:7-13]
+[nid005951:27815] Rank 18 bound to package[0][core:14-20]
+[nid005896:80153] Rank 12 bound to package[0][core:28-34]
+[nid005896:80153] Rank 13 bound to package[0][core:35-41]
+[nid006014:22034] Rank 26 bound to package[0][core:14-20]
+[nid005951:27815] Rank 19 bound to package[0][core:21-27]
+[nid005896:80153] Rank 14 bound to package[0][core:42-48]
+[nid005896:80153] Rank 15 bound to package[0][core:49-55]
+[nid006014:22034] Rank 27 bound to package[0][core:21-27]
+[nid005951:27815] Rank 20 bound to package[0][core:28-34]
+[nid005951:27815] Rank 16 bound to package[0][core:0-6]
+[nid006014:22034] Rank 28 bound to package[0][core:28-34]
+[nid006014:22034] Rank 29 bound to package[0][core:35-41]
+[nid006014:22034] Rank 30 bound to package[0][core:42-48]
+[nid006014:22034] Rank 31 bound to package[0][core:49-55]
+[nid005951:27815] Rank 21 bound to package[0][core:35-41]
+[nid005951:27815] Rank 22 bound to package[0][core:42-48]
+[nid005951:27815] Rank 23 bound to package[0][core:49-55]
+[nid006255:130201] Rank 48 bound to package[0][core:0-6]
+[nid005793:12595] Rank 0 bound to package[0][core:0-6]
+[nid005793:12595] Rank 1 bound to package[0][core:7-13]
+[nid005793:12595] Rank 2 bound to package[0][core:14-20]
+[nid005793:12595] Rank 4 bound to package[0][core:28-34]
+[nid005793:12595] Rank 3 bound to package[0][core:21-27]
+[nid006255:130201] Rank 50 bound to package[0][core:14-20]
+[nid006255:130201] Rank 49 bound to package[0][core:7-13]
+[nid006255:130201] Rank 52 bound to package[0][core:28-34]
+[nid005793:12595] Rank 6 bound to package[0][core:42-48]
+[nid006255:130201] Rank 51 bound to package[0][core:21-27]
+[nid006255:130201] Rank 53 bound to package[0][core:35-41]
+[nid005793:12595] Rank 5 bound to package[0][core:35-41]
+[nid005793:12595] Rank 7 bound to package[0][core:49-55]
+[nid006255:130201] Rank 54 bound to package[0][core:42-48]
+[nid006255:130201] Rank 55 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      67.24
+2                      67.34
+4                      67.67
+8                      68.36
+16                     69.21
+32                     69.43
+64                     72.33
+128                    73.49
+256                   391.58
+512                  1057.13
+1024                 1769.49
+2048                  803.11
+4096                  293.58
+8192                  366.98
+16384                 487.23
+32768                 839.52
+65536                1398.84
+131072               2608.96
+262144               4871.44
+524288               9634.04
+1048576             19105.28
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid005951:27977] Rank 16 bound to package[0][core:0-6]
+[nid005951:27977] Rank 17 bound to package[0][core:7-13]
+[nid005896:80692] Rank 8 bound to package[0][core:0-6]
+[nid006758:62117] Rank 56 bound to package[0][core:0-6]
+[nid005951:27977] Rank 18 bound to package[0][core:14-20]
+[nid005896:80692] Rank 10 bound to package[0][core:14-20]
+[nid005951:27977] Rank 19 bound to package[0][core:21-27]
+[nid005896:80692] Rank 13 bound to package[0][core:35-41]
+[nid005951:27977] Rank 21 bound to package[0][core:35-41]
+[nid006758:62117] Rank 58 bound to package[0][core:14-20]
+[nid005951:27977] Rank 20 bound to package[0][core:28-34]
+[nid005793:12805] Rank 0 bound to package[0][core:0-6]
+[nid005896:80692] Rank 9 bound to package[0][core:7-13]
+[nid005896:80692] Rank 12 bound to package[0][core:28-34]
+[nid005951:27977] Rank 23 bound to package[0][core:49-55]
+[nid005793:12805] Rank 1 bound to package[0][core:7-13]
+[nid005793:12805] Rank 2 bound to package[0][core:14-20]
+[nid005793:12805] Rank 4 bound to package[0][core:28-34]
+[nid005793:12805] Rank 3 bound to package[0][core:21-27]
+[nid005793:12805] Rank 5 bound to package[0][core:35-41]
+[nid005951:27977] Rank 22 bound to package[0][core:42-48]
+[nid005793:12805] Rank 6 bound to package[0][core:42-48]
+[nid006758:62117] Rank 57 bound to package[0][core:7-13]
+[nid005896:80692] Rank 11 bound to package[0][core:21-27]
+[nid005793:12805] Rank 7 bound to package[0][core:49-55]
+[nid006255:130358] Rank 48 bound to package[0][core:0-6]
+[nid005896:80692] Rank 15 bound to package[0][core:49-55]
+[nid006758:62117] Rank 60 bound to package[0][core:28-34]
+[nid006758:62117] Rank 59 bound to package[0][core:21-27]
+[nid006758:62117] Rank 61 bound to package[0][core:35-41]
+[nid006758:62117] Rank 62 bound to package[0][core:42-48]
+[nid006758:62117] Rank 63 bound to package[0][core:49-55]
+[nid005896:80692] Rank 14 bound to package[0][core:42-48]
+[nid006255:130358] Rank 50 bound to package[0][core:14-20]
+[nid006216:94844] Rank 32 bound to package[0][core:0-6]
+[nid006226:118098] Rank 40 bound to package[0][core:0-6]
+[nid006226:118098] Rank 41 bound to package[0][core:7-13]
+[nid006226:118098] Rank 43 bound to package[0][core:21-27]
+[nid006255:130358] Rank 49 bound to package[0][core:7-13]
+[nid006014:22195] Rank 24 bound to package[0][core:0-6]
+[nid006014:22195] Rank 25 bound to package[0][core:7-13]
+[nid006216:94844] Rank 33 bound to package[0][core:7-13]
+[nid006226:118098] Rank 42 bound to package[0][core:14-20]
+[nid006216:94844] Rank 34 bound to package[0][core:14-20]
+[nid006216:94844] Rank 36 bound to package[0][core:28-34]
+[nid006216:94844] Rank 35 bound to package[0][core:21-27]
+[nid006216:94844] Rank 37 bound to package[0][core:35-41]
+[nid006216:94844] Rank 39 bound to package[0][core:49-55]
+[nid006216:94844] Rank 38 bound to package[0][core:42-48]
+[nid006255:130358] Rank 51 bound to package[0][core:21-27]
+[nid006226:118098] Rank 44 bound to package[0][core:28-34]
+[nid006014:22195] Rank 26 bound to package[0][core:14-20]
+[nid006014:22195] Rank 29 bound to package[0][core:35-41]
+[nid006014:22195] Rank 28 bound to package[0][core:28-34]
+[nid006255:130358] Rank 52 bound to package[0][core:28-34]
+[nid006255:130358] Rank 53 bound to package[0][core:35-41]
+[nid006226:118098] Rank 46 bound to package[0][core:42-48]
+[nid006226:118098] Rank 45 bound to package[0][core:35-41]
+[nid006226:118098] Rank 47 bound to package[0][core:49-55]
+[nid006014:22195] Rank 27 bound to package[0][core:21-27]
+[nid006014:22195] Rank 31 bound to package[0][core:49-55]
+[nid006014:22195] Rank 30 bound to package[0][core:42-48]
+[nid006255:130358] Rank 54 bound to package[0][core:42-48]
+[nid006255:130358] Rank 55 bound to package[0][core:49-55]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      33.58
+8                      34.19
+16                     34.01
+32                     50.19
+64                     49.51
+128                    53.36
+256                    56.97
+512                    59.57
+1024                   61.64
+2048                   65.25
+4096                   68.97
+8192                   72.70
+16384                  79.73
+32768                 109.97
+65536                 277.92
+131072                337.18
+262144                615.14
+524288               1407.46
+1048576              1473.84
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid006014:22337] Rank 24 bound to package[0][core:0-6]
+[nid006014:22337] Rank 26 bound to package[0][core:14-20]
+[nid006014:22337] Rank 25 bound to package[0][core:7-13]
+[nid006014:22337] Rank 27 bound to package[0][core:21-27]
+[nid006014:22337] Rank 28 bound to package[0][core:28-34]
+[nid006014:22337] Rank 29 bound to package[0][core:35-41]
+[nid006014:22337] Rank 31 bound to package[0][core:49-55]
+[nid006014:22337] Rank 30 bound to package[0][core:42-48]
+[nid005896:80897] Rank 9 bound to package[0][core:7-13]
+[nid005793:12993] Rank 0 bound to package[0][core:0-6]
+[nid005793:12993] Rank 1 bound to package[0][core:7-13]
+[nid005793:12993] Rank 2 bound to package[0][core:14-20]
+[nid005793:12993] Rank 3 bound to package[0][core:21-27]
+[nid005793:12993] Rank 4 bound to package[0][core:28-34]
+[nid005793:12993] Rank 5 bound to package[0][core:35-41]
+[nid005793:12993] Rank 7 bound to package[0][core:49-55]
+[nid005793:12993] Rank 6 bound to package[0][core:42-48]
+[nid006216:95055] Rank 32 bound to package[0][core:0-6]
+[nid006216:95055] Rank 33 bound to package[0][core:7-13]
+[nid005896:80897] Rank 8 bound to package[0][core:0-6]
+[nid006216:95055] Rank 34 bound to package[0][core:14-20]
+[nid006216:95055] Rank 37 bound to package[0][core:35-41]
+[nid006216:95055] Rank 36 bound to package[0][core:28-34]
+[nid005896:80897] Rank 10 bound to package[0][core:14-20]
+[nid005951:28122] Rank 17 bound to package[0][core:7-13]
+[nid005951:28122] Rank 18 bound to package[0][core:14-20]
+[nid006216:95055] Rank 35 bound to package[0][core:21-27]
+[nid006255:130509] Rank 48 bound to package[0][core:0-6]
+[nid006255:130509] Rank 50 bound to package[0][core:14-20]
+[nid005951:28122] Rank 19 bound to package[0][core:21-27]
+[nid005896:80897] Rank 11 bound to package[0][core:21-27]
+[nid006216:95055] Rank 38 bound to package[0][core:42-48]
+[nid006255:130509] Rank 49 bound to package[0][core:7-13]
+[nid006216:95055] Rank 39 bound to package[0][core:49-55]
+[nid006758:62291] Rank 56 bound to package[0][core:0-6]
+[nid006758:62291] Rank 57 bound to package[0][core:7-13]
+[nid005951:28122] Rank 16 bound to package[0][core:0-6]
+[nid006226:118339] Rank 40 bound to package[0][core:0-6]
+[nid006226:118339] Rank 41 bound to package[0][core:7-13]
+[nid005896:80897] Rank 15 bound to package[0][core:49-55]
+[nid005896:80897] Rank 12 bound to package[0][core:28-34]
+[nid005896:80897] Rank 14 bound to package[0][core:42-48]
+[nid005896:80897] Rank 13 bound to package[0][core:35-41]
+[nid006758:62291] Rank 58 bound to package[0][core:14-20]
+[nid005951:28122] Rank 20 bound to package[0][core:28-34]
+[nid006226:118339] Rank 42 bound to package[0][core:14-20]
+[nid006758:62291] Rank 60 bound to package[0][core:28-34]
+[nid006758:62291] Rank 59 bound to package[0][core:21-27]
+[nid005951:28122] Rank 21 bound to package[0][core:35-41]
+[nid006226:118339] Rank 44 bound to package[0][core:28-34]
+[nid006255:130509] Rank 51 bound to package[0][core:21-27]
+[nid006255:130509] Rank 52 bound to package[0][core:28-34]
+[nid006255:130509] Rank 53 bound to package[0][core:35-41]
+[nid005951:28122] Rank 23 bound to package[0][core:49-55]
+[nid006226:118339] Rank 43 bound to package[0][core:21-27]
+[nid005951:28122] Rank 22 bound to package[0][core:42-48]
+[nid006255:130509] Rank 54 bound to package[0][core:42-48]
+[nid006255:130509] Rank 55 bound to package[0][core:49-55]
+[nid006758:62291] Rank 61 bound to package[0][core:35-41]
+[nid006758:62291] Rank 62 bound to package[0][core:42-48]
+[nid006758:62291] Rank 63 bound to package[0][core:49-55]
+[nid006226:118339] Rank 46 bound to package[0][core:42-48]
+[nid006226:118339] Rank 45 bound to package[0][core:35-41]
+[nid006226:118339] Rank 47 bound to package[0][core:49-55]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      74.65
+2                      75.30
+4                      76.92
+8                      88.62
+16                     89.02
+32                     89.39
+64                     92.51
+128                    97.12
+256                   107.06
+512                   111.47
+1024                   89.49
+2048                   97.26
+4096                   92.25
+8192                  113.58
+16384                 164.40
+32768                 301.53
+65536                 548.82
+131072               1224.97
+262144               2817.23
+524288               4894.21
+1048576              9720.43
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid005951:28280] Rank 16 bound to package[0][core:0-6]
+[nid005951:28280] Rank 17 bound to package[0][core:7-13]
+[nid005896:81170] Rank 8 bound to package[0][core:0-6]
+[nid005951:28280] Rank 18 bound to package[0][core:14-20]
+[nid005951:28280] Rank 19 bound to package[0][core:21-27]
+[nid005896:81170] Rank 9 bound to package[0][core:7-13]
+[nid005951:28280] Rank 21 bound to package[0][core:35-41]
+[nid005896:81170] Rank 10 bound to package[0][core:14-20]
+[nid005896:81170] Rank 11 bound to package[0][core:21-27]
+[nid005896:81170] Rank 12 bound to package[0][core:28-34]
+[nid005793:13185] Rank 2 bound to package[0][core:14-20]
+[nid005951:28280] Rank 20 bound to package[0][core:28-34]
+[nid005951:28280] Rank 23 bound to package[0][core:49-55]
+[nid005793:13185] Rank 0 bound to package[0][core:0-6]
+[nid005951:28280] Rank 22 bound to package[0][core:42-48]
+[nid005896:81170] Rank 13 bound to package[0][core:35-41]
+[nid006226:118602] Rank 40 bound to package[0][core:0-6]
+[nid006226:118602] Rank 41 bound to package[0][core:7-13]
+[nid005793:13185] Rank 6 bound to package[0][core:42-48]
+[nid005896:81170] Rank 15 bound to package[0][core:49-55]
+[nid005896:81170] Rank 14 bound to package[0][core:42-48]
+[nid005793:13185] Rank 4 bound to package[0][core:28-34]
+[nid006226:118602] Rank 42 bound to package[0][core:14-20]
+[nid006226:118602] Rank 43 bound to package[0][core:21-27]
+[nid006226:118602] Rank 44 bound to package[0][core:28-34]
+[nid006226:118602] Rank 45 bound to package[0][core:35-41]
+[nid006226:118602] Rank 46 bound to package[0][core:42-48]
+[nid006226:118602] Rank 47 bound to package[0][core:49-55]
+[nid005793:13185] Rank 5 bound to package[0][core:35-41]
+[nid005793:13185] Rank 3 bound to package[0][core:21-27]
+[nid005793:13185] Rank 7 bound to package[0][core:49-55]
+[nid006255:130660] Rank 48 bound to package[0][core:0-6]
+[nid006255:130660] Rank 49 bound to package[0][core:7-13]
+[nid006255:130660] Rank 50 bound to package[0][core:14-20]
+[nid006255:130660] Rank 51 bound to package[0][core:21-27]
+[nid006255:130660] Rank 52 bound to package[0][core:28-34]
+[nid006255:130660] Rank 53 bound to package[0][core:35-41]
+[nid006216:95331] Rank 32 bound to package[0][core:0-6]
+[nid006255:130660] Rank 54 bound to package[0][core:42-48]
+[nid006255:130660] Rank 55 bound to package[0][core:49-55]
+[nid006216:95331] Rank 34 bound to package[0][core:14-20]
+[nid006758:62598] Rank 56 bound to package[0][core:0-6]
+[nid006216:95331] Rank 33 bound to package[0][core:7-13]
+[nid006216:95331] Rank 35 bound to package[0][core:21-27]
+[nid006216:95331] Rank 36 bound to package[0][core:28-34]
+[nid006216:95331] Rank 37 bound to package[0][core:35-41]
+[nid006216:95331] Rank 38 bound to package[0][core:42-48]
+[nid006014:22486] Rank 24 bound to package[0][core:0-6]
+[nid006014:22486] Rank 25 bound to package[0][core:7-13]
+[nid006216:95331] Rank 39 bound to package[0][core:49-55]
+[nid006758:62598] Rank 57 bound to package[0][core:7-13]
+[nid006758:62598] Rank 58 bound to package[0][core:14-20]
+[nid006014:22486] Rank 26 bound to package[0][core:14-20]
+[nid006758:62598] Rank 59 bound to package[0][core:21-27]
+[nid006758:62598] Rank 60 bound to package[0][core:28-34]
+[nid006014:22486] Rank 27 bound to package[0][core:21-27]
+[nid006014:22486] Rank 28 bound to package[0][core:28-34]
+[nid006014:22486] Rank 29 bound to package[0][core:35-41]
+[nid006014:22486] Rank 31 bound to package[0][core:49-55]
+[nid006014:22486] Rank 30 bound to package[0][core:42-48]
+[nid006758:62598] Rank 61 bound to package[0][core:35-41]
+[nid006758:62598] Rank 62 bound to package[0][core:42-48]
+[nid006758:62598] Rank 63 bound to package[0][core:49-55]
+[nid005793:13185] Rank 1 bound to package[0][core:7-13]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      28.55
+2                      28.53
+4                      30.06
+8                      32.28
+16                     35.07
+32                     37.91
+64                     40.69
+128                    41.99
+256                    43.15
+512                    47.44
+1024                   66.77
+2048                   84.27
+4096                  130.55
+8192                  205.56
+16384                 357.51
+32768                 667.60
+65536                1296.15
+131072               2558.26
+262144               5063.04
+524288              10044.79
+1048576             20475.21
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -d rocm D D
+[nid006216:95601] Rank 32 bound to package[0][core:0-6]
+[nid006216:95601] Rank 33 bound to package[0][core:7-13]
+[nid006216:95601] Rank 34 bound to package[0][core:14-20]
+[nid006216:95601] Rank 35 bound to package[0][core:21-27]
+[nid006226:118931] Rank 40 bound to package[0][core:0-6]
+[nid006216:95601] Rank 36 bound to package[0][core:28-34]
+[nid006226:118931] Rank 42 bound to package[0][core:14-20]
+[nid006216:95601] Rank 37 bound to package[0][core:35-41]
+[nid006226:118931] Rank 41 bound to package[0][core:7-13]
+[nid006216:95601] Rank 38 bound to package[0][core:42-48]
+[nid006216:95601] Rank 39 bound to package[0][core:49-55]
+[nid006226:118931] Rank 43 bound to package[0][core:21-27]
+[nid005896:81490] Rank 8 bound to package[0][core:0-6]
+[nid005896:81490] Rank 10 bound to package[0][core:14-20]
+[nid005896:81490] Rank 9 bound to package[0][core:7-13]
+[nid005896:81490] Rank 12 bound to package[0][core:28-34]
+[nid006226:118931] Rank 44 bound to package[0][core:28-34]
+[nid006226:118931] Rank 46 bound to package[0][core:42-48]
+[nid005793:13380] Rank 1 bound to package[0][core:7-13]
+[nid005793:13380] Rank 2 bound to package[0][core:14-20]
+[nid006014:22632] Rank 24 bound to package[0][core:0-6]
+[nid006014:22632] Rank 26 bound to package[0][core:14-20]
+[nid005951:28430] Rank 16 bound to package[0][core:0-6]
+[nid005951:28430] Rank 19 bound to package[0][core:21-27]
+[nid005896:81490] Rank 11 bound to package[0][core:21-27]
+[nid006226:118931] Rank 45 bound to package[0][core:35-41]
+[nid006014:22632] Rank 25 bound to package[0][core:7-13]
+[nid006226:118931] Rank 47 bound to package[0][core:49-55]
+[nid005896:81490] Rank 15 bound to package[0][core:49-55]
+[nid005896:81490] Rank 13 bound to package[0][core:35-41]
+[nid005896:81490] Rank 14 bound to package[0][core:42-48]
+[nid005951:28430] Rank 17 bound to package[0][core:7-13]
+[nid006014:22632] Rank 28 bound to package[0][core:28-34]
+[nid006758:62877] Rank 56 bound to package[0][core:0-6]
+[nid005793:13380] Rank 3 bound to package[0][core:21-27]
+[nid006014:22632] Rank 27 bound to package[0][core:21-27]
+[nid005793:13380] Rank 4 bound to package[0][core:28-34]
+[nid005793:13380] Rank 0 bound to package[0][core:0-6]
+[nid005793:13380] Rank 6 bound to package[0][core:42-48]
+[nid005793:13380] Rank 5 bound to package[0][core:35-41]
+[nid005793:13380] Rank 7 bound to package[0][core:49-55]
+[nid005951:28430] Rank 18 bound to package[0][core:14-20]
+[nid005951:28430] Rank 20 bound to package[0][core:28-34]
+[nid005951:28430] Rank 21 bound to package[0][core:35-41]
+[nid006014:22632] Rank 29 bound to package[0][core:35-41]
+[nid006014:22632] Rank 30 bound to package[0][core:42-48]
+[nid006758:62877] Rank 57 bound to package[0][core:7-13]
+[nid006014:22632] Rank 31 bound to package[0][core:49-55]
+[nid006255:130803] Rank 48 bound to package[0][core:0-6]
+[nid005951:28430] Rank 22 bound to package[0][core:42-48]
+[nid006758:62877] Rank 58 bound to package[0][core:14-20]
+[nid006758:62877] Rank 59 bound to package[0][core:21-27]
+[nid006758:62877] Rank 61 bound to package[0][core:35-41]
+[nid006758:62877] Rank 62 bound to package[0][core:42-48]
+[nid006758:62877] Rank 60 bound to package[0][core:28-34]
+[nid005951:28430] Rank 23 bound to package[0][core:49-55]
+[nid006758:62877] Rank 63 bound to package[0][core:49-55]
+[nid006255:130803] Rank 50 bound to package[0][core:14-20]
+[nid006255:130803] Rank 49 bound to package[0][core:7-13]
+[nid006255:130803] Rank 51 bound to package[0][core:21-27]
+[nid006255:130803] Rank 52 bound to package[0][core:28-34]
+[nid006255:130803] Rank 53 bound to package[0][core:35-41]
+[nid006255:130803] Rank 54 bound to package[0][core:42-48]
+[nid006255:130803] Rank 55 bound to package[0][core:49-55]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                     433.80
+2                     426.55
+4                     428.12
+8                     428.95
+16                    428.37
+32                    428.70
+64                    431.05
+128                   432.66
+256                   430.42
+512                   431.30
+1024                  512.99
+2048                  570.75
+4096                  458.55
+8192                 6916.99
+16384                1116.13
+32768                1150.13
+65536                2111.51
+131072               2152.00
+262144               4142.08
+524288               8462.37
+1048576              9679.67
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -d rocm D D
+[nid006216:96441] Rank 32 bound to package[0][core:0-6]
+[nid006216:96441] Rank 33 bound to package[0][core:7-13]
+[nid006216:96441] Rank 35 bound to package[0][core:21-27]
+[nid006216:96441] Rank 34 bound to package[0][core:14-20]
+[nid006216:96441] Rank 36 bound to package[0][core:28-34]
+[nid006216:96441] Rank 37 bound to package[0][core:35-41]
+[nid006216:96441] Rank 38 bound to package[0][core:42-48]
+[nid006216:96441] Rank 39 bound to package[0][core:49-55]
+[nid006014:22949] Rank 24 bound to package[0][core:0-6]
+[nid006014:22949] Rank 25 bound to package[0][core:7-13]
+[nid006014:22949] Rank 26 bound to package[0][core:14-20]
+[nid006014:22949] Rank 27 bound to package[0][core:21-27]
+[nid006014:22949] Rank 28 bound to package[0][core:28-34]
+[nid006014:22949] Rank 29 bound to package[0][core:35-41]
+[nid006014:22949] Rank 30 bound to package[0][core:42-48]
+[nid006014:22949] Rank 31 bound to package[0][core:49-55]
+[nid005896:82267] Rank 8 bound to package[0][core:0-6]
+[nid005896:82267] Rank 9 bound to package[0][core:7-13]
+[nid005793:13720] Rank 0 bound to package[0][core:0-6]
+[nid005896:82267] Rank 10 bound to package[0][core:14-20]
+[nid006758:63681] Rank 56 bound to package[0][core:0-6]
+[nid005793:13720] Rank 1 bound to package[0][core:7-13]
+[nid006758:63681] Rank 57 bound to package[0][core:7-13]
+[nid006758:63681] Rank 58 bound to package[0][core:14-20]
+[nid006758:63681] Rank 59 bound to package[0][core:21-27]
+[nid006758:63681] Rank 60 bound to package[0][core:28-34]
+[nid005793:13720] Rank 2 bound to package[0][core:14-20]
+[nid005793:13720] Rank 4 bound to package[0][core:28-34]
+[nid005896:82267] Rank 11 bound to package[0][core:21-27]
+[nid005896:82267] Rank 12 bound to package[0][core:28-34]
+[nid005896:82267] Rank 13 bound to package[0][core:35-41]
+[nid006758:63681] Rank 61 bound to package[0][core:35-41]
+[nid005793:13720] Rank 3 bound to package[0][core:21-27]
+[nid005896:82267] Rank 14 bound to package[0][core:42-48]
+[nid005896:82267] Rank 15 bound to package[0][core:49-55]
+[nid006255:00475] Rank 48 bound to package[0][core:0-6]
+[nid006758:63681] Rank 63 bound to package[0][core:49-55]
+[nid006758:63681] Rank 62 bound to package[0][core:42-48]
+[nid005793:13720] Rank 5 bound to package[0][core:35-41]
+[nid005793:13720] Rank 6 bound to package[0][core:42-48]
+[nid005793:13720] Rank 7 bound to package[0][core:49-55]
+[nid006255:00475] Rank 49 bound to package[0][core:7-13]
+[nid006255:00475] Rank 50 bound to package[0][core:14-20]
+[nid005951:28700] Rank 16 bound to package[0][core:0-6]
+[nid006255:00475] Rank 52 bound to package[0][core:28-34]
+[nid005951:28700] Rank 18 bound to package[0][core:14-20]
+[nid005951:28700] Rank 19 bound to package[0][core:21-27]
+[nid006255:00475] Rank 51 bound to package[0][core:21-27]
+[nid005951:28700] Rank 20 bound to package[0][core:28-34]
+[nid006255:00475] Rank 53 bound to package[0][core:35-41]
+[nid006255:00475] Rank 55 bound to package[0][core:49-55]
+[nid006255:00475] Rank 54 bound to package[0][core:42-48]
+[nid006226:119697] Rank 40 bound to package[0][core:0-6]
+[nid006226:119697] Rank 42 bound to package[0][core:14-20]
+[nid006226:119697] Rank 41 bound to package[0][core:7-13]
+[nid005951:28700] Rank 17 bound to package[0][core:7-13]
+[nid005951:28700] Rank 22 bound to package[0][core:42-48]
+[nid005951:28700] Rank 21 bound to package[0][core:35-41]
+[nid005951:28700] Rank 23 bound to package[0][core:49-55]
+[nid006226:119697] Rank 44 bound to package[0][core:28-34]
+[nid006226:119697] Rank 43 bound to package[0][core:21-27]
+[nid006226:119697] Rank 45 bound to package[0][core:35-41]
+[nid006226:119697] Rank 47 bound to package[0][core:49-55]
+[nid006226:119697] Rank 46 bound to package[0][core:42-48]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                     161.85
+8                     161.71
+16                    148.34
+32                    148.15
+64                     67.00
+128                    68.23
+256                    70.73
+512                    75.05
+1024                   79.93
+2048                   88.52
+4096                   95.74
+8192                  168.25
+16384                 183.67
+32768                 187.96
+65536                 194.31
+131072                260.26
+262144                279.27
+524288                319.06
+1048576               418.85
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -d rocm D D
+[nid005896:82548] Rank 8 bound to package[0][core:0-6]
+[nid005896:82548] Rank 9 bound to package[0][core:7-13]
+[nid005951:28898] Rank 16 bound to package[0][core:0-6]
+[nid005896:82548] Rank 10 bound to package[0][core:14-20]
+[nid005896:82548] Rank 11 bound to package[0][core:21-27]
+[nid005896:82548] Rank 12 bound to package[0][core:28-34]
+[nid005896:82548] Rank 13 bound to package[0][core:35-41]
+[nid005896:82548] Rank 15 bound to package[0][core:49-55]
+[nid005896:82548] Rank 14 bound to package[0][core:42-48]
+[nid005951:28898] Rank 18 bound to package[0][core:14-20]
+[nid005951:28898] Rank 20 bound to package[0][core:28-34]
+[nid005951:28898] Rank 17 bound to package[0][core:7-13]
+[nid006226:120005] Rank 40 bound to package[0][core:0-6]
+[nid006226:120005] Rank 41 bound to package[0][core:7-13]
+[nid006226:120005] Rank 42 bound to package[0][core:14-20]
+[nid006226:120005] Rank 43 bound to package[0][core:21-27]
+[nid006226:120005] Rank 45 bound to package[0][core:35-41]
+[nid006226:120005] Rank 44 bound to package[0][core:28-34]
+[nid006226:120005] Rank 46 bound to package[0][core:42-48]
+[nid005951:28898] Rank 19 bound to package[0][core:21-27]
+[nid005951:28898] Rank 21 bound to package[0][core:35-41]
+[nid006226:120005] Rank 47 bound to package[0][core:49-55]
+[nid005951:28898] Rank 22 bound to package[0][core:42-48]
+[nid005951:28898] Rank 23 bound to package[0][core:49-55]
+[nid006014:23138] Rank 24 bound to package[0][core:0-6]
+[nid006014:23138] Rank 25 bound to package[0][core:7-13]
+[nid006758:63986] Rank 56 bound to package[0][core:0-6]
+[nid006758:63986] Rank 57 bound to package[0][core:7-13]
+[nid006014:23138] Rank 26 bound to package[0][core:14-20]
+[nid006014:23138] Rank 27 bound to package[0][core:21-27]
+[nid006014:23138] Rank 28 bound to package[0][core:28-34]
+[nid006014:23138] Rank 29 bound to package[0][core:35-41]
+[nid005793:13967] Rank 0 bound to package[0][core:0-6]
+[nid006014:23138] Rank 30 bound to package[0][core:42-48]
+[nid006014:23138] Rank 31 bound to package[0][core:49-55]
+[nid006216:96735] Rank 32 bound to package[0][core:0-6]
+[nid006758:63986] Rank 58 bound to package[0][core:14-20]
+[nid005793:13967] Rank 1 bound to package[0][core:7-13]
+[nid005793:13967] Rank 2 bound to package[0][core:14-20]
+[nid006216:96735] Rank 33 bound to package[0][core:7-13]
+[nid006216:96735] Rank 35 bound to package[0][core:21-27]
+[nid006758:63986] Rank 59 bound to package[0][core:21-27]
+[nid005793:13967] Rank 3 bound to package[0][core:21-27]
+[nid005793:13967] Rank 4 bound to package[0][core:28-34]
+[nid006758:63986] Rank 62 bound to package[0][core:42-48]
+[nid006758:63986] Rank 60 bound to package[0][core:28-34]
+[nid006758:63986] Rank 63 bound to package[0][core:49-55]
+[nid006758:63986] Rank 61 bound to package[0][core:35-41]
+[nid006216:96735] Rank 34 bound to package[0][core:14-20]
+[nid006255:01073] Rank 48 bound to package[0][core:0-6]
+[nid005793:13967] Rank 5 bound to package[0][core:35-41]
+[nid006255:01073] Rank 50 bound to package[0][core:14-20]
+[nid005793:13967] Rank 6 bound to package[0][core:42-48]
+[nid005793:13967] Rank 7 bound to package[0][core:49-55]
+[nid006216:96735] Rank 36 bound to package[0][core:28-34]
+[nid006216:96735] Rank 38 bound to package[0][core:42-48]
+[nid006216:96735] Rank 37 bound to package[0][core:35-41]
+[nid006216:96735] Rank 39 bound to package[0][core:49-55]
+[nid006255:01073] Rank 49 bound to package[0][core:7-13]
+[nid006255:01073] Rank 52 bound to package[0][core:28-34]
+[nid006255:01073] Rank 51 bound to package[0][core:21-27]
+[nid006255:01073] Rank 53 bound to package[0][core:35-41]
+[nid006255:01073] Rank 54 bound to package[0][core:42-48]
+[nid006255:01073] Rank 55 bound to package[0][core:49-55]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                     170.43
+2                     170.34
+4                     170.57
+8                     171.25
+16                    171.77
+32                    171.95
+64                    173.23
+128                   174.86
+256                   176.52
+512                   181.99
+1024                  197.82
+2048                  903.73
+4096                  943.65
+8192                 1002.53
+16384                1096.20
+32768               31030.73
+65536                4309.00
+131072               4462.57
+262144               8027.30
+524288               7984.21
+1048576              7288.73
+RCCL-tests
+-- mpirun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid006255:01342] Rank 48 bound to package[0][core:0-6]
+[nid006255:01342] Rank 49 bound to package[0][core:7-13]
+[nid005793:14202] Rank 0 bound to package[0][core:0-6]
+[nid005793:14202] Rank 2 bound to package[0][core:14-20]
+[nid005896:83116] Rank 8 bound to package[0][core:0-6]
+[nid005793:14202] Rank 1 bound to package[0][core:7-13]
+[nid006255:01342] Rank 50 bound to package[0][core:14-20]
+[nid005951:29083] Rank 16 bound to package[0][core:0-6]
+[nid005951:29083] Rank 18 bound to package[0][core:14-20]
+[nid006216:97308] Rank 32 bound to package[0][core:0-6]
+[nid005896:83116] Rank 9 bound to package[0][core:7-13]
+[nid006255:01342] Rank 51 bound to package[0][core:21-27]
+[nid006255:01342] Rank 52 bound to package[0][core:28-34]
+[nid006255:01342] Rank 54 bound to package[0][core:42-48]
+[nid006255:01342] Rank 53 bound to package[0][core:35-41]
+[nid005896:83116] Rank 10 bound to package[0][core:14-20]
+[nid005951:29083] Rank 17 bound to package[0][core:7-13]
+[nid006255:01342] Rank 55 bound to package[0][core:49-55]
+[nid005896:83116] Rank 11 bound to package[0][core:21-27]
+[nid005951:29083] Rank 19 bound to package[0][core:21-27]
+[nid005951:29083] Rank 20 bound to package[0][core:28-34]
+[nid005896:83116] Rank 12 bound to package[0][core:28-34]
+[nid005951:29083] Rank 21 bound to package[0][core:35-41]
+[nid005793:14202] Rank 3 bound to package[0][core:21-27]
+[nid005896:83116] Rank 13 bound to package[0][core:35-41]
+[nid005896:83116] Rank 15 bound to package[0][core:49-55]
+[nid005951:29083] Rank 23 bound to package[0][core:49-55]
+[nid006216:97308] Rank 34 bound to package[0][core:14-20]
+[nid005896:83116] Rank 14 bound to package[0][core:42-48]
+[nid005951:29083] Rank 22 bound to package[0][core:42-48]
+[nid006758:64539] Rank 56 bound to package[0][core:0-6]
+[nid006014:23325] Rank 24 bound to package[0][core:0-6]
+[nid005793:14202] Rank 4 bound to package[0][core:28-34]
+[nid005793:14202] Rank 5 bound to package[0][core:35-41]
+[nid005793:14202] Rank 6 bound to package[0][core:42-48]
+[nid006216:97308] Rank 33 bound to package[0][core:7-13]
+[nid006758:64539] Rank 58 bound to package[0][core:14-20]
+[nid005793:14202] Rank 7 bound to package[0][core:49-55]
+[nid006014:23325] Rank 25 bound to package[0][core:7-13]
+[nid006014:23325] Rank 26 bound to package[0][core:14-20]
+[nid006014:23325] Rank 27 bound to package[0][core:21-27]
+[nid006014:23325] Rank 28 bound to package[0][core:28-34]
+[nid006216:97308] Rank 37 bound to package[0][core:35-41]
+[nid006014:23325] Rank 29 bound to package[0][core:35-41]
+[nid006758:64539] Rank 57 bound to package[0][core:7-13]
+[nid006014:23325] Rank 31 bound to package[0][core:49-55]
+[nid006014:23325] Rank 30 bound to package[0][core:42-48]
+[nid006758:64539] Rank 60 bound to package[0][core:28-34]
+[nid006758:64539] Rank 59 bound to package[0][core:21-27]
+[nid006216:97308] Rank 36 bound to package[0][core:28-34]
+[nid006216:97308] Rank 35 bound to package[0][core:21-27]
+[nid006216:97308] Rank 38 bound to package[0][core:42-48]
+[nid006758:64539] Rank 61 bound to package[0][core:35-41]
+[nid006216:97308] Rank 39 bound to package[0][core:49-55]
+[nid006758:64539] Rank 62 bound to package[0][core:42-48]
+[nid006226:120569] Rank 40 bound to package[0][core:0-6]
+[nid006226:120569] Rank 41 bound to package[0][core:7-13]
+[nid006758:64539] Rank 63 bound to package[0][core:49-55]
+[nid006226:120569] Rank 43 bound to package[0][core:21-27]
+[nid006226:120569] Rank 42 bound to package[0][core:14-20]
+[nid006226:120569] Rank 45 bound to package[0][core:35-41]
+[nid006226:120569] Rank 44 bound to package[0][core:28-34]
+[nid006226:120569] Rank 46 bound to package[0][core:42-48]
+[nid006226:120569] Rank 47 bound to package[0][core:49-55]
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  14229 on  nid005793 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  14231 on  nid005793 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  14230 on  nid005793 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  14232 on  nid005793 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  14233 on  nid005793 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  14235 on  nid005793 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  14237 on  nid005793 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  14241 on  nid005793 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  83157 on  nid005896 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  83158 on  nid005896 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  83159 on  nid005896 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  83160 on  nid005896 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  83161 on  nid005896 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  83162 on  nid005896 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  83169 on  nid005896 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  83165 on  nid005896 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid  29110 on  nid005951 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid  29112 on  nid005951 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid  29111 on  nid005951 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid  29113 on  nid005951 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid  29114 on  nid005951 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid  29115 on  nid005951 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid  29124 on  nid005951 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid  29120 on  nid005951 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  23352 on  nid006014 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  23353 on  nid006014 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  23354 on  nid006014 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  23355 on  nid006014 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  23356 on  nid006014 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  23357 on  nid006014 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  23364 on  nid006014 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  23360 on  nid006014 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid  97335 on  nid006216 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid  97337 on  nid006216 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid  97336 on  nid006216 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid  97342 on  nid006216 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid  97339 on  nid006216 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid  97338 on  nid006216 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid  97347 on  nid006216 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid  97349 on  nid006216 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid 120596 on  nid006226 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid 120597 on  nid006226 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid 120599 on  nid006226 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid 120598 on  nid006226 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid 120602 on  nid006226 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid 120600 on  nid006226 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid 120604 on  nid006226 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid 120608 on  nid006226 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid   1374 on  nid006255 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid   1375 on  nid006255 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid   1376 on  nid006255 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid   1377 on  nid006255 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid   1378 on  nid006255 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid   1384 on  nid006255 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid   1379 on  nid006255 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid   1388 on  nid006255 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  64566 on  nid006758 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  64568 on  nid006758 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  64567 on  nid006758 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  64570 on  nid006758 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  64569 on  nid006758 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  64572 on  nid006758 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  64577 on  nid006758 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  64580 on  nid006758 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.12    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+        1024            16     uint8    none      -1    623.6    0.00    0.00      0    406.8    0.00    0.00    N/A
+        2048            32     uint8    none      -1    404.1    0.01    0.00      0    402.6    0.01    0.01    N/A
+        4096            64     uint8    none      -1    402.5    0.01    0.01      0    402.8    0.01    0.01    N/A
+        8192           128     uint8    none      -1    403.8    0.02    0.02      0    402.3    0.02    0.02    N/A
+       16384           256     uint8    none      -1    400.9    0.04    0.04      0    400.3    0.04    0.04    N/A
+       32768           512     uint8    none      -1    402.8    0.08    0.08      0    401.3    0.08    0.08    N/A
+       65536          1024     uint8    none      -1    404.3    0.16    0.16      0    403.1    0.16    0.16    N/A
+      131072          2048     uint8    none      -1    410.1    0.32    0.31      0    410.2    0.32    0.31    N/A
+      262144          4096     uint8    none      -1    431.6    0.61    0.60      0    425.9    0.62    0.61    N/A
+      524288          8192     uint8    none      -1    38797    0.01    0.01      0    39019    0.01    0.01    N/A
+     1048576         16384     uint8    none      -1    31711    0.03    0.03      0   4092.0    0.26    0.25    N/A
+     2097152         32768     uint8    none      -1   1255.6    1.67    1.64      0   9173.4    0.23    0.23    N/A
+     4194304         65536     uint8    none      -1    37873    0.11    0.11      0   8877.5    0.47    0.47    N/A
+     8388608        131072     uint8    none      -1   2426.7    3.46    3.40      0   2344.9    3.58    3.52    N/A
+    16777216        262144     uint8    none      -1   4821.8    3.48    3.43      0   4548.4    3.69    3.63    N/A
+    33554432        524288     uint8    none      -1   9386.2    3.57    3.52      0   9202.5    3.65    3.59    N/A
+    67108864       1048576     uint8    none      -1    10528    6.37    6.27      0    10026    6.69    6.59    N/A
+   134217728       2097152     uint8    none      -1    19908    6.74    6.64      0    20344    6.60    6.49    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 0.934016 
+#
+# Collective test concluded: alltoall_perf
+
+-- mpirun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid006014:23539] Rank 24 bound to package[0][core:0-6]
+[nid006014:23539] Rank 25 bound to package[0][core:7-13]
+[nid006014:23539] Rank 26 bound to package[0][core:14-20]
+[nid006014:23539] Rank 27 bound to package[0][core:21-27]
+[nid006014:23539] Rank 28 bound to package[0][core:28-34]
+[nid006014:23539] Rank 29 bound to package[0][core:35-41]
+[nid005896:83584] Rank 8 bound to package[0][core:0-6]
+[nid006758:65000] Rank 57 bound to package[0][core:7-13]
+[nid006014:23539] Rank 30 bound to package[0][core:42-48]
+[nid005896:83584] Rank 9 bound to package[0][core:7-13]
+[nid006014:23539] Rank 31 bound to package[0][core:49-55]
+[nid006758:65000] Rank 56 bound to package[0][core:0-6]
+[nid006216:97772] Rank 32 bound to package[0][core:0-6]
+[nid006216:97772] Rank 33 bound to package[0][core:7-13]
+[nid005896:83584] Rank 10 bound to package[0][core:14-20]
+[nid006216:97772] Rank 34 bound to package[0][core:14-20]
+[nid006216:97772] Rank 37 bound to package[0][core:35-41]
+[nid006216:97772] Rank 36 bound to package[0][core:28-34]
+[nid006758:65000] Rank 58 bound to package[0][core:14-20]
+[nid005793:14463] Rank 0 bound to package[0][core:0-6]
+[nid005793:14463] Rank 1 bound to package[0][core:7-13]
+[nid005793:14463] Rank 2 bound to package[0][core:14-20]
+[nid005793:14463] Rank 3 bound to package[0][core:21-27]
+[nid005793:14463] Rank 4 bound to package[0][core:28-34]
+[nid005793:14463] Rank 5 bound to package[0][core:35-41]
+[nid006758:65000] Rank 59 bound to package[0][core:21-27]
+[nid005793:14463] Rank 6 bound to package[0][core:42-48]
+[nid005896:83584] Rank 11 bound to package[0][core:21-27]
+[nid005896:83584] Rank 12 bound to package[0][core:28-34]
+[nid005793:14463] Rank 7 bound to package[0][core:49-55]
+[nid006758:65000] Rank 62 bound to package[0][core:42-48]
+[nid006216:97772] Rank 35 bound to package[0][core:21-27]
+[nid006216:97772] Rank 39 bound to package[0][core:49-55]
+[nid006216:97772] Rank 38 bound to package[0][core:42-48]
+[nid005896:83584] Rank 13 bound to package[0][core:35-41]
+[nid005896:83584] Rank 14 bound to package[0][core:42-48]
+[nid005896:83584] Rank 15 bound to package[0][core:49-55]
+[nid006255:01690] Rank 48 bound to package[0][core:0-6]
+[nid006255:01690] Rank 49 bound to package[0][core:7-13]
+[nid006758:65000] Rank 63 bound to package[0][core:49-55]
+[nid006758:65000] Rank 61 bound to package[0][core:35-41]
+[nid006758:65000] Rank 60 bound to package[0][core:28-34]
+[nid006255:01690] Rank 50 bound to package[0][core:14-20]
+[nid006255:01690] Rank 51 bound to package[0][core:21-27]
+[nid006255:01690] Rank 54 bound to package[0][core:42-48]
+[nid006255:01690] Rank 53 bound to package[0][core:35-41]
+[nid006255:01690] Rank 52 bound to package[0][core:28-34]
+[nid006255:01690] Rank 55 bound to package[0][core:49-55]
+[nid005951:29327] Rank 16 bound to package[0][core:0-6]
+[nid005951:29327] Rank 17 bound to package[0][core:7-13]
+[nid006226:121073] Rank 40 bound to package[0][core:0-6]
+[nid006226:121073] Rank 41 bound to package[0][core:7-13]
+[nid005951:29327] Rank 19 bound to package[0][core:21-27]
+[nid006226:121073] Rank 42 bound to package[0][core:14-20]
+[nid005951:29327] Rank 18 bound to package[0][core:14-20]
+[nid005951:29327] Rank 20 bound to package[0][core:28-34]
+[nid006226:121073] Rank 43 bound to package[0][core:21-27]
+[nid006226:121073] Rank 44 bound to package[0][core:28-34]
+[nid006226:121073] Rank 46 bound to package[0][core:42-48]
+[nid006226:121073] Rank 45 bound to package[0][core:35-41]
+[nid006226:121073] Rank 47 bound to package[0][core:49-55]
+[nid005951:29327] Rank 21 bound to package[0][core:35-41]
+[nid005951:29327] Rank 22 bound to package[0][core:42-48]
+[nid005951:29327] Rank 23 bound to package[0][core:49-55]
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  14490 on  nid005793 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  14491 on  nid005793 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  14492 on  nid005793 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  14493 on  nid005793 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  14494 on  nid005793 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  14495 on  nid005793 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  14498 on  nid005793 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  14502 on  nid005793 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  83611 on  nid005896 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  83612 on  nid005896 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  83613 on  nid005896 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  83614 on  nid005896 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  83615 on  nid005896 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  83617 on  nid005896 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  83619 on  nid005896 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  83623 on  nid005896 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid  29354 on  nid005951 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid  29355 on  nid005951 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid  29357 on  nid005951 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid  29356 on  nid005951 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid  29358 on  nid005951 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid  29359 on  nid005951 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid  29365 on  nid005951 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid  29367 on  nid005951 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  23566 on  nid006014 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  23567 on  nid006014 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  23568 on  nid006014 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  23569 on  nid006014 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  23570 on  nid006014 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  23571 on  nid006014 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  23574 on  nid006014 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  23577 on  nid006014 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid  97814 on  nid006216 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid  97815 on  nid006216 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid  97816 on  nid006216 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid  97819 on  nid006216 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid  97818 on  nid006216 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid  97817 on  nid006216 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid  97828 on  nid006216 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid  97825 on  nid006216 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid 121100 on  nid006226 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid 121101 on  nid006226 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid 121102 on  nid006226 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid 121103 on  nid006226 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid 121104 on  nid006226 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid 121108 on  nid006226 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid 121105 on  nid006226 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid 121112 on  nid006226 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid   1717 on  nid006255 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid   1718 on  nid006255 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid   1719 on  nid006255 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid   1720 on  nid006255 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid   1724 on  nid006255 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid   1722 on  nid006255 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid   1721 on  nid006255 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid   1728 on  nid006255 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  65055 on  nid006758 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  65054 on  nid006758 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  65056 on  nid006758 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  65057 on  nid006758 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  65067 on  nid006758 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  65065 on  nid006758 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  65058 on  nid006758 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  65059 on  nid006758 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1     uint8     sum      -1    193.5    0.00    0.00      0    141.0    0.00    0.00      0
+           2             2     uint8     sum      -1    148.8    0.00    0.00      0    141.0    0.00    0.00      0
+           4             4     uint8     sum      -1    140.1    0.00    0.00      0    130.8    0.00    0.00      0
+           8             8     uint8     sum      -1    133.3    0.00    0.00      0    135.7    0.00    0.00      0
+          16            16     uint8     sum      -1    132.2    0.00    0.00      0    132.3    0.00    0.00      0
+          32            32     uint8     sum      -1    136.1    0.00    0.00      0    131.5    0.00    0.00      0
+          64            64     uint8     sum      -1    64.50    0.00    0.00      0    66.33    0.00    0.00      0
+         128           128     uint8     sum      -1    65.71    0.00    0.00      0    66.66    0.00    0.00      0
+         256           256     uint8     sum      -1    67.93    0.00    0.01      0    65.05    0.00    0.01      0
+         512           512     uint8     sum      -1    68.99    0.01    0.01      0    68.24    0.01    0.01      0
+        1024          1024     uint8     sum      -1    72.57    0.01    0.03      0    73.02    0.01    0.03      0
+        2048          2048     uint8     sum      -1    80.13    0.03    0.05      0    79.57    0.03    0.05      0
+        4096          4096     uint8     sum      -1    83.45    0.05    0.10      0    82.76    0.05    0.10      0
+        8192          8192     uint8     sum      -1    154.6    0.05    0.10      0    150.7    0.05    0.11      0
+       16384         16384     uint8     sum      -1    173.8    0.09    0.19      0    178.5    0.09    0.18      0
+       32768         32768     uint8     sum      -1    175.6    0.19    0.37      0    173.1    0.19    0.37      0
+       65536         65536     uint8     sum      -1    184.8    0.35    0.70      0    183.9    0.36    0.70      0
+      131072        131072     uint8     sum      -1    261.4    0.50    0.99      0    263.5    0.50    0.98      0
+      262144        262144     uint8     sum      -1    284.4    0.92    1.81      0    506.5    0.52    1.02      0
+      524288        524288     uint8     sum      -1    328.1    1.60    3.15      0    328.0    1.60    3.15      0
+     1048576       1048576     uint8     sum      -1    414.0    2.53    4.99      0    411.2    2.55    5.02      0
+     2097152       2097152     uint8     sum      -1    29085    0.07    0.14      0    18257    0.11    0.23      0
+     4194304       4194304     uint8     sum      -1   2947.3    1.42    2.80      0    12356    0.34    0.67      0
+     8388608       8388608     uint8     sum      -1    22609    0.37    0.73      0    39051    0.21    0.42      0
+    16777216      16777216     uint8     sum      -1    67169    0.25    0.49      0    67529    0.25    0.49      0
+    33554432      33554432     uint8     sum      -1    17263    1.94    3.83      0    17317    1.94    3.81      0
+    67108864      67108864     uint8     sum      -1    17657    3.80    7.48      0    17445    3.85    7.57      0
+   134217728     134217728     uint8     sum      -1    17821    7.53   14.83      0    17825    7.53   14.82      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 1.47405 
+#
+# Collective test concluded: all_reduce_perf
+
+-- mpirun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid006255:01890] Rank 48 bound to package[0][core:0-6]
+[nid006255:01890] Rank 49 bound to package[0][core:7-13]
+[nid006255:01890] Rank 50 bound to package[0][core:14-20]
+[nid006255:01890] Rank 51 bound to package[0][core:21-27]
+[nid006255:01890] Rank 52 bound to package[0][core:28-34]
+[nid006255:01890] Rank 53 bound to package[0][core:35-41]
+[nid006014:23735] Rank 24 bound to package[0][core:0-6]
+[nid006014:23735] Rank 25 bound to package[0][core:7-13]
+[nid006014:23735] Rank 26 bound to package[0][core:14-20]
+[nid006255:01890] Rank 54 bound to package[0][core:42-48]
+[nid006255:01890] Rank 55 bound to package[0][core:49-55]
+[nid006014:23735] Rank 27 bound to package[0][core:21-27]
+[nid006014:23735] Rank 29 bound to package[0][core:35-41]
+[nid006216:98277] Rank 33 bound to package[0][core:7-13]
+[nid006216:98277] Rank 34 bound to package[0][core:14-20]
+[nid005793:14704] Rank 0 bound to package[0][core:0-6]
+[nid005793:14704] Rank 1 bound to package[0][core:7-13]
+[nid005793:14704] Rank 2 bound to package[0][core:14-20]
+[nid005793:14704] Rank 3 bound to package[0][core:21-27]
+[nid005793:14704] Rank 4 bound to package[0][core:28-34]
+[nid006758:65570] Rank 56 bound to package[0][core:0-6]
+[nid005793:14704] Rank 5 bound to package[0][core:35-41]
+[nid006758:65570] Rank 58 bound to package[0][core:14-20]
+[nid005793:14704] Rank 6 bound to package[0][core:42-48]
+[nid006758:65570] Rank 57 bound to package[0][core:7-13]
+[nid006758:65570] Rank 60 bound to package[0][core:28-34]
+[nid006758:65570] Rank 59 bound to package[0][core:21-27]
+[nid005793:14704] Rank 7 bound to package[0][core:49-55]
+[nid006014:23735] Rank 28 bound to package[0][core:28-34]
+[nid005896:84080] Rank 8 bound to package[0][core:0-6]
+[nid005896:84080] Rank 10 bound to package[0][core:14-20]
+[nid006014:23735] Rank 30 bound to package[0][core:42-48]
+[nid006014:23735] Rank 31 bound to package[0][core:49-55]
+[nid006758:65570] Rank 61 bound to package[0][core:35-41]
+[nid006758:65570] Rank 63 bound to package[0][core:49-55]
+[nid006758:65570] Rank 62 bound to package[0][core:42-48]
+[nid005896:84080] Rank 9 bound to package[0][core:7-13]
+[nid005896:84080] Rank 12 bound to package[0][core:28-34]
+[nid005896:84080] Rank 11 bound to package[0][core:21-27]
+[nid006216:98277] Rank 35 bound to package[0][core:21-27]
+[nid006216:98277] Rank 36 bound to package[0][core:28-34]
+[nid006216:98277] Rank 32 bound to package[0][core:0-6]
+[nid006216:98277] Rank 37 bound to package[0][core:35-41]
+[nid006216:98277] Rank 38 bound to package[0][core:42-48]
+[nid006216:98277] Rank 39 bound to package[0][core:49-55]
+[nid005896:84080] Rank 13 bound to package[0][core:35-41]
+[nid006226:121558] Rank 44 bound to package[0][core:28-34]
+[nid006226:121558] Rank 45 bound to package[0][core:35-41]
+[nid005896:84080] Rank 14 bound to package[0][core:42-48]
+[nid005896:84080] Rank 15 bound to package[0][core:49-55]
+[nid006226:121558] Rank 41 bound to package[0][core:7-13]
+[nid006226:121558] Rank 40 bound to package[0][core:0-6]
+[nid006226:121558] Rank 42 bound to package[0][core:14-20]
+[nid006226:121558] Rank 47 bound to package[0][core:49-55]
+[nid006226:121558] Rank 46 bound to package[0][core:42-48]
+[nid006226:121558] Rank 43 bound to package[0][core:21-27]
+[nid005951:29519] Rank 16 bound to package[0][core:0-6]
+[nid005951:29519] Rank 17 bound to package[0][core:7-13]
+[nid005951:29519] Rank 18 bound to package[0][core:14-20]
+[nid005951:29519] Rank 19 bound to package[0][core:21-27]
+[nid005951:29519] Rank 20 bound to package[0][core:28-34]
+[nid005951:29519] Rank 21 bound to package[0][core:35-41]
+[nid005951:29519] Rank 23 bound to package[0][core:49-55]
+[nid005951:29519] Rank 22 bound to package[0][core:42-48]
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  14731 on  nid005793 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  14732 on  nid005793 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  14733 on  nid005793 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  14734 on  nid005793 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  14735 on  nid005793 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  14738 on  nid005793 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  14739 on  nid005793 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  14742 on  nid005793 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  84107 on  nid005896 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  84109 on  nid005896 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  84108 on  nid005896 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  84111 on  nid005896 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  84110 on  nid005896 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  84112 on  nid005896 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  84116 on  nid005896 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  84120 on  nid005896 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid  29546 on  nid005951 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid  29547 on  nid005951 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid  29548 on  nid005951 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid  29549 on  nid005951 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid  29550 on  nid005951 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid  29551 on  nid005951 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid  29558 on  nid005951 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid  29555 on  nid005951 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  23762 on  nid006014 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  23763 on  nid006014 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  23764 on  nid006014 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  23765 on  nid006014 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  23767 on  nid006014 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  23766 on  nid006014 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  23773 on  nid006014 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  23775 on  nid006014 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid  98308 on  nid006216 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid  98304 on  nid006216 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid  98305 on  nid006216 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid  98306 on  nid006216 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid  98307 on  nid006216 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid  98309 on  nid006216 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid  98312 on  nid006216 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid  98316 on  nid006216 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid 121588 on  nid006226 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid 121587 on  nid006226 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid 121589 on  nid006226 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid 121598 on  nid006226 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid 121585 on  nid006226 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid 121586 on  nid006226 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid 121595 on  nid006226 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid 121590 on  nid006226 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid   1917 on  nid006255 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid   1918 on  nid006255 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid   1919 on  nid006255 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid   1920 on  nid006255 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid   1921 on  nid006255 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid   1922 on  nid006255 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid   1925 on  nid006255 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid   1929 on  nid006255 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  65597 on  nid006758 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  65599 on  nid006758 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  65598 on  nid006758 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  65601 on  nid006758 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  65600 on  nid006758 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  65602 on  nid006758 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  65610 on  nid006758 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  65605 on  nid006758 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.19    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+        1024            16     uint8    none      -1    160.1    0.01    0.01      0    160.2    0.01    0.01      0
+        2048            32     uint8    none      -1    162.8    0.01    0.01      0    161.0    0.01    0.01      0
+        4096            64     uint8    none      -1    162.2    0.03    0.02      0    159.7    0.03    0.03      0
+        8192           128     uint8    none      -1    160.4    0.05    0.05      0    160.8    0.05    0.05      0
+       16384           256     uint8    none      -1    161.2    0.10    0.10      0    161.6    0.10    0.10      0
+       32768           512     uint8    none      -1    166.4    0.20    0.19      0    164.9    0.20    0.20      0
+       65536          1024     uint8    none      -1    175.2    0.37    0.37      0    176.4    0.37    0.37      0
+      131072          2048     uint8    none      -1    900.6    0.15    0.14      0    906.9    0.14    0.14      0
+      262144          4096     uint8    none      -1   1149.5    0.23    0.22      0    925.6    0.28    0.28      0
+      524288          8192     uint8    none      -1   1021.2    0.51    0.51      0   1023.5    0.51    0.50      0
+     1048576         16384     uint8    none      -1   1330.7    0.79    0.78      0   1124.0    0.93    0.92      0
+     2097152         32768     uint8    none      -1   137849    0.02    0.01      0   160875    0.01    0.01      0
+     4194304         65536     uint8    none      -1    55302    0.08    0.07      0   8961.8    0.47    0.46      0
+     8388608        131072     uint8    none      -1    20930    0.40    0.39      0   4829.2    1.74    1.71      0
+    16777216        262144     uint8    none      -1   8656.2    1.94    1.91      0   8642.7    1.94    1.91      0
+    33554432        524288     uint8    none      -1   8687.4    3.86    3.80      0   8696.6    3.86    3.80      0
+    67108864       1048576     uint8    none      -1   8636.3    7.77    7.65      0   8804.1    7.62    7.50      0
+   134217728       2097152     uint8    none      -1   8943.0   15.01   14.77      0   8933.6   15.02   14.79      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 1.13938 
+#
+# Collective test concluded: all_gather_perf
+
