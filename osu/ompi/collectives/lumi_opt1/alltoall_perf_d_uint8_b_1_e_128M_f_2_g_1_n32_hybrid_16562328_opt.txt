@@ -1,0 +1,75 @@
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 107335 on  nid005188 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 107337 on  nid005188 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 107336 on  nid005188 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 107338 on  nid005188 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 107339 on  nid005188 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 107342 on  nid005188 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 107347 on  nid005188 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 107348 on  nid005188 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  32188 on  nid006849 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  32184 on  nid006849 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  32193 on  nid006849 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  32187 on  nid006849 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  32186 on  nid006849 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  32185 on  nid006849 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  32190 on  nid006849 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  32195 on  nid006849 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid  96520 on  nid006850 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid  96521 on  nid006850 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid  96522 on  nid006850 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid  96523 on  nid006850 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid  96524 on  nid006850 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid  96526 on  nid006850 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid  96528 on  nid006850 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid  96532 on  nid006850 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  90570 on  nid006851 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  90571 on  nid006851 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  90574 on  nid006851 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  90572 on  nid006851 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  90578 on  nid006851 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  90573 on  nid006851 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  90575 on  nid006851 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  90581 on  nid006851 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.12    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.10    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+         512            16     uint8    none      -1    191.3    0.00    0.00      0    180.7    0.00    0.00    N/A
+        1024            32     uint8    none      -1    181.8    0.01    0.01      0    175.6    0.01    0.01    N/A
+        2048            64     uint8    none      -1    177.2    0.01    0.01      0    177.2    0.01    0.01    N/A
+        4096           128     uint8    none      -1    176.9    0.02    0.02      0    176.6    0.02    0.02    N/A
+        8192           256     uint8    none      -1    178.9    0.05    0.04      0    175.4    0.05    0.05    N/A
+       16384           512     uint8    none      -1    176.5    0.09    0.09      0    175.5    0.09    0.09    N/A
+       32768          1024     uint8    none      -1    177.3    0.18    0.18      0    176.3    0.19    0.18    N/A
+       65536          2048     uint8    none      -1    181.6    0.36    0.35      0    179.5    0.37    0.35    N/A
+      131072          4096     uint8    none      -1    189.8    0.69    0.67      0    191.1    0.69    0.66    N/A
+      262144          8192     uint8    none      -1    259.8    1.01    0.98      0    256.4    1.02    0.99    N/A
+      524288         16384     uint8    none      -1    281.7    1.86    1.80      0    278.1    1.89    1.83    N/A
+     1048576         32768     uint8    none      -1    293.2    3.58    3.46      0    291.1    3.60    3.49    N/A
+     2097152         65536     uint8    none      -1    373.6    5.61    5.44      0    375.8    5.58    5.41    N/A
+     4194304        131072     uint8    none      -1    528.7    7.93    7.68      0    534.1    7.85    7.61    N/A
+     8388608        262144     uint8    none      -1    842.3    9.96    9.65      0    847.1    9.90    9.59    N/A
+    16777216        524288     uint8    none      -1   1461.4   11.48   11.12      0   1471.0   11.41   11.05    N/A
+    33554432       1048576     uint8    none      -1   2800.8   11.98   11.61      0   2771.1   12.11   11.73    N/A
+    67108864       2097152     uint8    none      -1   5340.3   12.57   12.17      0   5298.6   12.67   12.27    N/A
+   134217728       4194304     uint8    none      -1    10481   12.81   12.41      0    10399   12.91   12.50    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 2.77747 
+#
+# Collective test concluded: alltoall_perf
+

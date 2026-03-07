@@ -1,0 +1,299 @@
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  29246 on  nid005233 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  29247 on  nid005233 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  29248 on  nid005233 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  29249 on  nid005233 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  29250 on  nid005233 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  29252 on  nid005233 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  29255 on  nid005233 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  29259 on  nid005233 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  44453 on  nid005234 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  44454 on  nid005234 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  44456 on  nid005234 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  44455 on  nid005234 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  44457 on  nid005234 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  44458 on  nid005234 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  44461 on  nid005234 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  44464 on  nid005234 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid  47083 on  nid005816 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid  47085 on  nid005816 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid  47084 on  nid005816 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid  47087 on  nid005816 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid  47086 on  nid005816 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid  47088 on  nid005816 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid  47097 on  nid005816 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid  47091 on  nid005816 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  60467 on  nid005817 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  60469 on  nid005817 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  60468 on  nid005817 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  60470 on  nid005817 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  60471 on  nid005817 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  60472 on  nid005817 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  60480 on  nid005817 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  60476 on  nid005817 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid  77614 on  nid005818 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid  77616 on  nid005818 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid  77615 on  nid005818 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid  77617 on  nid005818 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid  77618 on  nid005818 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid  77620 on  nid005818 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid  77622 on  nid005818 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid  77627 on  nid005818 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid  29713 on  nid006011 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid  29714 on  nid006011 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid  29715 on  nid006011 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid  29716 on  nid006011 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid  29717 on  nid006011 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid  29718 on  nid006011 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid  29721 on  nid006011 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid  29725 on  nid006011 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid 127329 on  nid006012 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid 127330 on  nid006012 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid 127331 on  nid006012 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid 127334 on  nid006012 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid 127333 on  nid006012 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid 127332 on  nid006012 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid 127337 on  nid006012 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid 127341 on  nid006012 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid   8925 on  nid006013 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid   8927 on  nid006013 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid   8926 on  nid006013 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid   8936 on  nid006013 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid   8928 on  nid006013 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid   8929 on  nid006013 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid   8931 on  nid006013 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid   8939 on  nid006013 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 64 Group  0 Pid  89213 on  nid006043 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 65 Group  0 Pid  89212 on  nid006043 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 66 Group  0 Pid  89224 on  nid006043 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 67 Group  0 Pid  89214 on  nid006043 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 68 Group  0 Pid  89216 on  nid006043 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 69 Group  0 Pid  89220 on  nid006043 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 70 Group  0 Pid  89215 on  nid006043 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 71 Group  0 Pid  89226 on  nid006043 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 72 Group  0 Pid  81245 on  nid006044 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 73 Group  0 Pid  81246 on  nid006044 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 74 Group  0 Pid  81248 on  nid006044 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 75 Group  0 Pid  81247 on  nid006044 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 76 Group  0 Pid  81249 on  nid006044 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 77 Group  0 Pid  81250 on  nid006044 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 78 Group  0 Pid  81256 on  nid006044 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 79 Group  0 Pid  81258 on  nid006044 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 80 Group  0 Pid  68150 on  nid006045 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 81 Group  0 Pid  68152 on  nid006045 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 82 Group  0 Pid  68151 on  nid006045 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 83 Group  0 Pid  68153 on  nid006045 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 84 Group  0 Pid  68154 on  nid006045 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 85 Group  0 Pid  68155 on  nid006045 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 86 Group  0 Pid  68158 on  nid006045 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 87 Group  0 Pid  68162 on  nid006045 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 88 Group  0 Pid  85427 on  nid006113 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 89 Group  0 Pid  85428 on  nid006113 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 90 Group  0 Pid  85429 on  nid006113 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 91 Group  0 Pid  85431 on  nid006113 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 92 Group  0 Pid  85430 on  nid006113 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 93 Group  0 Pid  85435 on  nid006113 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 94 Group  0 Pid  85432 on  nid006113 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 95 Group  0 Pid  85438 on  nid006113 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 96 Group  0 Pid  93682 on  nid006114 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 97 Group  0 Pid  93683 on  nid006114 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 98 Group  0 Pid  93686 on  nid006114 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 99 Group  0 Pid  93687 on  nid006114 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 100 Group  0 Pid  93684 on  nid006114 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 101 Group  0 Pid  93685 on  nid006114 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 102 Group  0 Pid  93696 on  nid006114 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 103 Group  0 Pid  93693 on  nid006114 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 104 Group  0 Pid  19833 on  nid006115 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 105 Group  0 Pid  19834 on  nid006115 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 106 Group  0 Pid  19836 on  nid006115 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 107 Group  0 Pid  19838 on  nid006115 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 108 Group  0 Pid  19841 on  nid006115 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 109 Group  0 Pid  19845 on  nid006115 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 110 Group  0 Pid  19835 on  nid006115 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 111 Group  0 Pid  19837 on  nid006115 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 112 Group  0 Pid 111972 on  nid006218 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 113 Group  0 Pid 111969 on  nid006218 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 114 Group  0 Pid 111967 on  nid006218 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 115 Group  0 Pid 111968 on  nid006218 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 116 Group  0 Pid 111970 on  nid006218 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 117 Group  0 Pid 111979 on  nid006218 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 118 Group  0 Pid 111982 on  nid006218 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 119 Group  0 Pid 111971 on  nid006218 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 120 Group  0 Pid 103412 on  nid006219 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 121 Group  0 Pid 103411 on  nid006219 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 122 Group  0 Pid 103413 on  nid006219 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 123 Group  0 Pid 103415 on  nid006219 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 124 Group  0 Pid 103414 on  nid006219 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 125 Group  0 Pid 103416 on  nid006219 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 126 Group  0 Pid 103427 on  nid006219 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 127 Group  0 Pid 103423 on  nid006219 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 128 Group  0 Pid 123343 on  nid006220 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 129 Group  0 Pid 123345 on  nid006220 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 130 Group  0 Pid 123344 on  nid006220 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 131 Group  0 Pid 123346 on  nid006220 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 132 Group  0 Pid 123347 on  nid006220 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 133 Group  0 Pid 123349 on  nid006220 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 134 Group  0 Pid 123355 on  nid006220 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 135 Group  0 Pid 123358 on  nid006220 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 136 Group  0 Pid  10394 on  nid006307 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 137 Group  0 Pid  10396 on  nid006307 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 138 Group  0 Pid  10395 on  nid006307 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 139 Group  0 Pid  10398 on  nid006307 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 140 Group  0 Pid  10397 on  nid006307 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 141 Group  0 Pid  10399 on  nid006307 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 142 Group  0 Pid  10404 on  nid006307 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 143 Group  0 Pid  10407 on  nid006307 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 144 Group  0 Pid  25933 on  nid006308 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 145 Group  0 Pid  25932 on  nid006308 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 146 Group  0 Pid  25936 on  nid006308 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 147 Group  0 Pid  25934 on  nid006308 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 148 Group  0 Pid  25935 on  nid006308 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 149 Group  0 Pid  25937 on  nid006308 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 150 Group  0 Pid  25943 on  nid006308 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 151 Group  0 Pid  25946 on  nid006308 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 152 Group  0 Pid 124294 on  nid006309 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 153 Group  0 Pid 124295 on  nid006309 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 154 Group  0 Pid 124296 on  nid006309 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 155 Group  0 Pid 124297 on  nid006309 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 156 Group  0 Pid 124298 on  nid006309 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 157 Group  0 Pid 124301 on  nid006309 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 158 Group  0 Pid 124302 on  nid006309 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 159 Group  0 Pid 124305 on  nid006309 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 160 Group  0 Pid 122655 on  nid006517 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 161 Group  0 Pid 122654 on  nid006517 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 162 Group  0 Pid 122658 on  nid006517 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 163 Group  0 Pid 122656 on  nid006517 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 164 Group  0 Pid 122657 on  nid006517 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 165 Group  0 Pid 122666 on  nid006517 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 166 Group  0 Pid 122660 on  nid006517 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 167 Group  0 Pid 122668 on  nid006517 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 168 Group  0 Pid  36365 on  nid006518 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 169 Group  0 Pid  36366 on  nid006518 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 170 Group  0 Pid  36368 on  nid006518 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 171 Group  0 Pid  36369 on  nid006518 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 172 Group  0 Pid  36367 on  nid006518 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 173 Group  0 Pid  36370 on  nid006518 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 174 Group  0 Pid  36374 on  nid006518 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 175 Group  0 Pid  36377 on  nid006518 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 176 Group  0 Pid 117066 on  nid006519 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 177 Group  0 Pid 117064 on  nid006519 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 178 Group  0 Pid 117063 on  nid006519 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 179 Group  0 Pid 117065 on  nid006519 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 180 Group  0 Pid 117067 on  nid006519 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 181 Group  0 Pid 117068 on  nid006519 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 182 Group  0 Pid 117074 on  nid006519 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 183 Group  0 Pid 117077 on  nid006519 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 184 Group  0 Pid 128434 on  nid006572 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 185 Group  0 Pid 128435 on  nid006572 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 186 Group  0 Pid 128436 on  nid006572 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 187 Group  0 Pid 128437 on  nid006572 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 188 Group  0 Pid 128439 on  nid006572 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 189 Group  0 Pid 128438 on  nid006572 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 190 Group  0 Pid 128446 on  nid006572 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 191 Group  0 Pid 128443 on  nid006572 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 192 Group  0 Pid  77917 on  nid006573 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 193 Group  0 Pid  77919 on  nid006573 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 194 Group  0 Pid  77918 on  nid006573 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 195 Group  0 Pid  77921 on  nid006573 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 196 Group  0 Pid  77920 on  nid006573 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 197 Group  0 Pid  77923 on  nid006573 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 198 Group  0 Pid  77925 on  nid006573 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 199 Group  0 Pid  77929 on  nid006573 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 200 Group  0 Pid  13368 on  nid006574 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 201 Group  0 Pid  13370 on  nid006574 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 202 Group  0 Pid  13369 on  nid006574 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 203 Group  0 Pid  13371 on  nid006574 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 204 Group  0 Pid  13372 on  nid006574 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 205 Group  0 Pid  13376 on  nid006574 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 206 Group  0 Pid  13373 on  nid006574 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 207 Group  0 Pid  13381 on  nid006574 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 208 Group  0 Pid 117728 on  nid006672 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 209 Group  0 Pid 117729 on  nid006672 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 210 Group  0 Pid 117730 on  nid006672 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 211 Group  0 Pid 117731 on  nid006672 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 212 Group  0 Pid 117732 on  nid006672 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 213 Group  0 Pid 117733 on  nid006672 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 214 Group  0 Pid 117737 on  nid006672 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 215 Group  0 Pid 117740 on  nid006672 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 216 Group  0 Pid  31890 on  nid006673 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 217 Group  0 Pid  31892 on  nid006673 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 218 Group  0 Pid  31891 on  nid006673 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 219 Group  0 Pid  31893 on  nid006673 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 220 Group  0 Pid  31894 on  nid006673 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 221 Group  0 Pid  31901 on  nid006673 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 222 Group  0 Pid  31895 on  nid006673 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 223 Group  0 Pid  31898 on  nid006673 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 224 Group  0 Pid  49684 on  nid006674 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 225 Group  0 Pid  49687 on  nid006674 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 226 Group  0 Pid  49685 on  nid006674 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 227 Group  0 Pid  49686 on  nid006674 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 228 Group  0 Pid  49688 on  nid006674 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 229 Group  0 Pid  49690 on  nid006674 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 230 Group  0 Pid  49697 on  nid006674 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 231 Group  0 Pid  49693 on  nid006674 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 232 Group  0 Pid  35343 on  nid006693 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 233 Group  0 Pid  35344 on  nid006693 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 234 Group  0 Pid  35345 on  nid006693 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 235 Group  0 Pid  35346 on  nid006693 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 236 Group  0 Pid  35347 on  nid006693 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 237 Group  0 Pid  35353 on  nid006693 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 238 Group  0 Pid  35358 on  nid006693 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 239 Group  0 Pid  35356 on  nid006693 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 240 Group  0 Pid  73870 on  nid006694 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 241 Group  0 Pid  73874 on  nid006694 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 242 Group  0 Pid  73871 on  nid006694 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 243 Group  0 Pid  73872 on  nid006694 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 244 Group  0 Pid  73873 on  nid006694 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 245 Group  0 Pid  73875 on  nid006694 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 246 Group  0 Pid  73879 on  nid006694 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 247 Group  0 Pid  73882 on  nid006694 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 248 Group  0 Pid  45645 on  nid006695 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 249 Group  0 Pid  45647 on  nid006695 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 250 Group  0 Pid  45646 on  nid006695 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 251 Group  0 Pid  45648 on  nid006695 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 252 Group  0 Pid  45649 on  nid006695 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 253 Group  0 Pid  45650 on  nid006695 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 254 Group  0 Pid  45653 on  nid006695 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 255 Group  0 Pid  45657 on  nid006695 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+        4096            16     uint8    none      -1   2566.8    0.00    0.00      0   1760.9    0.00    0.00    N/A
+        8192            32     uint8    none      -1   1733.1    0.00    0.00      0   1739.6    0.00    0.00    N/A
+       16384            64     uint8    none      -1   1732.3    0.01    0.01      0   1736.2    0.01    0.01    N/A
+       32768           128     uint8    none      -1   1731.9    0.02    0.02      0   1742.8    0.02    0.02    N/A
+       65536           256     uint8    none      -1   1724.8    0.04    0.04      0   1730.5    0.04    0.04    N/A
+      131072           512     uint8    none      -1   1726.2    0.08    0.08      0   1732.9    0.08    0.08    N/A
+      262144          1024     uint8    none      -1   1742.2    0.15    0.15      0   1747.0    0.15    0.15    N/A
+      524288          2048     uint8    none      -1   1769.4    0.30    0.30      0   2209.0    0.24    0.24    N/A
+     1048576          4096     uint8    none      -1   7886.6    0.13    0.13      0    15123    0.07    0.07    N/A
+     2097152          8192     uint8    none      -1   2510.6    0.84    0.83      0   2523.0    0.83    0.83    N/A
+     4194304         16384     uint8    none      -1   2612.2    1.61    1.60      0   2627.5    1.60    1.59    N/A
+     8388608         32768     uint8    none      -1   2862.3    2.93    2.92      0   2884.2    2.91    2.90    N/A
+    16777216         65536     uint8    none      -1   3612.5    4.64    4.63      0   3634.5    4.62    4.60    N/A
+    33554432        131072     uint8    none      -1   4997.7    6.71    6.69      0   5062.9    6.63    6.60    N/A
+    67108864        262144     uint8    none      -1   8220.7    8.16    8.13      0   8226.2    8.16    8.13    N/A
+   134217728        524288     uint8    none      -1    14156    9.48    9.44      0    14132    9.50    9.46    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 1.24412 
+#
+# Collective test concluded: alltoall_perf
+
