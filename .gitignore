@@ -2,8 +2,10 @@
 libfabric/
 install_cxi/
 install_libfabric/
-openmpi5/
-install_ompi/
+openmpi5*/
+openmpi5
+install_ompi*/
+install_ompi
 rccl/
 install_rccl/
 install_rccl_cpe/
