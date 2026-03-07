@@ -1,2 +1,0 @@
-# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
-# Size       Avg Latency(us)

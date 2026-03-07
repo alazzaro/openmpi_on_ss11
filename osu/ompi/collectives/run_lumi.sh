@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 4; do
+for NNODES in 1 2 4 8 16 32 64; do
+#for NNODES in 4; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
@@ -55,7 +55,7 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
     (
         echo "with LinkX"
 
-        export FI_SHM_USE_XPMEM=1
+        export FI_SHM_USE_XPMEM=0 # otherwise the D2D breaks with LNX
         export FI_PROVIDER=lnx
         export FI_LNX_PROV_LINKS=shm+cxi # changed in the binding script
         export OMPI_MCA_opal_common_ofi_provider_include=lnx
@@ -63,13 +63,23 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
         export OMPI_MCA_pml=cm
         export OMPI_MCA_mtl=ofi
 	export OMPI_MCA_smsc=xpmem
-	export OMPI_MCA_mtl_ofi_disable_hmem=1 # avoid error on multiple nodes
 
-	CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+	# opts
+#	export FI_CXI_RDZV_THRESHOLD=4096
+
+	CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D")
 #  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
         for cmd in "\${CMDS[@]}"; do
     	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
         done
+
+        export FI_SHM_USE_XPMEM=1
+
+	CMDS=("osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
+        done
+
     )
     fi # only software
 #    fi
