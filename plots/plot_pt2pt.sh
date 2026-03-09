@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MYUSER="marcink"
-#MYUSER="alazzaro"
+#MYUSER="marcink"
+MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
 echo "User: $MYUSER"
@@ -49,7 +49,7 @@ case "${SYSTEM}" in
 		       "../osu/craype/pt2pt/olivia/osu_bibw_b_single_D_D_singlenode.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_ob1_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_lnx_srun.txt"
-		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_singlenode.txt"
+		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_singlenode_mpirun.txt"
 		      )
 		;;
 esac
@@ -71,7 +71,7 @@ case "${SYSTEM}" in
 		FILES=("../osu/craype/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
-		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode.txt"
+		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode_mpirun.txt"
 		      )
 		;;
 esac
@@ -209,6 +209,7 @@ STYLES=("g-^"
 case "${SYSTEM}" in
             lumi)
 		FILES=("$(ls ../osu/craype/pt2pt/lumi/osu_bibw_b_multiple_H_H_multinode_hybrid_*.txt)"
+#		       "$(ls ../osu/craype/pt2pt/lumi_single_buffer/osu_bibw_b_single_H_H_multinode_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_H_H_cxi_multinode_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_H_H_cxi_multinode_software_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_H_H_lnx_multinode_software_*.txt)"
@@ -225,11 +226,13 @@ case "${SYSTEM}" in
 esac
 
 LABELS=("Cray MPI (-b multiple)"
+#	"Cray MPI (-b single)"
 	"ompi cxi, hybrid matching"
 	"ompi cxi, software matching"
 	"ompi lnx"
        )
 STYLES=("b-o"
+#	"bo:"
 	"g-^"
 	"r-^"
 	"g-o"
@@ -253,7 +256,7 @@ case "${SYSTEM}" in
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/software_matching/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
-		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode.txt"
+		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode_mpirun.txt"
 		      )
 		;;
 esac
