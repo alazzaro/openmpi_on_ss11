@@ -16,7 +16,7 @@ rm -rf $OMPI_DIR
 cd $ROOT_DIR
 mkdir -p $OMPI_DIR
 cd $OMPI_DIR
-VER=5.0.9
+VER=5.0.10
 wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${VER}.tar.bz2
 tar xvf openmpi-${VER}.tar.bz2
 cd openmpi-${VER}
