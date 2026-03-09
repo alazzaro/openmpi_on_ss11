@@ -45,16 +45,17 @@ case "${SYSTEM}" in
 		      )
 	    ;;
 	    olivia)
-		FILES=("craype/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode.txt"
-		       "craype/pt2pt/olivia/osu_bibw_b_single_D_D_singlenode.txt"
-		       "ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_ob1_srun.txt"
-		       "ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_lnx_srun.txt"
-		       "craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_singlenode.txt"
+		FILES=("../osu/craype/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode.txt"
+		       "../osu/craype/pt2pt/olivia/osu_bibw_b_single_D_D_singlenode.txt"
+		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_ob1_srun.txt"
+		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_lnx_srun.txt"
+		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_singlenode.txt"
 		      )
 		;;
 esac
 
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU intra-node bibw DD" --outfile $SYSTEM/osu-intranode-bibw-DD.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU intra-node bibw DD" --outfile $SYSTEM/osu-intranode-bibw-DD.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile $SYSTEM/osu-intranode-bibw-DD.png
 
 case "${SYSTEM}" in
             lumi)
@@ -86,7 +87,8 @@ STYLES=("b-o"
 	"r^:"
        )
 
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-DD.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-DD.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-DD.png
 
 
 case "${SYSTEM}" in
@@ -113,7 +115,8 @@ STYLES=("g-^"
 	"g-o"
        )
 
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-DD.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-DD.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-DD.png
 
 
 case "${SYSTEM}" in
@@ -144,7 +147,8 @@ STYLES=("b-o"
 	"g-^"
 	"g-o"
        )
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU intra-node bibw HH" --outfile ${SYSTEM}/osu-intranode-bibw-HH.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU intra-node bibw HH" --outfile ${SYSTEM}/osu-intranode-bibw-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-intranode-bibw-HH.png
 
 case "${SYSTEM}" in
             lumi)
@@ -170,7 +174,8 @@ STYLES=("b-o"
 	"g-^"
 	"g-o"
        )
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-HH.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-HH.png
 
 case "${SYSTEM}" in
             lumi)
@@ -197,4 +202,5 @@ STYLES=("g-^"
 	"g-o"
        )
 
-./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-HH.png
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-tagmatching-HH.png
