@@ -1,0 +1,10 @@
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                   21046.30
+2                   21843.18
+4                   20989.64
+8                   21157.53
+16                  21120.75
+32                  21314.75
+64                  21344.83

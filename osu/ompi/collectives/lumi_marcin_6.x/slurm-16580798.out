@@ -1,0 +1,248 @@
+SLURM_MEM_PER_CPU=0
+SLURM_NODEID=0
+SLURM_TASK_PID=98449
+SLURM_PRIO_PROCESS=0
+SLURM_SUBMIT_DIR=/pfs/lustrep1/users/makrotki/cug_2026/ompi/runs6x
+SLURM_CPUS_PER_TASK=7
+SLURM_GPUS_PER_NODE=8
+SLURM_PROCID=0
+SLURM_JOB_GID=327000092
+SLURMD_NODENAME=nid005299
+SLURM_JOB_END_TIME=1772999414
+SLURM_TASKS_PER_NODE=8(x64)
+SLURM_NNODES=64
+SLURM_JOB_START_TIME=1772994014
+SLURM_NTASKS_PER_NODE=8
+SLURM_JOB_NODELIST=nid[005299,005419-005420,005737,005751,005834-005836,005917,005966-005968,006018,006025,006276,006412,006535,006548,006597,006606,006623,006647,006661,006882,006886,006917,006954,006965,006984,006990,006996,007014-007015,007040,007042,007057-007058,007098,007119,007156,007222,007242,007263-007264,007296-007297,007319,007336-007337,007346-007347,007469-007471,007611-007612,007675-007676,007688-007689,007700-007701,007773-007774]
+SLURM_CLUSTER_NAME=lumi
+SLURM_NODELIST=nid[005299,005419-005420,005737,005751,005834-005836,005917,005966-005968,006018,006025,006276,006412,006535,006548,006597,006606,006623,006647,006661,006882,006886,006917,006954,006965,006984,006990,006996,007014-007015,007040,007042,007057-007058,007098,007119,007156,007222,007242,007263-007264,007296-007297,007319,007336-007337,007346-007347,007469-007471,007611-007612,007675-007676,007688-007689,007700-007701,007773-007774]
+SLURM_GPUS_ON_NODE=8
+SLURM_NTASKS=512
+SLURM_JOB_CPUS_PER_NODE=56(x64)
+SLURM_TOPOLOGY_ADDR=nid005299
+SLURM_THREADS_PER_CORE=1
+SLURM_JOB_NAME=YourJobname
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+SLURM_JOBID=16580798
+SLURM_CONF=/etc/slurm/slurm.conf
+SLURM_JOB_QOS=normal
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=64
+SLURM_JOB_UID=327000092
+SLURM_JOB_PARTITION=standard-g
+SLURM_HINT=nomultithread
+SLURM_JOB_USER=makrotki
+SLURM_NPROCS=512
+SLURM_SUBMIT_HOST=uan03
+SLURM_JOB_ACCOUNT=project_465002282
+SLURM_TRES_PER_TASK=cpu=7
+SLURM_GTIDS=0
+SLURM_JOB_ID=16580798
+SLURM_LOCALID=0
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) libfabric/1.22.0 => libfabric/2.3.1
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/6x
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=lnx
+FI_CXI_RDZV_EAGER_SIZE=4096
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/6x
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007ffc22fcd000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x000014cdc5431000)
+	libmpi.so.0 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libmpi.so.0 (0x000014cdc5070000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x000014cdc4e04000)
+	libm.so.6 => /lib64/libm.so.6 (0x000014cdc4d1a000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x000014cdc4ced000)
+	libc.so.6 => /lib64/libc.so.6 (0x000014cdc4ad8000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x000014cdc4ad5000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x000014cdc4a37000)
+	librt.so.1 => /lib64/librt.so.1 (0x000014cdc4a32000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x000014cdbc2c9000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x000014cdbbfbd000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x000014cdbbc00000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x000014cdbbfba000)
+	/lib64/ld-linux-x86-64.so.2 (0x000014cdc69bb000)
+	libopen-pal.so.0 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libopen-pal.so.0 (0x000014cdbbe72000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x000014cdbbacb000)
+	libnl-route-3.so.200 => /usr/lib64/libnl-route-3.so.200 (0x000014cdbba37000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x000014cdbbe4d000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x000014cdbbe4a000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libpmix.so.2 (0x000014cdbb7b6000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libevent_core-2.1.so.7 (0x000014cdbbe14000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libevent_pthreads-2.1.so.7 (0x000014cdbbe10000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libhwloc.so.15 (0x000014cdbb75c000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x000014cdbb743000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x000014cdbb684000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x000014cdbb400000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x000014cdbb66d000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x000014cdbb65f000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x000014cdbb3b1000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x000014cdbb2d4000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x000014cdbb64d000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x000014cdbb643000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x000014cdbb61a000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x000014cdbb000000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x000014cdbb265000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x000014cdbac00000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x000014cdbaf4a000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x000014cdba689000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x000014cdbaef8000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x000014cdbaea3000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x000014cdbb253000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x000014cdbb246000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x000014cdba5e5000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x000014cdba200000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x000014cdbb23c000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x000014cdba125000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x000014cdbb225000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x000014cdbb21e000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x000014cdbae94000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x000014cdbae76000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x000014cdbae54000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x000014cdb9e00000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x000014cdbae40000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x000014cdbae13000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x000014cdba069000)
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=cxi
+FI_CXI_RDZV_EAGER_SIZE=4096
+libfabric:47581:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47580:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47575:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47576:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47574:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47577:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47578:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47579:1772994023::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      55.49
+8                      55.94
+16                     56.17
+32                     56.12
+64                     56.56
+128                    62.30
+256                    93.37
+512                    95.26
+1024                   98.68
+2048                  150.28
+4096                  182.63
+8192                  260.71
+16384                 355.72
+32768                 502.69
+65536                 799.63
+131072                990.35
+262144               1453.03
+524288               2577.59
+1048576              3475.10
+libfabric:47870:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47875:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47869:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47873:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47880:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47871:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47872:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:47868:1772994030::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      47.12
+2                      50.25
+4                      75.86
+8                      81.13
+16                     90.56
+32                    116.38
+64                    433.80
+128                   305.23
+256                   272.12
+512                   449.40
+1024                  534.00
+2048                  941.70
+4096                 1815.94
+8192                16695.72
+16384                4144.25
+32768               11315.30
+65536               16478.98
+131072              20441.64
+262144              71904.58
+524288             502063.04
+1048576            150834.68
+libfabric:50241:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50238:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50240:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50243:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50237:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50258:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50245:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+libfabric:50255:1772994161::cxi:core:cxip_query_if_list():547<warn> nid007040: CXI retry handler not running for device: cxi3
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     232.63
+2                     233.19
+4                     276.49
+8                     282.09
+16                    286.81
+32                  33329.17
+64                    754.37
+128                   734.24
+256                   885.23
+512                  1775.10
+[nid006535:00000] *** An error occurred in MPI_Alltoall
+[nid006535:00000] *** reported by process [2163343361,129]
+[nid006535:00000] *** on communicator MPI_COMM_WORLD
+[nid006535:00000] *** MPI_ERR_INTERN: internal error
+[nid006535:00000] *** MPI_ERRORS_ARE_FATAL (processes in this communicator will now abort,
+[nid006535:00000] ***    and MPI will try to terminate your MPI job as well)
+--------------------------------------------------------------------------
+
+prterun has exited due to process rank 129 with PID 0 on node nid006535 calling
+"abort". This may have caused other processes in the application to be
+terminated by signals sent by prterun (as reported here).
+--------------------------------------------------------------------------
+ 

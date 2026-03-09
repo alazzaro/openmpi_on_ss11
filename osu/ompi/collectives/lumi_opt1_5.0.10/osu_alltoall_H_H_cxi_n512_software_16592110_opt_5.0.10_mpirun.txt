@@ -1,0 +1,12 @@
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     448.54
+2                     450.14
+4                     462.57
+8                     455.62
+16                    460.59
+32                    547.75
+64                    580.37
+128                   625.02
+256                   791.92

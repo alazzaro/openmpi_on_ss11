@@ -21,6 +21,8 @@ COLOR_CYCLE = ['b', 'g', 'r', 'm', 'c', 'y']
 LINESTYLE_CYCLE = ['-', '--', '-.', ':']
 MARKER_CYCLE = ['o', 's', 'D', '^', 'v', 'x']
 
+font_size=16
+
 def parse_nccl_file(path):
     """
     Parse an nccl-tests result file.
@@ -186,7 +188,7 @@ def main():
             "(same order as --files), e.g. 'r-o' 'g--' 'b^:'. "
             "If omitted, built-in color/marker cycles are used."
         ),
-    )    
+    )
     args = parser.parse_args()
 
     files = [Path(f) for f in args.files]
@@ -236,11 +238,11 @@ def main():
                 marker=marker,
                 markersize=6,
                 linewidth=2,
-            )    
+            )
 
     plt.xscale("log", base=10)
     plt.yscale("log", base=10)
-    plt.xlabel("Message size (bytes)", fontsize=12)
+    plt.xlabel("Message size (bytes)", fontsize=font_size)
 
     # Build y-label depending on what we actually plotted
     if len(quantities) == 1 and len(units) == 1:
@@ -250,15 +252,15 @@ def main():
     else:
         # Mixed plot
         ylabel = "Metric"
-    plt.ylabel(ylabel, fontsize=12)
+    plt.ylabel(ylabel, fontsize=font_size)
 
-    plt.title(args.title, fontsize=14, fontweight="bold")
+    plt.title(args.title, fontsize=font_size+2, fontweight="bold")
 
     # Style similar to your example: grid, legend box with white background
     plt.grid(True, which="major", linestyle="-", linewidth=0.7, alpha=0.7)
     legend = plt.legend(
         loc="best",
-        fontsize=10,
+        fontsize=font_size-2,
         frameon=True,
     )
     legend.get_frame().set_alpha(0.9)
