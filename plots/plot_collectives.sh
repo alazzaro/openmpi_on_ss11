@@ -92,8 +92,8 @@ for n in ${NGPUS}; do
 	STYLES=("b-o"
 		"g-^"
 		"g-o"
-		"r^:"
 #		"ro:"
+		"r^:"
 		"k-o"
 	       )
 	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, ${n} GPUs" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
