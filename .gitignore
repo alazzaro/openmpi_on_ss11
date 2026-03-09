@@ -1,7 +1,8 @@
 *~
 libfabric/
 install_cxi/
-install_libfabric/
+install_libfabric*/
+install_libfabric
 openmpi5*/
 openmpi5
 install_ompi*/
