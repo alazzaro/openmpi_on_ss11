@@ -1,8 +1,3 @@
-
-
-0 gpu 4 2
-1 gpu 2 2
-
 # OSU MPI-ROCM Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)        Validation

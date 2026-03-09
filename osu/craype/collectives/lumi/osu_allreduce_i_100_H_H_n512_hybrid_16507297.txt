@@ -1,0 +1,25 @@
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      30.81
+8                      31.38
+16                     31.54
+32                     30.98
+64                     31.23
+128                    33.52
+256                    46.31
+512                    50.33
+1024                   53.52
+2048                   57.29
+4096                   61.98
+8192                   75.37
+16384                  96.58
+32768                 112.24
+65536                 137.78
+131072                202.32
+262144                319.96
+524288               1398.00
+1048576              6616.23
+
+MPICH Slingshot Network Summary: 12 network timeouts
+

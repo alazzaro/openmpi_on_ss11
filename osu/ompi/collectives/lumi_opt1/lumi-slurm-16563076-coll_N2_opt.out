@@ -1,0 +1,1724 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                      9) cray-python/3.11.7
+  2) libfabric/1.22.0                    10) gcc-native/14.2
+  3) craype-network-ofi                  11) craype/2.7.34
+  4) perftools-base/25.03.0              12) cray-dsmml/0.3.1
+  5) xpmem/2.11.5-1.3_g73ade43320bc      13) cray-mpich/8.1.32
+  6) ModuleLabel/label              (S)  14) cray-libsci/25.03.0
+  7) lumi-tools/24.05               (S)  15) PrgEnv-gnu/8.6.0
+  8) init-lumi/0.2                  (S)  16) rocm/6.3.4
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+ROCM_PATH = /opt/rocm-6.3.4
+XPMEM Lib path  = /usr/lib64
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+~/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+============
+#!/bin/bash
+
+#for NNODES in 1 2 4 8 16 32 64; do
+for NNODES in 2; do
+#for NNODES in 64; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt.out
+#SBATCH --time=1:30:00
+#SBATCH --network=disable_rdzv_get
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable OpenMPI and RCCL
+USE_CPE=0 source \$ROOT_DIR/sourceme_rccl.sh
+
+# LUMI Binding
+export BINDING="--bind-to core --map-by L3cache:pe=7 --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind"
+
+export PRTE_MCA_ras_base_launch_orted_on_hn=1
+export PMIX_MCA_gds=^shmem2
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+for FI_CXI_RX_MATCH_MODE in software hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    # Consider validation
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
+
+     # opts
+     # https://github.com/HewlettPackard/shs-ccl-docs/blob/main/rccl/rccl_tuning_guide.md
+     export HSA_FORCE_FINE_GRAIN_PCIE=1
+     export FI_CXI_RDZV_THRESHOLD=4096
+     export FI_MR_CACHE_MONITOR=kdreg2 # not useful, can avoid deadline on RCCL
+     export FI_CXI_RDZV_EAGER_SIZE=0
+     export FI_CXI_RDZV_PROTO="alt_read"
+#      export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
+      export FI_CXI_DEFAULT_TX_SIZE=2048
+      export FI_CXI_DISABLE_HOST_REGISTER=1
+
+#    if false; then
+    if [ "\${FI_CXI_RX_MATCH_MODE}" == "software" ]; then
+    (
+        echo "with LinkX"
+
+        export FI_SHM_USE_XPMEM=0 # otherwise the D2D breaks with LNX
+        export FI_PROVIDER=lnx
+        export FI_LNX_PROV_LINKS=shm+cxi # changed in the binding script
+        export OMPI_MCA_opal_common_ofi_provider_include=lnx
+        export OMPI_MCA_mtl_ofi_av=table
+        export OMPI_MCA_pml=cm
+        export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_smsc=xpmem
+
+	CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D")
+#  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
+        done
+
+        export FI_SHM_USE_XPMEM=1
+
+	CMDS=("osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
+        done
+
+    )
+    fi # only software
+#    fi
+
+    (
+        echo "no OpenMPI internal transport, only libfabric. Use CXI directly"
+
+        export FI_SHM_USE_XPMEM=1
+	export FI_PROVIDER=cxi
+    	unset FI_LNX_PROV_LINKS
+    	export OMPI_MCA_opal_common_ofi_provider_include=cxi
+    	export OMPI_MCA_mtl_ofi_av=table
+    	export OMPI_MCA_pml=cm
+    	export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_smsc=xpmem
+
+        CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+#       CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "mpi/collective" "_cxi\${SUFFIX}"
+        done
+    )
+
+    if [ "\${FI_CXI_RX_MATCH_MODE}" == "hybrid" ]; then
+#    if false; then
+    (
+
+        # No validation available for RCCL
+    	OSU_ARGS=" "
+
+	CMDS=("osu_xccl_alltoall -d rocm D D" "osu_xccl_allreduce -d rocm D D" "osu_xccl_allgather -d rocm D D")
+    	for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "xccl/collective" "\${SUFFIX}"
+     	done
+    )
+#    fi
+
+#    if false; then
+    (
+        echo "RCCL-tests"
+
+	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- mpirun \$cmd
+	    mpirun \${BINDING} --report-bindings \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	done
+    )
+#    fi
+
+    fi # only hybrid
+
+done
+
+if [ "${NNODES}" == "1" ]; then
+(
+    echo "with OpenMPI internal transport"
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${SLURM_JOB_ID}"
+
+    unset FI_SHM_USE_XPMEM
+    unset FI_PROVIDER
+    unset FI_CXI_RX_MATCH_MODE
+    unset FI_LNX_PROV_LINKS
+    unset OMPI_MCA_opal_common_ofi_provider_include
+    unset OMPI_MCA_mtl_ofi_av
+    export OMPI_MCA_pml=ob1
+    # CUDA
+    #  export OMPI_MCA_btl=vader,smcuda,self
+    # ROCM
+    export OMPI_MCA_btl=vader,sm,self
+    unset OMPI_MCA_mtl
+    export OMPI_MCA_smsc=xpmem # Only OpenMPI
+
+    CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D" "osu_allreduce H H" "osu_alltoall H H" "osu_allgather H H")
+    for cmd in "\${CMDS[@]}"; do
+        run_osu_cmd "\$cmd" "mpi/collective" "_ob1\${SUFFIX}"
+    done
+)
+fi # single node
+
+EOF
+
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+SLURM_MEM_PER_CPU=0
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64:/opt/cray/libfabric/1.22.0/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+LIBFABRIC_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric
+_ModuleTable017_=YXBwbC9sdW1pL21vZHVsZXMvU29mdHdhcmVTdGFjazovYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnM6L2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrOi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0K
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=109030
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/8.1.32/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=TGFiZWwvbGFiZWwubHVhIiwKZnVsbE5hbWUgPSAiTW9kdWxlTGFiZWwvbGFiZWwiLApsb2FkT3JkZXIgPSA2LApwcm9wVCA9IHsKbG1vZCA9IHsKc3RpY2t5ID0gMSwKfSwKfSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCndWID0gInNsYWJlbC4qemZpbmFsIiwKfSwKWyJQcmdFbnYtZ251Il0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvUHJnRW52LWdudS84LjYuMC5sdWEiLApmdWxsTmFtZSA9ICJQcmdFbnYtZ251LzguNi4wIiwKbG9hZE9yZGVyID0gMTUsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAi
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.23 57398 193.167.209.163 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE:CRAYPE_X86_ROME:PERFTOOLS:CRAYPAT:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=8.1.32
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib
+PMIX_MCA_gds=^shmem2
+c=gnu
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLXg4Ni1yb21lLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS14ODYtcm9tZSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLXg4Ni1yb21lIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9s
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005347
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/10
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=ZWZpbGVzL25ldC9vZmkvMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdC9jcmF5cGUtbmV0d29yay1vZmkubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtbmV0d29yay1vZmkiLAp3ViA9ICJNLip6ZmluYWwiLAp9LApbImNyYXlwZS14ODYtcm9tZSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMFwiKSIsCn0sCmZu
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+PRTE_MCA_ras_base_launch_orted_on_hn=1
+ROCM_PATH=/opt/rocm-6.3.4
+OMPI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/openmpi5
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+CFLAGS=-g -O -Wno-error=maybe-uninitialized -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+SLURM_JOB_GID=10013986
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1;/opt/cray/libfabric/1.22.0/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1
+BINDING=--bind-to core --map-by L3cache:pe=7 --mca hwloc_base_binding_policy core --mca hwloc_base_mem_bind policy:bind
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005347
+PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:PE_MPICH:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ci9nbnUvMTIuMCIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0iCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4IiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9sbW9kL21vZHVsZWZpbGVzL0NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1772931403
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/8.1.32/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+_ModuleTable004_=YnNjaS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gImNyYXktbGlic2NpLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAxNCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5LWxpYnNjaSIsCndWID0gIl4wMDAwMDAyNS4wMDAwMDAwMDMuKnpmaW5hbCIsCn0sClsiY3JheS1tcGljaCJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21uZXQvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1w
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8(x2)
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PREFIX_CXI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi
+PE_MPICH_PKGCONFIG_LIBS=mpich
+USE_SRUN=0
+OSTYPE=linux
+CC=gcc-14
+XDG_SESSION_ID=297145
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=8.1.32
+SLURM_NNODES=2
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+CXXFLAGS=-g -O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+_ModuleTable012_=MDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJhc2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSA0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFs
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+CRAY_CPU_TARGET=x86-rome
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1772926003
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/ompi/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+SLURM_JOB_NODELIST=nid[005347-005348]
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid[005347-005348]
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+LIBCXI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric/libcxi
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=disable_rdzv_get
+HOST=uan01
+SSH_CLIENT=178.197.255.23 57398 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=16
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-rome/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56(x2)
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid005347
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:1;PE_MPICH:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+FCFLAGS=-O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=bmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9hcHBsL2x1bWkvbW9kdWxlcy9lYXN5YnVpbGQvc3lzdGVtXCIpIiwKfSwKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrL2luaXQtbHVtaS8wLjIubHVhIiwKZnVsbE5hbWUgPSAiaW5pdC1sdW1pLzAuMiIsCmxvYWRPcmRlciA9IDgsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImluaXQtbHVtaSIsCndWID0gIjAwMDAwMDAwMC4wMDAwMDAwMDIuKnpmaW5hbCIsCn0sCmxpYmZhYnJpYyA9IHsKZm4gPSAiL29wdC9jcmF5L21vZHVsZWZpbGVzL2xpYmZhYnJpYy8xLjIyLjAiLApmdWxsTmFt
+PE_PKGCONFIG_LIBS=rocm-6.3.4:libsci_mpi:libsci:mpich:dsmml
+SLURM_JOBID=16563076
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXJvbWUiLApjcmF5cGVfbmV0d29yayA9ICJjcmF5cGUtbmV0d29yay1vZmkiLApnY2NfY29tcGlsZXIgPSAiZ2NjLW5hdGl2ZSIsCmxpYnNjaSA9ICJjcmF5LWxpYnNjaSIsCm1waSA9ICJjcmF5LW1waWNoIiwKfSwKbVQgPSB7Ck1vZHVsZUxhYmVsID0gewpmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMvTW9kdWxl
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-x86-rome:libfabric/1.22.0:craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-mpich/8.1.32:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+FC=gfortran-14
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=cHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSAxMSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUiLAp3ViA9ICJeMDAwMDAwMDIuMDAwMDAwMDA3LjAwMDAwMDAzNC4qemZpbmFsIiwKfSwKWyJjcmF5cGUtbmV0d29yay1vZmkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/mpich/8.1.32/ofi/man:1;/opt/cray/pe/mpich/8.1.32/man/mpich:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=UHJnRW52LWdudSIsCndWID0gIl4wMDAwMDAwOC4wMDAwMDAwMDYuKnpmaW5hbCIsCn0sClsiY3JheS1kc21tbCJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktZHNtbWwvMC4zLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1kc21tbC8wLjMuMSIsCmxvYWRPcmRlciA9IDEyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktZHNtbWwiLAp3ViA9ICJeMDAwMDAwMDAuMDAwMDAwMDAzLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LWxpYnNjaSJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxlci9nbnUvMTIuMC9jcmF5LWxp
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/10
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/8.1.32
+_ModuleTable013_=IiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+CXX=g++-14
+SLURM_JOB_NUM_NODES=2
+_ModuleTable016_=L2NyYXlwZS10YXJnZXRzL2RlZmF1bHQiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9Tb2Z0d2FyZVN0YWNrIiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycyIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrIiwgIi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0sCnN5c3RlbUJhc2VNUEFUSCA9ICIvb3B0L2NyYXkvcGUvbW9kdWxlZmlsZXMvTGludXg6L29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdDov
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=bW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSAxMCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJnY2MtbmF0aXZlIiwKd1YgPSAiXjAwMDAwMDE0LjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKWyJpbml0LWx1bWkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBl
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=8.1.32
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=17
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+SLURM_JOB_PARTITION=standard-g
+LMOD_FAMILY_COMPILER=gcc-native
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=16
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan01
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/mpich/8.1.32/ofi/man:/opt/cray/pe/mpich/8.1.32/man/mpich:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CPPFLAGS=-I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=8.1.32
+XDG_RUNTIME_DIR=/run/user/10013986
+PREFIX_OMPI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi
+LDFLAGS=-g -O -L/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib -L/opt/rocm-6.3.4/lib
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/8.1.32/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16563076
+_ModuleTable014_=IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndWID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9taXhfY29tcGlsZXJzIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxl
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE:1;CRAYPE_X86_ROME:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-rome.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/8.1.32.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config:/opt/cray/libfabric/1.22.0/lib64/pkgconfig
+LMOD_SETTARG_FULL_SUPPORT=no
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=ZSA9ICJsaWJmYWJyaWMvMS4yMi4wIiwKbG9hZE9yZGVyID0gMiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNywKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAw
+PREFIX_LIBFABRIC=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;libsci_mpi:1;libsci:1;mpich:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=aWNoLzguMS4zMi5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LW1waWNoLzguMS4zMiIsCmxvYWRPcmRlciA9IDEzLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2giLAp3ViA9ICJeMDAwMDAwMDguMDAwMDAwMDAxLjAwMDAwMDAzMi4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXkt
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n16_software_16563076_opt
+========
+with LinkX
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid005347:109265] Rank 0 bound to package[0][core:0-6]
+[nid005347:109265] Rank 2 bound to package[0][core:14-20]
+[nid005347:109265] Rank 1 bound to package[0][core:7-13]
+[nid005347:109265] Rank 4 bound to package[0][core:28-34]
+[nid005347:109265] Rank 3 bound to package[0][core:21-27]
+[nid005347:109265] Rank 5 bound to package[0][core:35-41]
+[nid005347:109265] Rank 6 bound to package[0][core:42-48]
+[nid005347:109265] Rank 7 bound to package[0][core:49-55]
+[nid005348:80155] Rank 8 bound to package[0][core:0-6]
+[nid005348:80155] Rank 10 bound to package[0][core:14-20]
+[nid005348:80155] Rank 9 bound to package[0][core:7-13]
+[nid005348:80155] Rank 11 bound to package[0][core:21-27]
+[nid005348:80155] Rank 13 bound to package[0][core:35-41]
+[nid005348:80155] Rank 12 bound to package[0][core:28-34]
+[nid005348:80155] Rank 14 bound to package[0][core:42-48]
+[nid005348:80155] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     122.12
+2                      87.23
+4                     748.56
+8                     688.22
+16                    699.67
+32                    703.50
+64                    704.89
+128                   705.93
+256                   712.33
+512                    89.40
+1024                   91.57
+2048                   88.97
+4096                  101.34
+8192                  110.19
+16384                 113.06
+32768                 124.61
+65536                 157.49
+131072                233.56
+262144                300.05
+524288                497.87
+1048576               910.57
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid005347:109665] Rank 0 bound to package[0][core:0-6]
+[nid005347:109665] Rank 2 bound to package[0][core:14-20]
+[nid005348:80563] Rank 8 bound to package[0][core:0-6]
+[nid005347:109665] Rank 1 bound to package[0][core:7-13]
+[nid005347:109665] Rank 3 bound to package[0][core:21-27]
+[nid005347:109665] Rank 5 bound to package[0][core:35-41]
+[nid005347:109665] Rank 6 bound to package[0][core:42-48]
+[nid005347:109665] Rank 4 bound to package[0][core:28-34]
+[nid005347:109665] Rank 7 bound to package[0][core:49-55]
+[nid005348:80563] Rank 9 bound to package[0][core:7-13]
+[nid005348:80563] Rank 10 bound to package[0][core:14-20]
+[nid005348:80563] Rank 11 bound to package[0][core:21-27]
+[nid005348:80563] Rank 12 bound to package[0][core:28-34]
+[nid005348:80563] Rank 13 bound to package[0][core:35-41]
+[nid005348:80563] Rank 14 bound to package[0][core:42-48]
+[nid005348:80563] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                     136.83
+8                      74.55
+16                     74.13
+32                     74.55
+64                     72.13
+128                    73.19
+256                    73.23
+512                    73.66
+1024                   74.06
+2048                   75.64
+4096                   93.46
+8192                  105.18
+16384                 109.11
+32768                 133.99
+65536                 216.98
+131072                386.12
+262144                685.54
+524288               1283.32
+1048576              2472.64
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid005348:80768] Rank 8 bound to package[0][core:0-6]
+[nid005348:80768] Rank 9 bound to package[0][core:7-13]
+[nid005348:80768] Rank 10 bound to package[0][core:14-20]
+[nid005348:80768] Rank 11 bound to package[0][core:21-27]
+[nid005348:80768] Rank 12 bound to package[0][core:28-34]
+[nid005348:80768] Rank 15 bound to package[0][core:49-55]
+[nid005348:80768] Rank 14 bound to package[0][core:42-48]
+[nid005348:80768] Rank 13 bound to package[0][core:35-41]
+[nid005347:109926] Rank 0 bound to package[0][core:0-6]
+[nid005347:109926] Rank 1 bound to package[0][core:7-13]
+[nid005347:109926] Rank 2 bound to package[0][core:14-20]
+[nid005347:109926] Rank 3 bound to package[0][core:21-27]
+[nid005347:109926] Rank 4 bound to package[0][core:28-34]
+[nid005347:109926] Rank 5 bound to package[0][core:35-41]
+[nid005347:109926] Rank 6 bound to package[0][core:42-48]
+[nid005347:109926] Rank 7 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     185.94
+2                      71.73
+4                      90.04
+8                      71.03
+16                     69.58
+32                     69.24
+64                     69.77
+128                    70.06
+256                    74.76
+512                    78.81
+1024                   87.25
+2048                   94.57
+4096                  120.33
+8192                  178.07
+16384                 306.69
+32768                 559.72
+65536                1026.88
+131072               3329.41
+262144               9165.43
+524288              18792.61
+1048576             38630.63
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid005348:81258] Rank 8 bound to package[0][core:0-6]
+[nid005348:81258] Rank 9 bound to package[0][core:7-13]
+[nid005347:110398] Rank 0 bound to package[0][core:0-6]
+[nid005347:110398] Rank 2 bound to package[0][core:14-20]
+[nid005347:110398] Rank 1 bound to package[0][core:7-13]
+[nid005347:110398] Rank 4 bound to package[0][core:28-34]
+[nid005347:110398] Rank 3 bound to package[0][core:21-27]
+[nid005347:110398] Rank 5 bound to package[0][core:35-41]
+[nid005347:110398] Rank 6 bound to package[0][core:42-48]
+[nid005347:110398] Rank 7 bound to package[0][core:49-55]
+[nid005348:81258] Rank 10 bound to package[0][core:14-20]
+[nid005348:81258] Rank 11 bound to package[0][core:21-27]
+[nid005348:81258] Rank 12 bound to package[0][core:28-34]
+[nid005348:81258] Rank 13 bound to package[0][core:35-41]
+[nid005348:81258] Rank 14 bound to package[0][core:42-48]
+[nid005348:81258] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      13.93
+8                      14.08
+16                     14.08
+32                     14.30
+64                     15.51
+128                    17.48
+256                    17.28
+512                    17.68
+1024                   18.57
+2048                   20.40
+4096                   23.53
+8192                   37.42
+16384                  44.46
+32768                  51.54
+65536                 146.84
+131072                262.09
+262144                490.71
+524288                945.73
+1048576              1861.26
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid005347:110643] Rank 0 bound to package[0][core:0-6]
+[nid005347:110643] Rank 2 bound to package[0][core:14-20]
+[nid005347:110643] Rank 1 bound to package[0][core:7-13]
+[nid005347:110643] Rank 3 bound to package[0][core:21-27]
+[nid005347:110643] Rank 4 bound to package[0][core:28-34]
+[nid005347:110643] Rank 5 bound to package[0][core:35-41]
+[nid005347:110643] Rank 6 bound to package[0][core:42-48]
+[nid005347:110643] Rank 7 bound to package[0][core:49-55]
+[nid005348:81435] Rank 9 bound to package[0][core:7-13]
+[nid005348:81435] Rank 10 bound to package[0][core:14-20]
+[nid005348:81435] Rank 11 bound to package[0][core:21-27]
+[nid005348:81435] Rank 8 bound to package[0][core:0-6]
+[nid005348:81435] Rank 12 bound to package[0][core:28-34]
+[nid005348:81435] Rank 13 bound to package[0][core:35-41]
+[nid005348:81435] Rank 14 bound to package[0][core:42-48]
+[nid005348:81435] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      20.13
+2                      20.21
+4                      26.09
+8                      26.54
+16                     28.07
+32                     29.25
+64                     29.70
+128                    29.84
+256                    34.47
+512                    24.00
+1024                   26.07
+2048                   26.50
+4096                   30.85
+8192                   37.63
+16384                  48.45
+32768                  71.48
+65536                 116.51
+131072                212.48
+262144                385.77
+524288                763.70
+1048576              1516.44
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid005347:110841] Rank 1 bound to package[0][core:7-13]
+[nid005347:110841] Rank 3 bound to package[0][core:21-27]
+[nid005347:110841] Rank 2 bound to package[0][core:14-20]
+[nid005347:110841] Rank 4 bound to package[0][core:28-34]
+[nid005347:110841] Rank 0 bound to package[0][core:0-6]
+[nid005347:110841] Rank 5 bound to package[0][core:35-41]
+[nid005347:110841] Rank 6 bound to package[0][core:42-48]
+[nid005347:110841] Rank 7 bound to package[0][core:49-55]
+[nid005348:81650] Rank 10 bound to package[0][core:14-20]
+[nid005348:81650] Rank 11 bound to package[0][core:21-27]
+[nid005348:81650] Rank 13 bound to package[0][core:35-41]
+[nid005348:81650] Rank 9 bound to package[0][core:7-13]
+[nid005348:81650] Rank 8 bound to package[0][core:0-6]
+[nid005348:81650] Rank 15 bound to package[0][core:49-55]
+[nid005348:81650] Rank 12 bound to package[0][core:28-34]
+[nid005348:81650] Rank 14 bound to package[0][core:42-48]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      10.77
+2                      10.62
+4                      11.49
+8                      11.44
+16                     12.68
+32                     12.83
+64                     13.39
+128                    14.00
+256                    15.52
+512                    17.78
+1024                   27.10
+2048                   28.11
+4096                   37.57
+8192                   56.95
+16384                  96.83
+32768                 178.40
+65536                 335.64
+131072                642.95
+262144               1258.41
+524288               2530.32
+1048576              5177.36
+no OpenMPI internal transport, only libfabric. Use CXI directly
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid005347:111083] Rank 0 bound to package[0][core:0-6]
+[nid005347:111083] Rank 1 bound to package[0][core:7-13]
+[nid005347:111083] Rank 2 bound to package[0][core:14-20]
+[nid005347:111083] Rank 3 bound to package[0][core:21-27]
+[nid005347:111083] Rank 4 bound to package[0][core:28-34]
+[nid005347:111083] Rank 5 bound to package[0][core:35-41]
+[nid005347:111083] Rank 7 bound to package[0][core:49-55]
+[nid005347:111083] Rank 6 bound to package[0][core:42-48]
+[nid005348:81805] Rank 8 bound to package[0][core:0-6]
+[nid005348:81805] Rank 10 bound to package[0][core:14-20]
+[nid005348:81805] Rank 9 bound to package[0][core:7-13]
+[nid005348:81805] Rank 11 bound to package[0][core:21-27]
+[nid005348:81805] Rank 14 bound to package[0][core:42-48]
+[nid005348:81805] Rank 12 bound to package[0][core:28-34]
+[nid005348:81805] Rank 13 bound to package[0][core:35-41]
+[nid005348:81805] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      30.66
+2                      30.82
+4                     702.16
+8                     705.59
+16                    706.26
+32                    707.72
+64                    710.73
+128                   721.89
+256                   712.58
+512                    31.07
+1024                   33.92
+2048                   34.07
+4096                   35.43
+8192                   49.13
+16384                  60.42
+32768                  82.87
+65536                 129.51
+131072                223.95
+262144                431.44
+524288                879.64
+1048576              2155.24
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid005347:111448] Rank 0 bound to package[0][core:0-6]
+[nid005347:111448] Rank 2 bound to package[0][core:14-20]
+[nid005347:111448] Rank 1 bound to package[0][core:7-13]
+[nid005347:111448] Rank 4 bound to package[0][core:28-34]
+[nid005347:111448] Rank 3 bound to package[0][core:21-27]
+[nid005347:111448] Rank 6 bound to package[0][core:42-48]
+[nid005347:111448] Rank 5 bound to package[0][core:35-41]
+[nid005347:111448] Rank 7 bound to package[0][core:49-55]
+[nid005348:82133] Rank 8 bound to package[0][core:0-6]
+[nid005348:82133] Rank 10 bound to package[0][core:14-20]
+[nid005348:82133] Rank 9 bound to package[0][core:7-13]
+[nid005348:82133] Rank 11 bound to package[0][core:21-27]
+[nid005348:82133] Rank 12 bound to package[0][core:28-34]
+[nid005348:82133] Rank 14 bound to package[0][core:42-48]
+[nid005348:82133] Rank 13 bound to package[0][core:35-41]
+[nid005348:82133] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      35.99
+8                      37.39
+16                     37.38
+32                     37.90
+64                     36.81
+128                    40.49
+256                    40.47
+512                    41.11
+1024                   42.10
+2048                   57.25
+4096                   51.41
+8192                   97.47
+16384                 105.72
+32768                 126.13
+65536                 217.77
+131072                384.35
+262144                708.84
+524288               1347.70
+1048576              2621.11
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid005347:111655] Rank 0 bound to package[0][core:0-6]
+[nid005347:111655] Rank 2 bound to package[0][core:14-20]
+[nid005348:82380] Rank 8 bound to package[0][core:0-6]
+[nid005348:82380] Rank 10 bound to package[0][core:14-20]
+[nid005348:82380] Rank 9 bound to package[0][core:7-13]
+[nid005348:82380] Rank 11 bound to package[0][core:21-27]
+[nid005347:111655] Rank 1 bound to package[0][core:7-13]
+[nid005347:111655] Rank 3 bound to package[0][core:21-27]
+[nid005347:111655] Rank 4 bound to package[0][core:28-34]
+[nid005347:111655] Rank 5 bound to package[0][core:35-41]
+[nid005347:111655] Rank 6 bound to package[0][core:42-48]
+[nid005347:111655] Rank 7 bound to package[0][core:49-55]
+[nid005348:82380] Rank 12 bound to package[0][core:28-34]
+[nid005348:82380] Rank 13 bound to package[0][core:35-41]
+[nid005348:82380] Rank 14 bound to package[0][core:42-48]
+[nid005348:82380] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      50.51
+2                      49.14
+4                      48.18
+8                      48.43
+16                     49.11
+32                     50.72
+64                     51.57
+128                    51.92
+256                    60.51
+512                    73.97
+1024                   75.03
+2048                   80.89
+4096                   99.10
+8192                  134.22
+16384                 185.17
+32768                 280.22
+65536                 468.79
+131072                834.79
+262144               1291.48
+524288               2483.27
+1048576              4878.78
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid005348:82611] Rank 8 bound to package[0][core:0-6]
+[nid005348:82611] Rank 9 bound to package[0][core:7-13]
+[nid005348:82611] Rank 12 bound to package[0][core:28-34]
+[nid005348:82611] Rank 11 bound to package[0][core:21-27]
+[nid005348:82611] Rank 13 bound to package[0][core:35-41]
+[nid005348:82611] Rank 10 bound to package[0][core:14-20]
+[nid005348:82611] Rank 14 bound to package[0][core:42-48]
+[nid005348:82611] Rank 15 bound to package[0][core:49-55]
+[nid005347:111933] Rank 0 bound to package[0][core:0-6]
+[nid005347:111933] Rank 1 bound to package[0][core:7-13]
+[nid005347:111933] Rank 2 bound to package[0][core:14-20]
+[nid005347:111933] Rank 3 bound to package[0][core:21-27]
+[nid005347:111933] Rank 4 bound to package[0][core:28-34]
+[nid005347:111933] Rank 5 bound to package[0][core:35-41]
+[nid005347:111933] Rank 6 bound to package[0][core:42-48]
+[nid005347:111933] Rank 7 bound to package[0][core:49-55]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      20.67
+8                      21.09
+16                     21.08
+32                     21.57
+64                     21.02
+128                    24.30
+256                    27.11
+512                    27.40
+1024                   28.36
+2048                   43.18
+4096                   36.79
+8192                   78.93
+16384                  87.04
+32768                  97.25
+65536                 203.59
+131072                330.34
+262144                583.31
+524288               1084.30
+1048576              2090.16
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid005347:112170] Rank 0 bound to package[0][core:0-6]
+[nid005348:82794] Rank 8 bound to package[0][core:0-6]
+[nid005347:112170] Rank 1 bound to package[0][core:7-13]
+[nid005347:112170] Rank 3 bound to package[0][core:21-27]
+[nid005347:112170] Rank 2 bound to package[0][core:14-20]
+[nid005347:112170] Rank 4 bound to package[0][core:28-34]
+[nid005347:112170] Rank 5 bound to package[0][core:35-41]
+[nid005348:82794] Rank 9 bound to package[0][core:7-13]
+[nid005347:112170] Rank 7 bound to package[0][core:49-55]
+[nid005348:82794] Rank 11 bound to package[0][core:21-27]
+[nid005347:112170] Rank 6 bound to package[0][core:42-48]
+[nid005348:82794] Rank 10 bound to package[0][core:14-20]
+[nid005348:82794] Rank 12 bound to package[0][core:28-34]
+[nid005348:82794] Rank 13 bound to package[0][core:35-41]
+[nid005348:82794] Rank 14 bound to package[0][core:42-48]
+[nid005348:82794] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      20.95
+2                      20.78
+4                      27.12
+8                      27.32
+16                     28.67
+32                     32.23
+64                     32.43
+128                    41.05
+256                    34.42
+512                    21.52
+1024                   22.14
+2048                   23.31
+4096                   25.08
+8192                   39.12
+16384                  54.39
+32768                  83.20
+65536                 142.12
+131072                258.41
+262144                538.11
+524288               1185.43
+1048576              2637.35
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid005347:112411] Rank 0 bound to package[0][core:0-6]
+[nid005347:112411] Rank 2 bound to package[0][core:14-20]
+[nid005347:112411] Rank 1 bound to package[0][core:7-13]
+[nid005347:112411] Rank 4 bound to package[0][core:28-34]
+[nid005347:112411] Rank 3 bound to package[0][core:21-27]
+[nid005347:112411] Rank 5 bound to package[0][core:35-41]
+[nid005347:112411] Rank 6 bound to package[0][core:42-48]
+[nid005347:112411] Rank 7 bound to package[0][core:49-55]
+[nid005348:82995] Rank 8 bound to package[0][core:0-6]
+[nid005348:82995] Rank 10 bound to package[0][core:14-20]
+[nid005348:82995] Rank 9 bound to package[0][core:7-13]
+[nid005348:82995] Rank 11 bound to package[0][core:21-27]
+[nid005348:82995] Rank 12 bound to package[0][core:28-34]
+[nid005348:82995] Rank 14 bound to package[0][core:42-48]
+[nid005348:82995] Rank 13 bound to package[0][core:35-41]
+[nid005348:82995] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      19.62
+2                      19.89
+4                      19.19
+8                      19.48
+16                     21.20
+32                     22.52
+64                     23.45
+128                    24.56
+256                    31.63
+512                    44.88
+1024                   46.66
+2048                   50.02
+4096                   67.42
+8192                   96.76
+16384                 141.26
+32768                 218.01
+65536                 371.28
+131072                671.70
+262144               1276.06
+524288               2493.22
+1048576              4912.18
+========
+_n16_hybrid_16563076_opt
+========
+no OpenMPI internal transport, only libfabric. Use CXI directly
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d rocm D D
+[nid005347:112628] Rank 0 bound to package[0][core:0-6]
+[nid005347:112628] Rank 1 bound to package[0][core:7-13]
+[nid005347:112628] Rank 2 bound to package[0][core:14-20]
+[nid005347:112628] Rank 3 bound to package[0][core:21-27]
+[nid005347:112628] Rank 4 bound to package[0][core:28-34]
+[nid005347:112628] Rank 5 bound to package[0][core:35-41]
+[nid005347:112628] Rank 7 bound to package[0][core:49-55]
+[nid005347:112628] Rank 6 bound to package[0][core:42-48]
+[nid005348:83223] Rank 8 bound to package[0][core:0-6]
+[nid005348:83223] Rank 9 bound to package[0][core:7-13]
+[nid005348:83223] Rank 10 bound to package[0][core:14-20]
+[nid005348:83223] Rank 12 bound to package[0][core:28-34]
+[nid005348:83223] Rank 11 bound to package[0][core:21-27]
+[nid005348:83223] Rank 14 bound to package[0][core:42-48]
+[nid005348:83223] Rank 13 bound to package[0][core:35-41]
+[nid005348:83223] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      34.43
+2                      34.20
+4                     685.69
+8                     685.52
+16                    689.70
+32                    714.18
+64                    707.71
+128                   699.28
+256                   703.20
+512                    34.46
+1024                   34.75
+2048                   35.10
+4096                   35.92
+8192                   52.33
+16384                  63.67
+32768                  88.23
+65536                 135.89
+131072                231.76
+262144                431.14
+524288                903.41
+1048576              1955.75
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d rocm D D
+[nid005347:112971] Rank 0 bound to package[0][core:0-6]
+[nid005347:112971] Rank 2 bound to package[0][core:14-20]
+[nid005347:112971] Rank 1 bound to package[0][core:7-13]
+[nid005347:112971] Rank 3 bound to package[0][core:21-27]
+[nid005347:112971] Rank 4 bound to package[0][core:28-34]
+[nid005347:112971] Rank 5 bound to package[0][core:35-41]
+[nid005347:112971] Rank 6 bound to package[0][core:42-48]
+[nid005347:112971] Rank 7 bound to package[0][core:49-55]
+[nid005348:83555] Rank 8 bound to package[0][core:0-6]
+[nid005348:83555] Rank 10 bound to package[0][core:14-20]
+[nid005348:83555] Rank 9 bound to package[0][core:7-13]
+[nid005348:83555] Rank 11 bound to package[0][core:21-27]
+[nid005348:83555] Rank 12 bound to package[0][core:28-34]
+[nid005348:83555] Rank 14 bound to package[0][core:42-48]
+[nid005348:83555] Rank 13 bound to package[0][core:35-41]
+[nid005348:83555] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      37.34
+8                      38.09
+16                     38.00
+32                     38.44
+64                     37.35
+128                    40.94
+256                    40.58
+512                    40.93
+1024                   41.78
+2048                   43.40
+4096                   47.73
+8192                   96.65
+16384                 103.65
+32768                 125.84
+65536                 211.96
+131072                371.31
+262144                707.10
+524288               1378.99
+1048576              2722.10
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d rocm D D
+[nid005347:113319] Rank 1 bound to package[0][core:7-13]
+[nid005347:113319] Rank 3 bound to package[0][core:21-27]
+[nid005347:113319] Rank 2 bound to package[0][core:14-20]
+[nid005347:113319] Rank 0 bound to package[0][core:0-6]
+[nid005347:113319] Rank 5 bound to package[0][core:35-41]
+[nid005347:113319] Rank 4 bound to package[0][core:28-34]
+[nid005347:113319] Rank 6 bound to package[0][core:42-48]
+[nid005347:113319] Rank 7 bound to package[0][core:49-55]
+[nid005348:83754] Rank 8 bound to package[0][core:0-6]
+[nid005348:83754] Rank 10 bound to package[0][core:14-20]
+[nid005348:83754] Rank 9 bound to package[0][core:7-13]
+[nid005348:83754] Rank 11 bound to package[0][core:21-27]
+[nid005348:83754] Rank 12 bound to package[0][core:28-34]
+[nid005348:83754] Rank 13 bound to package[0][core:35-41]
+[nid005348:83754] Rank 14 bound to package[0][core:42-48]
+[nid005348:83754] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      51.42
+2                      51.27
+4                      49.41
+8                      49.52
+16                     49.78
+32                     51.20
+64                     52.06
+128                    52.11
+256                    56.57
+512                    70.12
+1024                   76.84
+2048                   81.76
+4096                  101.06
+8192                  134.77
+16384                 187.10
+32768                 262.36
+65536                 471.33
+131072                847.08
+262144               1435.17
+524288               2781.98
+1048576              5606.19
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce H H
+[nid005348:83999] Rank 8 bound to package[0][core:0-6]
+[nid005347:113609] Rank 0 bound to package[0][core:0-6]
+[nid005348:83999] Rank 9 bound to package[0][core:7-13]
+[nid005348:83999] Rank 11 bound to package[0][core:21-27]
+[nid005348:83999] Rank 10 bound to package[0][core:14-20]
+[nid005347:113609] Rank 2 bound to package[0][core:14-20]
+[nid005348:83999] Rank 12 bound to package[0][core:28-34]
+[nid005347:113609] Rank 1 bound to package[0][core:7-13]
+[nid005347:113609] Rank 3 bound to package[0][core:21-27]
+[nid005347:113609] Rank 4 bound to package[0][core:28-34]
+[nid005347:113609] Rank 6 bound to package[0][core:42-48]
+[nid005347:113609] Rank 5 bound to package[0][core:35-41]
+[nid005347:113609] Rank 7 bound to package[0][core:49-55]
+[nid005348:83999] Rank 14 bound to package[0][core:42-48]
+[nid005348:83999] Rank 13 bound to package[0][core:35-41]
+[nid005348:83999] Rank 15 bound to package[0][core:49-55]
+
+# OSU MPI Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      19.34
+8                      20.08
+16                     19.85
+32                     20.35
+64                     19.82
+128                    23.13
+256                    25.24
+512                    25.40
+1024                   26.22
+2048                   27.36
+4096                   30.91
+8192                   76.13
+16384                  81.20
+32768                  90.60
+65536                 195.32
+131072                332.19
+262144                609.10
+524288               1112.90
+1048576              2212.88
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall H H
+[nid005347:113834] Rank 0 bound to package[0][core:0-6]
+[nid005347:113834] Rank 2 bound to package[0][core:14-20]
+[nid005347:113834] Rank 1 bound to package[0][core:7-13]
+[nid005347:113834] Rank 3 bound to package[0][core:21-27]
+[nid005348:84218] Rank 8 bound to package[0][core:0-6]
+[nid005347:113834] Rank 4 bound to package[0][core:28-34]
+[nid005347:113834] Rank 7 bound to package[0][core:49-55]
+[nid005347:113834] Rank 6 bound to package[0][core:42-48]
+[nid005347:113834] Rank 5 bound to package[0][core:35-41]
+[nid005348:84218] Rank 9 bound to package[0][core:7-13]
+[nid005348:84218] Rank 10 bound to package[0][core:14-20]
+[nid005348:84218] Rank 13 bound to package[0][core:35-41]
+[nid005348:84218] Rank 12 bound to package[0][core:28-34]
+[nid005348:84218] Rank 11 bound to package[0][core:21-27]
+[nid005348:84218] Rank 15 bound to package[0][core:49-55]
+[nid005348:84218] Rank 14 bound to package[0][core:42-48]
+
+# OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      24.23
+2                      23.98
+4                      27.98
+8                      27.84
+16                     28.87
+32                     32.73
+64                     32.82
+128                    33.30
+256                    34.51
+512                    24.78
+1024                   24.98
+2048                   25.57
+4096                   25.90
+8192                   43.16
+16384                  58.50
+32768                  87.92
+65536                 146.64
+131072                269.94
+262144                552.70
+524288               1241.07
+1048576              2443.98
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather H H
+[nid005347:114048] Rank 0 bound to package[0][core:0-6]
+[nid005347:114048] Rank 1 bound to package[0][core:7-13]
+[nid005347:114048] Rank 2 bound to package[0][core:14-20]
+[nid005347:114048] Rank 3 bound to package[0][core:21-27]
+[nid005347:114048] Rank 4 bound to package[0][core:28-34]
+[nid005347:114048] Rank 7 bound to package[0][core:49-55]
+[nid005347:114048] Rank 6 bound to package[0][core:42-48]
+[nid005347:114048] Rank 5 bound to package[0][core:35-41]
+[nid005348:84430] Rank 8 bound to package[0][core:0-6]
+[nid005348:84430] Rank 9 bound to package[0][core:7-13]
+[nid005348:84430] Rank 10 bound to package[0][core:14-20]
+[nid005348:84430] Rank 12 bound to package[0][core:28-34]
+[nid005348:84430] Rank 11 bound to package[0][core:21-27]
+[nid005348:84430] Rank 13 bound to package[0][core:35-41]
+[nid005348:84430] Rank 15 bound to package[0][core:49-55]
+[nid005348:84430] Rank 14 bound to package[0][core:42-48]
+
+# OSU MPI Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      18.21
+2                      18.07
+4                      17.41
+8                      17.85
+16                     19.74
+32                     21.08
+64                     21.73
+128                    22.56
+256                    24.30
+512                    37.63
+1024                   44.15
+2048                   48.85
+4096                   66.84
+8192                   99.61
+16384                 149.08
+32768                 240.61
+65536                 423.78
+131072                780.09
+262144               1414.48
+524288               2645.09
+1048576              5138.71
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -d rocm D D
+[nid005347:114294] Rank 0 bound to package[0][core:0-6]
+[nid005347:114294] Rank 1 bound to package[0][core:7-13]
+[nid005347:114294] Rank 3 bound to package[0][core:21-27]
+[nid005347:114294] Rank 2 bound to package[0][core:14-20]
+[nid005347:114294] Rank 4 bound to package[0][core:28-34]
+[nid005347:114294] Rank 5 bound to package[0][core:35-41]
+[nid005347:114294] Rank 7 bound to package[0][core:49-55]
+[nid005347:114294] Rank 6 bound to package[0][core:42-48]
+[nid005348:84650] Rank 8 bound to package[0][core:0-6]
+[nid005348:84650] Rank 10 bound to package[0][core:14-20]
+[nid005348:84650] Rank 9 bound to package[0][core:7-13]
+[nid005348:84650] Rank 11 bound to package[0][core:21-27]
+[nid005348:84650] Rank 12 bound to package[0][core:28-34]
+[nid005348:84650] Rank 13 bound to package[0][core:35-41]
+[nid005348:84650] Rank 14 bound to package[0][core:42-48]
+[nid005348:84650] Rank 15 bound to package[0][core:49-55]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      89.61
+2                      89.44
+4                      89.65
+8                      90.35
+16                     89.70
+32                     89.95
+64                     90.38
+128                    91.40
+256                    90.70
+512                    90.82
+1024                   91.24
+2048                   93.19
+4096                   98.39
+8192                  120.30
+16384                 137.13
+32768                 137.52
+65536                 172.70
+131072                233.40
+262144                352.37
+524288                588.25
+1048576              1067.92
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -d rocm D D
+[nid005348:85060] Rank 8 bound to package[0][core:0-6]
+[nid005348:85060] Rank 9 bound to package[0][core:7-13]
+[nid005348:85060] Rank 10 bound to package[0][core:14-20]
+[nid005348:85060] Rank 11 bound to package[0][core:21-27]
+[nid005348:85060] Rank 12 bound to package[0][core:28-34]
+[nid005348:85060] Rank 14 bound to package[0][core:42-48]
+[nid005348:85060] Rank 13 bound to package[0][core:35-41]
+[nid005348:85060] Rank 15 bound to package[0][core:49-55]
+[nid005347:114777] Rank 0 bound to package[0][core:0-6]
+[nid005347:114777] Rank 1 bound to package[0][core:7-13]
+[nid005347:114777] Rank 2 bound to package[0][core:14-20]
+[nid005347:114777] Rank 5 bound to package[0][core:35-41]
+[nid005347:114777] Rank 6 bound to package[0][core:42-48]
+[nid005347:114777] Rank 4 bound to package[0][core:28-34]
+[nid005347:114777] Rank 7 bound to package[0][core:49-55]
+[nid005347:114777] Rank 3 bound to package[0][core:21-27]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allreduce Latency Test v7.5.2
+# Size       Avg Latency(us)
+4                     110.33
+8                     110.26
+16                    101.16
+32                    100.88
+64                     42.27
+128                    42.77
+256                    44.25
+512                    45.71
+1024                   47.82
+2048                   50.82
+4096                   54.38
+8192                  120.91
+16384                 129.86
+32768                 134.60
+65536                 135.58
+131072                160.61
+262144                180.34
+524288                212.73
+1048576               293.90
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -d rocm D D
+[nid005348:85349] Rank 8 bound to package[0][core:0-6]
+[nid005348:85349] Rank 9 bound to package[0][core:7-13]
+[nid005348:85349] Rank 10 bound to package[0][core:14-20]
+[nid005348:85349] Rank 11 bound to package[0][core:21-27]
+[nid005348:85349] Rank 12 bound to package[0][core:28-34]
+[nid005348:85349] Rank 13 bound to package[0][core:35-41]
+[nid005348:85349] Rank 15 bound to package[0][core:49-55]
+[nid005348:85349] Rank 14 bound to package[0][core:42-48]
+[nid005347:115078] Rank 0 bound to package[0][core:0-6]
+[nid005347:115078] Rank 1 bound to package[0][core:7-13]
+[nid005347:115078] Rank 2 bound to package[0][core:14-20]
+[nid005347:115078] Rank 5 bound to package[0][core:35-41]
+[nid005347:115078] Rank 4 bound to package[0][core:28-34]
+[nid005347:115078] Rank 3 bound to package[0][core:21-27]
+[nid005347:115078] Rank 6 bound to package[0][core:42-48]
+[nid005347:115078] Rank 7 bound to package[0][core:49-55]
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+#Using RCCL
+
+# OSU RCCL-ROCM Allgather Latency Test v7.5.2
+# Size       Avg Latency(us)
+1                      62.94
+2                      57.93
+4                      57.89
+8                      58.24
+16                     58.04
+32                     58.12
+64                     58.43
+128                    59.43
+256                    59.92
+512                    60.99
+1024                   64.16
+2048                   70.59
+4096                  215.50
+8192                  224.17
+16384                 239.64
+32768                 265.90
+65536                 271.32
+131072                289.49
+262144                341.11
+524288                386.80
+1048576               663.93
+RCCL-tests
+-- mpirun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid005348:85617] Rank 8 bound to package[0][core:0-6]
+[nid005348:85617] Rank 9 bound to package[0][core:7-13]
+[nid005348:85617] Rank 10 bound to package[0][core:14-20]
+[nid005348:85617] Rank 12 bound to package[0][core:28-34]
+[nid005348:85617] Rank 11 bound to package[0][core:21-27]
+[nid005348:85617] Rank 14 bound to package[0][core:42-48]
+[nid005348:85617] Rank 13 bound to package[0][core:35-41]
+[nid005348:85617] Rank 15 bound to package[0][core:49-55]
+[nid005347:115384] Rank 0 bound to package[0][core:0-6]
+[nid005347:115384] Rank 1 bound to package[0][core:7-13]
+[nid005347:115384] Rank 3 bound to package[0][core:21-27]
+[nid005347:115384] Rank 2 bound to package[0][core:14-20]
+[nid005347:115384] Rank 4 bound to package[0][core:28-34]
+[nid005347:115384] Rank 5 bound to package[0][core:35-41]
+[nid005347:115384] Rank 6 bound to package[0][core:42-48]
+[nid005347:115384] Rank 7 bound to package[0][core:49-55]
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 115412 on  nid005347 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 115413 on  nid005347 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 115415 on  nid005347 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 115414 on  nid005347 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 115416 on  nid005347 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 115417 on  nid005347 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 115419 on  nid005347 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 115424 on  nid005347 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  85644 on  nid005348 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  85645 on  nid005348 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  85646 on  nid005348 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  85648 on  nid005348 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  85647 on  nid005348 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  85652 on  nid005348 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  85650 on  nid005348 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  85656 on  nid005348 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.11    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.09    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+         256            16     uint8    none      -1    166.6    0.00    0.00      0    71.06    0.00    0.00    N/A
+         512            32     uint8    none      -1    113.9    0.00    0.00      0    69.97    0.01    0.01    N/A
+        1024            64     uint8    none      -1    70.39    0.01    0.01      0    74.91    0.01    0.01    N/A
+        2048           128     uint8    none      -1    76.83    0.03    0.02      0    70.25    0.03    0.03    N/A
+        4096           256     uint8    none      -1    74.87    0.05    0.05      0    69.06    0.06    0.06    N/A
+        8192           512     uint8    none      -1    70.69    0.12    0.11      0    68.74    0.12    0.11    N/A
+       16384          1024     uint8    none      -1    70.44    0.23    0.22      0    70.27    0.23    0.22    N/A
+       32768          2048     uint8    none      -1    71.61    0.46    0.43      0    73.03    0.45    0.42    N/A
+       65536          4096     uint8    none      -1    76.83    0.85    0.80      0    76.27    0.86    0.81    N/A
+      131072          8192     uint8    none      -1    99.06    1.32    1.24      0    96.81    1.35    1.27    N/A
+      262144         16384     uint8    none      -1    114.0    2.30    2.16      0    114.5    2.29    2.15    N/A
+      524288         32768     uint8    none      -1    114.4    4.58    4.30      0    112.9    4.64    4.35    N/A
+     1048576         65536     uint8    none      -1    152.5    6.87    6.45      0    150.1    6.98    6.55    N/A
+     2097152        131072     uint8    none      -1    212.7    9.86    9.25      0    213.5    9.82    9.21    N/A
+     4194304        262144     uint8    none      -1    337.8   12.42   11.64      0    335.3   12.51   11.73    N/A
+     8388608        524288     uint8    none      -1    591.9   14.17   13.29      0    596.7   14.06   13.18    N/A
+    16777216       1048576     uint8    none      -1   1077.5   15.57   14.60      0   1069.5   15.69   14.71    N/A
+    33554432       2097152     uint8    none      -1   2056.4   16.32   15.30      0   1989.8   16.86   15.81    N/A
+    67108864       4194304     uint8    none      -1   4006.5   16.75   15.70      0   3856.8   17.40   16.31    N/A
+   134217728       8388608     uint8    none      -1   7904.3   16.98   15.92      0   7628.8   17.59   16.49    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 4.01596 
+#
+# Collective test concluded: alltoall_perf
+
+-- mpirun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid005348:85921] Rank 8 bound to package[0][core:0-6]
+[nid005348:85921] Rank 9 bound to package[0][core:7-13]
+[nid005348:85921] Rank 10 bound to package[0][core:14-20]
+[nid005348:85921] Rank 11 bound to package[0][core:21-27]
+[nid005348:85921] Rank 12 bound to package[0][core:28-34]
+[nid005348:85921] Rank 13 bound to package[0][core:35-41]
+[nid005348:85921] Rank 14 bound to package[0][core:42-48]
+[nid005348:85921] Rank 15 bound to package[0][core:49-55]
+[nid005347:115719] Rank 0 bound to package[0][core:0-6]
+[nid005347:115719] Rank 2 bound to package[0][core:14-20]
+[nid005347:115719] Rank 1 bound to package[0][core:7-13]
+[nid005347:115719] Rank 3 bound to package[0][core:21-27]
+[nid005347:115719] Rank 4 bound to package[0][core:28-34]
+[nid005347:115719] Rank 5 bound to package[0][core:35-41]
+[nid005347:115719] Rank 6 bound to package[0][core:42-48]
+[nid005347:115719] Rank 7 bound to package[0][core:49-55]
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 115746 on  nid005347 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 115748 on  nid005347 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 115747 on  nid005347 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 115749 on  nid005347 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 115750 on  nid005347 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 115752 on  nid005347 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 115754 on  nid005347 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 115758 on  nid005347 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  85948 on  nid005348 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  85949 on  nid005348 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  85950 on  nid005348 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  85951 on  nid005348 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  85952 on  nid005348 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  85953 on  nid005348 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  85956 on  nid005348 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  85959 on  nid005348 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1     uint8     sum      -1    102.8    0.00    0.00      0    83.50    0.00    0.00      0
+           2             2     uint8     sum      -1    88.47    0.00    0.00      0    83.28    0.00    0.00      0
+           4             4     uint8     sum      -1    82.58    0.00    0.00      0    77.04    0.00    0.00      0
+           8             8     uint8     sum      -1    77.38    0.00    0.00      0    78.89    0.00    0.00      0
+          16            16     uint8     sum      -1    77.09    0.00    0.00      0    77.36    0.00    0.00      0
+          32            32     uint8     sum      -1    79.41    0.00    0.00      0    76.63    0.00    0.00      0
+          64            64     uint8     sum      -1    33.31    0.00    0.00      0    35.24    0.00    0.00      0
+         128           128     uint8     sum      -1    34.54    0.00    0.01      0    35.00    0.00    0.01      0
+         256           256     uint8     sum      -1    35.86    0.01    0.01      0    33.64    0.01    0.01      0
+         512           512     uint8     sum      -1    35.81    0.01    0.03      0    35.11    0.01    0.03      0
+        1024          1024     uint8     sum      -1    37.49    0.03    0.05      0    38.29    0.03    0.05      0
+        2048          2048     uint8     sum      -1    39.87    0.05    0.10      0    39.87    0.05    0.10      0
+        4096          4096     uint8     sum      -1    39.54    0.10    0.19      0    39.29    0.10    0.20      0
+        8192          8192     uint8     sum      -1    103.6    0.08    0.15      0    100.7    0.08    0.15      0
+       16384         16384     uint8     sum      -1    112.8    0.15    0.27      0    116.3    0.14    0.26      0
+       32768         32768     uint8     sum      -1    113.0    0.29    0.54      0    111.8    0.29    0.55      0
+       65536         65536     uint8     sum      -1    117.5    0.56    1.05      0    115.2    0.57    1.07      0
+      131072        131072     uint8     sum      -1    149.7    0.88    1.64      0    148.5    0.88    1.66      0
+      262144        262144     uint8     sum      -1    172.8    1.52    2.84      0    172.2    1.52    2.85      0
+      524288        524288     uint8     sum      -1    207.0    2.53    4.75      0    208.8    2.51    4.71      0
+     1048576       1048576     uint8     sum      -1    292.0    3.59    6.73      0    290.9    3.60    6.76      0
+     2097152       2097152     uint8     sum      -1    384.2    5.46   10.24      0    384.2    5.46   10.23      0
+     4194304       4194304     uint8     sum      -1    580.3    7.23   13.55      0    578.9    7.24   13.58      0
+     8388608       8388608     uint8     sum      -1    966.3    8.68   16.28      0    964.0    8.70   16.32      0
+    16777216      16777216     uint8     sum      -1   1316.3   12.75   23.90      0   1317.2   12.74   23.88      0
+    33554432      33554432     uint8     sum      -1   2598.5   12.91   24.21      0   2599.2   12.91   24.21      0
+    67108864      67108864     uint8     sum      -1   5177.9   12.96   24.30      0   5177.9   12.96   24.30      0
+   134217728     134217728     uint8     sum      -1    10350   12.97   24.32      0    10351   12.97   24.31      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.54289 
+#
+# Collective test concluded: all_reduce_perf
+
+-- mpirun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
+[nid005348:86202] Rank 8 bound to package[0][core:0-6]
+[nid005348:86202] Rank 9 bound to package[0][core:7-13]
+[nid005348:86202] Rank 10 bound to package[0][core:14-20]
+[nid005348:86202] Rank 11 bound to package[0][core:21-27]
+[nid005348:86202] Rank 13 bound to package[0][core:35-41]
+[nid005348:86202] Rank 12 bound to package[0][core:28-34]
+[nid005348:86202] Rank 14 bound to package[0][core:42-48]
+[nid005348:86202] Rank 15 bound to package[0][core:49-55]
+[nid005347:116007] Rank 0 bound to package[0][core:0-6]
+[nid005347:116007] Rank 1 bound to package[0][core:7-13]
+[nid005347:116007] Rank 3 bound to package[0][core:21-27]
+[nid005347:116007] Rank 2 bound to package[0][core:14-20]
+[nid005347:116007] Rank 4 bound to package[0][core:28-34]
+[nid005347:116007] Rank 5 bound to package[0][core:35-41]
+[nid005347:116007] Rank 6 bound to package[0][core:42-48]
+[nid005347:116007] Rank 7 bound to package[0][core:49-55]
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid 116034 on  nid005347 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid 116035 on  nid005347 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid 116037 on  nid005347 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid 116036 on  nid005347 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid 116038 on  nid005347 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid 116040 on  nid005347 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid 116044 on  nid005347 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid 116056 on  nid005347 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  86241 on  nid005348 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  86242 on  nid005348 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  86243 on  nid005348 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  86244 on  nid005348 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  86246 on  nid005348 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  86245 on  nid005348 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  86249 on  nid005348 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  86253 on  nid005348 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.17    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+         256            16     uint8    none      -1    46.62    0.01    0.01      0    46.69    0.01    0.01      0
+         512            32     uint8    none      -1    49.13    0.01    0.01      0    46.84    0.01    0.01      0
+        1024            64     uint8    none      -1    47.06    0.02    0.02      0    44.38    0.02    0.02      0
+        2048           128     uint8    none      -1    44.51    0.05    0.04      0    44.40    0.05    0.04      0
+        4096           256     uint8    none      -1    44.53    0.09    0.09      0    44.63    0.09    0.09      0
+        8192           512     uint8    none      -1    46.06    0.18    0.17      0    45.23    0.18    0.17      0
+       16384          1024     uint8    none      -1    47.36    0.35    0.32      0    48.24    0.34    0.32      0
+       32768          2048     uint8    none      -1    52.46    0.62    0.59      0    52.21    0.63    0.59      0
+       65536          4096     uint8    none      -1    225.2    0.29    0.27      0    222.8    0.29    0.28      0
+      131072          8192     uint8    none      -1    238.4    0.55    0.52      0    238.7    0.55    0.51      0
+      262144         16384     uint8    none      -1    476.1    0.55    0.52      0    469.8    0.56    0.52      0
+      524288         32768     uint8    none      -1    271.2    1.93    1.81      0    269.3    1.95    1.83      0
+     1048576         65536     uint8    none      -1    274.7    3.82    3.58      0    274.1    3.83    3.59      0
+     2097152        131072     uint8    none      -1    282.2    7.43    6.97      0    283.4    7.40    6.94      0
+     4194304        262144     uint8    none      -1    340.3   12.33   11.56      0    340.6   12.31   11.54      0
+     8388608        524288     uint8    none      -1    377.3   22.23   20.84      0    374.8   22.38   20.98      0
+    16777216       1048576     uint8    none      -1    671.5   24.98   23.42      0    669.0   25.08   23.51      0
+    33554432       2097152     uint8    none      -1   1308.4   25.64   24.04      0   1304.0   25.73   24.12      0
+    67108864       4194304     uint8    none      -1   2588.4   25.93   24.31      0   2584.6   25.97   24.34      0
+   134217728       8388608     uint8    none      -1   5166.4   25.98   24.36      0   5167.8   25.97   24.35      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.12838 
+#
+# Collective test concluded: all_gather_perf
+

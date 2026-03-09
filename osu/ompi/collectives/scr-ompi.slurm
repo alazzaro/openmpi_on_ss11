@@ -11,15 +11,15 @@ export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../../.." &> /dev
 echo "ROOT_DIR = "$ROOT_DIR
 
 if [ "$OSU_ARGS" == "" ];then
-    OSU_ARGS=" -c "
+    OSU_ARGS=" "
 fi
 
 source $ROOT_DIR/sourceme_ompi.sh
 #export NCCL_DEBUG=INFO
 #export FI_LOG_LEVEL=debug
 
-export FI_CXI_RDZV_EAGER_SIZE=1024
-export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
+export FI_CXI_RDZV_EAGER_SIZE=1024 # not so important, just large enough
+export FI_CXI_RDZV_THRESHOLD=4096 # has to be 4k for cray mpi alltoall to loose a bump
 
 # this is necessary for device collectives to work on NVIDIA. Otherwise segfault.
 export OMPI_MCA_mtl_ofi_disable_hmem=1
@@ -36,6 +36,7 @@ export OMPI_MCA_mtl=ofi
 export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
+# osu_alltoall -d cuda segfaults with ompi6 + lnx 
 CMDS=("osu_alltoall -d cuda" "osu_allreduce -d cuda" "osu_allgather -d cuda" "osu_allreduce" "osu_alltoall" "osu_allgather")
 for cmd in "${CMDS[@]}"; do
     run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_lnx"
@@ -55,9 +56,16 @@ if [ "$SLURM_NNODES" == "1" ]; then
     export PRTE_MCA_ras_base_launch_orted_on_hn=1
     export PMIX_MCA_gds=^shmem2
 
+    # improves things for large messages with ompi 6
+    export OMPI_MCA_coll_accelerator_alltoall_thresh=10485760
+    export OMPI_MCA_coll_accelerator_allgather_thresh=10485760
+
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_ob1"
     done
+
+    unset OMPI_MCA_coll_accelerator_alltoall_thresh
+    unset OMPI_MCA_coll_accelerator_allgather_thresh
 fi
 
 # no OpenMPI internal transport, only libfabric. Use CXI directly
@@ -72,12 +80,21 @@ export OMPI_MCA_mtl=ofi
 export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
+#export OMPI_MCA_coll_accelerator_alltoall_thresh=131072
+#export OMPI_MCA_coll_accelerator_priority=0
+#export OMPI_MCA_coll_base_verbose=100
+
 for cmd in "${CMDS[@]}"; do
     run_osu_cmd "$cmd" "mpi/collective" "_n${SLURM_NTASKS}_cxi"
 done
 
 # NCCL
 source $ROOT_DIR/sourceme_nccl.sh
+
+# tuning
+export FI_CXI_RDZV_EAGER_SIZE=8192 # has to be 4k+
+export FI_CXI_RDZV_THRESHOLD=32768 # has to be 32k for osu nccl allgather to perform well
+                                   # also has some positive effect on allreduce
 
 # recommended settings
 export HSA_FORCE_FINE_GRAIN_PCIE=1

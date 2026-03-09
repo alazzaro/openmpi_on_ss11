@@ -1,0 +1,43 @@
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0     uint8    none      -1     0.11    0.00    0.00      0     0.09    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+        8192            16     uint8    none      -1   5189.3    0.00    0.00      0   3605.6    0.00    0.00    N/A
+       16384            32     uint8    none      -1   3574.2    0.00    0.00      0   3533.5    0.00    0.00    N/A
+       32768            64     uint8    none      -1   3551.3    0.01    0.01      0   3531.2    0.01    0.01    N/A
+       65536           128     uint8    none      -1   3570.7    0.02    0.02      0   3547.9    0.02    0.02    N/A
+      131072           256     uint8    none      -1   3533.1    0.04    0.04      0   3510.8    0.04    0.04    N/A
+      262144           512     uint8    none      -1   3556.2    0.07    0.07      0   3520.5    0.07    0.07    N/A
+      524288          1024     uint8    none      -1   3565.2    0.15    0.15      0   3544.0    0.15    0.15    N/A
+     1048576          2048     uint8    none      -1   3638.2    0.29    0.29      0   3611.4    0.29    0.29    N/A
+     2097152          4096     uint8    none      -1   3795.1    0.55    0.55      0   3770.5    0.56    0.56    N/A
+     4194304          8192     uint8    none      -1    11763    0.36    0.36      0    11503    0.36    0.36    N/A
+     8388608         16384     uint8    none      -1    11754    0.71    0.71      0    11570    0.73    0.72    N/A
+    16777216         32768     uint8    none      -1    11987    1.40    1.40      0    11898    1.41    1.41    N/A
+    33554432         65536     uint8    none      -1    22141    1.52    1.51      0    22028    1.52    1.52    N/A
+    67108864        131072     uint8    none      -1    22544    2.98    2.97      0    22467    2.99    2.98    N/A
+   134217728        262144     uint8    none      -1   118757    1.13    1.13      0    43508    3.08    3.08    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 0.364653 
+#
+# Collective test concluded: alltoall_perf
+

@@ -1,0 +1,43 @@
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0     uint8    none      -1     0.31    0.00    0.00       0     0.24    0.00    0.00       0
+           0             0     uint8    none      -1     0.23    0.00    0.00       0     0.28    0.00    0.00       0
+           0             0     uint8    none      -1     0.28    0.00    0.00       0     0.28    0.00    0.00       0
+           0             0     uint8    none      -1     0.28    0.00    0.00       0     0.30    0.00    0.00       0
+           0             0     uint8    none      -1     0.27    0.00    0.00       0     0.29    0.00    0.00       0
+           0             0     uint8    none      -1     0.27    0.00    0.00       0     0.25    0.00    0.00       0
+           0             0     uint8    none      -1     0.26    0.00    0.00       0     0.23    0.00    0.00       0
+           0             0     uint8    none      -1     0.23    0.00    0.00       0     0.25    0.00    0.00       0
+         256            16     uint8    none      -1    36.41    0.01    0.01       0    35.84    0.01    0.01       0
+         512            32     uint8    none      -1    35.26    0.01    0.01       0    35.55    0.01    0.01       0
+        1024            64     uint8    none      -1    35.89    0.03    0.03       0    37.18    0.03    0.03       0
+        2048           128     uint8    none      -1    36.93    0.06    0.05       0    36.75    0.06    0.05       0
+        4096           256     uint8    none      -1    36.93    0.11    0.10       0    37.11    0.11    0.10       0
+        8192           512     uint8    none      -1    38.13    0.21    0.20       0    38.20    0.21    0.20       0
+       16384          1024     uint8    none      -1    40.86    0.40    0.38       0    41.19    0.40    0.37       0
+       32768          2048     uint8    none      -1    41.21    0.80    0.75       0    42.23    0.78    0.73       0
+       65536          4096     uint8    none      -1    47.89    1.37    1.28       0    47.27    1.39    1.30       0
+      131072          8192     uint8    none      -1    53.18    2.46    2.31       0    51.00    2.57    2.41       0
+      262144         16384     uint8    none      -1    52.69    4.97    4.66       0    52.93    4.95    4.64       0
+      524288         32768     uint8    none      -1   105.37    4.98    4.66       0   105.67    4.96    4.65       0
+     1048576         65536     uint8    none      -1   126.62    8.28    7.76       0   101.90   10.29    9.65       0
+     2097152        131072     uint8    none      -1   156.11   13.43   12.59     882   132.34   15.85   14.86       0
+     4194304        262144     uint8    none      -1   166.05   25.26   23.68    2624   199.21   21.05   19.74     768
+     8388608        524288     uint8    none      -1   132.84   63.15   59.20       0   132.89   63.12   59.18       0
+    16777216       1048576     uint8    none      -1   217.88   77.00   72.19       0   217.14   77.27   72.44       0
+    33554432       2097152     uint8    none      -1  4950.37    6.78    6.35       0  1627.23   20.62   19.33       0
+    67108864       4194304     uint8    none      -1   735.84   91.20   85.50       0   731.54   91.74   86.00       0
+   134217728       8388608     uint8    none      -1  1421.79   94.40   88.50       0  1422.92   94.33   88.43       0
+# Out of bounds values : 42 FAILED
+# Avg bus bandwidth    : 13.4708 
+#
+# Collective test concluded: all_gather_perf
+#
+

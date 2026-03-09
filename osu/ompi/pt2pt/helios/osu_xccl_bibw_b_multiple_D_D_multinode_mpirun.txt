@@ -1,0 +1,29 @@
+using OMPI envars
+#Using NCCL
+using OMPI envars
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)        Validation
+1                       0.06
+2                       0.12
+4                       0.24
+8                       0.47
+16                      0.96
+32                      1.93
+64                      3.83
+128                     7.63
+256                    14.31
+512                    28.58
+1024                   56.00
+2048                  112.77
+4096                  218.57
+8192                  421.46
+16384                 702.30
+32768                1162.04
+65536                1545.40
+131072               1840.24
+262144               2080.94
+524288               2161.82
+1048576              2490.71
+2097152              2504.18
+4194304              2528.69

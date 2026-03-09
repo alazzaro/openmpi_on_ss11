@@ -1,6 +1,7 @@
 export ROOT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
 echo "ROOT_DIR = "$ROOT_DIR
 
+<<<<<<< main
 # ============================================================================
 # USER CONFIGURATION SECTION - MODIFY THESE PATHS AS NEEDED FOR YOUR SYSTEM
 # ============================================================================
@@ -418,6 +419,38 @@ case "$SYSTEM_CONFIG" in
 		XPMEM_LIBFABRIC=""
 		return -1
         ;;
+=======
+case "$USER" in
+    lazzaroa)
+	module load PrgEnv-gnu
+	module load rocm
+	module list
+
+	echo "ROCM_PATH = "$ROCM_PATH
+
+	XPMEM_ROOT=$(pkg-config --variable=libdir cray-xpmem)
+	XPMEM_LIBFABRIC="--enable-xpmem=${XPMEM_ROOT}"
+	echo "XPMEM Lib path  = "$XPMEM_ROOT
+
+	GPU_INCLUDE="-I$ROCM_PATH/include"
+	GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
+	;;
+    marcink)
+	if [ "${CRAY_MPICH_VER}" == "" ]; then
+	    ml load NRIS/GPU
+	    ml load libfabric/2.3.1-GCCcore-14.3.0
+	    return 0
+	fi
+
+	# with cray mpi use the pre-installed libfabric
+	export PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0/
+	return 0
+	;;
+    *)
+	echo "User not recongnized"
+	return -1
+	;;
+>>>>>>> main
 esac
 
 # Summary of configuration  
@@ -450,8 +483,9 @@ export PATH=${PREFIX_CXI}/bin:${PATH}
 export LD_LIBRARY_PATH=${PREFIX_CXI}/lib:${LD_LIBRARY_PATH}
 export PKG_CONFIG_PATH=$PREFIX_CXI/lib/pkgconfig:$PKG_CONFIG_PATH
 export MANPATH=$PREFIX_CXI/man:$MANPATH
+export MANPATH=$PREFIX_CXI/share/man:$MANPATH
 
 export PATH=${PREFIX_LIBFABRIC}/bin:${PATH}
 export LD_LIBRARY_PATH=${PREFIX_LIBFABRIC}/lib:${LD_LIBRARY_PATH}
 export PKG_CONFIG_PATH=$PREFIX_LIBFABRIC/lib/pkgconfig:$PKG_CONFIG_PATH
-export MANPATH=$PREFIX_LIBFABRIC/man:$MANPATH
+export MANPATH=$PREFIX_LIBFABRIC/share/man:$MANPATH

@@ -1,0 +1,27 @@
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      20.16
+2                      19.88
+4                      19.87
+8                      21.57
+16                     29.71
+32                     30.67
+64                     34.47
+128                    34.95
+256                    48.83
+512                    56.50
+1024                   73.64
+2048                   75.49
+4096                  284.74
+8192                  188.41
+16384                 152.83
+32768                 123.82
+65536                 199.88
+131072                429.04
+262144                837.83
+524288               1796.68
+1048576              3609.13
+
+MPICH Slingshot Network Summary: 1 network timeouts
+

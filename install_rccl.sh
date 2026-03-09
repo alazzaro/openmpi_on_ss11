@@ -68,6 +68,10 @@ for USE_CPE in 0 1; do
 	    MPI_HOME="${CRAY_MPICH_PREFIX}"
 	fi
 	CXX=hipcc ./install.sh --rocm_home=$ROCM_PATH --rccl_home=$PREFIX_RCCL --mpi --mpi_home="${MPI_HOME}" --hip_compiler=$(which hipcc) --gpu_targets=gfx90a
+	# Install binaries
+	cd build
+	mkdir -p $PREFIX_RCCL/bin
+	cp *_perf $PREFIX_RCCL/bin
 )
 done
 
