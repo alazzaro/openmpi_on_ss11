@@ -63,8 +63,7 @@ for n in ${NGPUS}; do
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
 #		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
-#		       "../ompi/collectives/lumi_marcin_6.x/osu_{test}
-#ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+		       "../osu/ompi/collectives/lumi_marcin_6.x/osu_${test}_d_rocm_lnx_n${n}.txt"
 		      )
 	    ;;
 	    olivia)
@@ -88,14 +87,14 @@ for n in ${NGPUS}; do
 		"ompi5 lnx"
 #		"${XCCL} (OSU)"
 		"${XCCL} (${XCCL_TESTS})"
-#		"ompi6 ${cmp}"
+		"ompi6 ${cmp}"
 	       )
 	STYLES=("b-o"
 		"g-^"
 		"g-o"
 		"r^:"
 #		"ro:"
-#		"k-o"
+		"k-o"
 	       )
 	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, ${n} GPUs" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
     done
