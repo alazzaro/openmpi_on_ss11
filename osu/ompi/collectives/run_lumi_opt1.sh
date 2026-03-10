@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1; do
+for NNODES in 1 2 4 8 16 32 64; do
+#for NNODES in 4; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
@@ -11,7 +11,7 @@ sbatch -N $NNODES <<EOF
 #SBATCH --gres=gpu:8
 #SBATCH --exclusive
 #SBATCH --network=single_node_vni
-#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt.out
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt_5.0.10.out
 #SBATCH --time=1:30:00
 ##SBATCH --network=disable_rdzv_get
 
@@ -41,7 +41,7 @@ env
 for FI_CXI_RX_MATCH_MODE in software hybrid; do
     export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
 
-    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt"
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt_5.0.10"
 
     echo "========"
     echo \$SUFFIX
@@ -58,9 +58,9 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
      export FI_MR_CACHE_MONITOR=kdreg2 # not useful, can avoid deadline on RCCL
      export FI_CXI_RDZV_EAGER_SIZE=0
      export FI_CXI_RDZV_PROTO="alt_read"
-#      export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
-      export FI_CXI_DEFAULT_TX_SIZE=2048
-      export FI_CXI_DISABLE_HOST_REGISTER=1
+     export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
+     export FI_CXI_DEFAULT_TX_SIZE=2048
+     export FI_CXI_DISABLE_HOST_REGISTER=1
 
 #    if false; then
     if [ "\${FI_CXI_RX_MATCH_MODE}" == "software" ]; then
@@ -79,6 +79,9 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
 	CMDS=("osu_alltoall -d rocm D D" "osu_allreduce -d rocm D D" "osu_allgather -d rocm D D")
 #  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
         for cmd in "\${CMDS[@]}"; do
+#	    ompi_info > ompi_info.log
+#	    ldd \$OSU_HOME/mpi/collective/osu_alltoall > alltoall_ldd.log
+#	    env > alltoall_env.log
     	    run_osu_cmd "\$cmd" "mpi/collective" "_lnx\${SUFFIX}"
         done
 
@@ -92,7 +95,7 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
     )
     fi # only software
 #    fi
-
+#    if false; then
     (
         echo "no OpenMPI internal transport, only libfabric. Use CXI directly"
 
@@ -111,6 +114,7 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
             run_osu_cmd "\$cmd" "mpi/collective" "_cxi\${SUFFIX}"
         done
     )
+#    fi
 
     if [ "\${FI_CXI_RX_MATCH_MODE}" == "hybrid" ]; then
 #    if false; then
@@ -144,6 +148,7 @@ for FI_CXI_RX_MATCH_MODE in software hybrid; do
 
 done
 
+#if false; then
 if [ "${NNODES}" == "1" ]; then
 (
     echo "with OpenMPI internal transport"
@@ -170,6 +175,7 @@ if [ "${NNODES}" == "1" ]; then
     done
 )
 fi # single node
+#fi
 
 EOF
 

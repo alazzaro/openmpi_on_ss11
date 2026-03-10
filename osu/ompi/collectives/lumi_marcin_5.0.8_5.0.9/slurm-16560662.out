@@ -1,0 +1,655 @@
+SLURM_MEM_PER_CPU=0
+SLURM_NODEID=0
+SLURM_TASK_PID=26324
+SLURM_PRIO_PROCESS=0
+SLURM_SUBMIT_DIR=/pfs/lustrep1/users/makrotki/cug_2026/ompi/runs
+SLURM_CPUS_PER_TASK=7
+SLURM_GPUS_PER_NODE=8
+SLURM_PROCID=0
+SLURM_JOB_GID=327000092
+SLURMD_NODENAME=nid005490
+SLURM_JOB_END_TIME=1772921722
+SLURM_TASKS_PER_NODE=8(x8)
+SLURM_NNODES=8
+SLURM_JOB_START_TIME=1772916322
+SLURM_NTASKS_PER_NODE=8
+SLURM_JOB_NODELIST=nid[005490-005491,007387-007389,007448-007450]
+SLURM_CLUSTER_NAME=lumi
+SLURM_NODELIST=nid[005490-005491,007387-007389,007448-007450]
+SLURM_GPUS_ON_NODE=8
+SLURM_NTASKS=64
+SLURM_JOB_CPUS_PER_NODE=56(x8)
+SLURM_TOPOLOGY_ADDR=nid005490
+SLURM_THREADS_PER_CORE=1
+SLURM_JOB_NAME=YourJobname
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+SLURM_JOBID=16560662
+SLURM_CONF=/etc/slurm/slurm.conf
+SLURM_JOB_QOS=normal
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=8
+SLURM_JOB_UID=327000092
+SLURM_JOB_PARTITION=standard-g
+SLURM_HINT=nomultithread
+SLURM_JOB_USER=makrotki
+SLURM_NPROCS=64
+SLURM_SUBMIT_HOST=uan03
+SLURM_JOB_ACCOUNT=project_465002282
+SLURM_TRES_PER_TASK=cpu=7
+SLURM_GTIDS=0
+SLURM_JOB_ID=16560662
+SLURM_LOCALID=0
+Lmod has detected the following error: Swap failed: "PrgEnv-cray" is not
+loaded.
+
+
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/5.0.8
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=lnx
+FI_CXI_RDZV_EAGER_SIZE=4096
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/5.0.8
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007ffc1efce000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x00001510d9344000)
+	libmpi.so.40 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libmpi.so.40 (0x00001510d8fc9000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x00001510d8d5d000)
+	libm.so.6 => /lib64/libm.so.6 (0x00001510d8c73000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00001510d8c46000)
+	libc.so.6 => /lib64/libc.so.6 (0x00001510d8a31000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00001510d8a2e000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x00001510d8990000)
+	librt.so.1 => /lib64/librt.so.1 (0x00001510d898b000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x00001510d0222000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x00001510cff16000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x00001510cfc00000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00001510cff13000)
+	/lib64/ld-linux-x86-64.so.2 (0x00001510da8ce000)
+	libopen-pal.so.80 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libopen-pal.so.80 (0x00001510cfae3000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x00001510cf9ae000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x00001510cfec2000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x00001510cfe9f000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x00001510cf8d1000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x00001510cfe8d000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x00001510cfe81000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x00001510cfe7e000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libpmix.so.2 (0x00001510cf69b000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libevent_core-2.1.so.7 (0x00001510cfe4a000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libevent_pthreads-2.1.so.7 (0x00001510cfe46000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libhwloc.so.15 (0x00001510cf642000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x00001510cfe2b000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x00001510cf583000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x00001510cf200000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x00001510cfe14000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x00001510cf575000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x00001510cf54c000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x00001510cee00000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x00001510cf4dd000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x00001510cea00000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x00001510cf427000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x00001510ce489000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x00001510cf1ae000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x00001510cf159000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x00001510cf149000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x00001510cf41a000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x00001510cf0a5000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x00001510ce000000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x00001510cf09d000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x00001510ced25000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x00001510cf086000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00001510cf081000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x00001510cf072000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x00001510cf054000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x00001510cf032000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x00001510cdc00000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00001510cf020000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x00001510cecf8000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x00001510cec3c000)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                     696.92
+8                      84.58
+16                     83.69
+32                    105.04
+64                    103.41
+128                   117.11
+256                   106.34
+512                   109.36
+1024                  111.47
+2048                  124.45
+4096                  141.60
+8192                  133.94
+16384                 160.22
+32768                 189.20
+65536                 251.11
+131072                401.05
+262144                717.54
+524288               1334.61
+1048576              2573.71
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      77.84
+2                      77.61
+4                      78.00
+8                      79.04
+16                     79.72
+32                     80.54
+64                     95.81
+128                   104.20
+256                   104.02
+512                   113.78
+1024                  121.73
+2048                  129.40
+4096                  146.93
+8192                  185.58
+16384                 279.31
+32768                 450.72
+65536                 795.06
+131072               1465.53
+262144               3488.23
+524288               6923.65
+1048576             13274.18
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    2778.08
+2                    2631.66
+4                    2657.08
+8                    2681.48
+16                   2688.65
+32                   2699.47
+64                   2715.76
+128                  2731.56
+256                  2769.03
+512                  2800.14
+1024                  169.01
+2048                  177.90
+4096                  188.93
+8192                  213.66
+16384                 214.28
+32768                 297.95
+65536                 505.08
+131072                930.35
+262144               2571.09
+524288               4175.21
+1048576              8215.80
+
+The following have been reloaded with a version change:
+  1) openmpi/5.0.8 => openmpi/5.0.9
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/5.0.9
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007fff4cb04000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x000014de94396000)
+	libmpi.so.40 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libmpi.so.40 (0x000014de9401b000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x000014de93daf000)
+	libm.so.6 => /lib64/libm.so.6 (0x000014de93cc5000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x000014de93c98000)
+	libc.so.6 => /lib64/libc.so.6 (0x000014de93a83000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x000014de93a80000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x000014de939e2000)
+	librt.so.1 => /lib64/librt.so.1 (0x000014de939dd000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x000014de8b274000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x000014de8af68000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x000014de8ac00000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x000014de8af65000)
+	/lib64/ld-linux-x86-64.so.2 (0x000014de95920000)
+	libopen-pal.so.80 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libopen-pal.so.80 (0x000014de8ae46000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x000014de8aacb000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x000014de8aa7c000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x000014de8a99f000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x000014de8ae32000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x000014de8ae28000)
+	libnl-route-3.so.200 => /usr/lib64/libnl-route-3.so.200 (0x000014de8a90b000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x000014de8a8e8000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x000014de8ae23000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libpmix.so.2 (0x000014de8a6af000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libevent_core-2.1.so.7 (0x000014de8a67b000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libevent_pthreads-2.1.so.7 (0x000014de8ae1f000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libhwloc.so.15 (0x000014de8a622000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x000014de8a609000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x000014de8a54a000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x000014de8a200000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x000014de8a533000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x000014de8ae0d000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x000014de8a50a000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x000014de89e00000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x000014de8a49b000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x000014de89a00000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x000014de8a14a000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x000014de89489000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x000014de8a447000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x000014de8a0f5000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x000014de8a437000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x000014de8a42a000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x000014de8a051000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x000014de89000000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x000014de8a420000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x000014de89d25000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x000014de8a03a000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x000014de8a419000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x000014de8a02b000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x000014de89d07000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x000014de89ce5000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x000014de88c00000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x000014de89cd3000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x000014de89ca6000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x000014de893cd000)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                     176.91
+8                      85.39
+16                     84.30
+32                    106.71
+64                    105.11
+128                   121.63
+256                   108.16
+512                   108.68
+1024                  110.77
+2048                  122.51
+4096                  138.14
+8192                  132.87
+16384                 158.17
+32768                 188.80
+65536                 236.85
+131072                393.38
+262144                708.42
+524288               1321.45
+1048576              2558.48
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     151.14
+2                      85.50
+4                      83.76
+8                      84.02
+16                     84.75
+32                     85.23
+64                     95.85
+128                   105.32
+256                   108.91
+512                   108.72
+1024                  141.68
+2048                  194.80
+4096                  305.42
+8192                  529.62
+16384                 982.52
+32768                3333.93
+65536                8480.57
+131072              18458.83
+262144              39289.14
+524288              83344.95
+1048576            170918.85
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    2814.19
+2                    2669.61
+4                    2680.82
+8                    2685.39
+16                   2676.89
+32                   2689.87
+64                   2735.73
+128                  2740.68
+256                  2774.39
+512                  2859.48
+1024                  171.16
+2048                  180.79
+4096                  193.10
+8192                  219.62
+16384                 231.89
+32768                 314.61
+65536                 509.10
+131072                902.94
+262144               2653.07
+524288               4422.39
+1048576              8749.54
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=cxi
+FI_CXI_RDZV_EAGER_SIZE=4096
+
+The following have been reloaded with a version change:
+  1) openmpi/5.0.9 => openmpi/5.0.8
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/5.0.8
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007fff8aff5000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x00001502845e8000)
+	libmpi.so.40 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libmpi.so.40 (0x000015028426d000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x0000150284001000)
+	libm.so.6 => /lib64/libm.so.6 (0x0000150283f17000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x0000150283eea000)
+	libc.so.6 => /lib64/libc.so.6 (0x0000150283cd5000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x0000150283cd2000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x0000150283c34000)
+	librt.so.1 => /lib64/librt.so.1 (0x0000150283c2f000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x000015027b4c6000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x000015027b1ba000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x000015027ae00000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x000015027b1b7000)
+	/lib64/ld-linux-x86-64.so.2 (0x0000150285b72000)
+	libopen-pal.so.80 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libopen-pal.so.80 (0x000015027b09a000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x000015027accb000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x000015027b049000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x000015027b026000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x000015027abee000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x000015027b014000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x000015027abe4000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x000015027b00f000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libpmix.so.2 (0x000015027a9ae000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libevent_core-2.1.so.7 (0x000015027a97a000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libevent_pthreads-2.1.so.7 (0x000015027a976000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-5.0.8/lib/libhwloc.so.15 (0x000015027a91d000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x000015027a904000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x000015027a845000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x000015027a600000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x000015027a82e000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x000015027a820000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x000015027a5d7000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x000015027a200000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x000015027a568000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x0000150279e00000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x000015027a4b2000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x0000150279889000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x000015027a460000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x000015027a1ab000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x000015027a450000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x000015027a443000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x000015027a107000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x0000150279400000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x000015027a43b000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x000015027a02c000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x000015027a424000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x000015027a41f000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x000015027a01d000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x000015027986b000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x0000150279849000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x0000150279000000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x0000150279837000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x000015027980a000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x0000150279344000)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      48.87
+8                      50.28
+16                     50.39
+32                     65.77
+64                     64.19
+128                    69.12
+256                    69.26
+512                    70.60
+1024                   73.42
+2048                   76.90
+4096                   82.21
+8192                  118.55
+16384                 120.54
+32768                 143.66
+65536                 203.90
+131072                481.25
+262144                660.81
+524288               1160.52
+1048576              2086.90
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      63.05
+2                      62.88
+4                      63.36
+8                      63.76
+16                     64.43
+32                     65.05
+64                     69.43
+128                    76.24
+256                    83.46
+512                    90.63
+1024                   97.52
+2048                  128.04
+4096                  176.08
+8192                  301.42
+16384                 396.65
+32768                 704.08
+65536                1321.58
+131072               2558.56
+262144               4877.10
+524288               9999.38
+1048576             19716.01
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    4273.40
+2                    4235.41
+4                    4241.90
+8                    4398.06
+16                   3010.47
+32                   2800.29
+64                   2839.12
+128                  2818.23
+256                  2752.81
+512                  2770.44
+1024                   93.85
+2048                   99.29
+4096                   95.45
+8192                  114.54
+16384                 166.35
+32768                 276.18
+65536                 533.57
+131072               1099.31
+262144               2470.33
+524288               4319.81
+1048576              8374.60
+
+The following have been reloaded with a version change:
+  1) openmpi/5.0.8 => openmpi/5.0.9
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/5.0.9
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007fffe95c5000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x00001532c44b4000)
+	libmpi.so.40 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libmpi.so.40 (0x00001532c4139000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x00001532c3ecd000)
+	libm.so.6 => /lib64/libm.so.6 (0x00001532c3de3000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00001532c3db6000)
+	libc.so.6 => /lib64/libc.so.6 (0x00001532c3ba1000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00001532c3b9e000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x00001532c3b00000)
+	librt.so.1 => /lib64/librt.so.1 (0x00001532c3afb000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x00001532bb392000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x00001532bb086000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x00001532bae00000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00001532bb083000)
+	/lib64/ld-linux-x86-64.so.2 (0x00001532c5a3e000)
+	libopen-pal.so.80 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libopen-pal.so.80 (0x00001532bace1000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x00001532babac000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x00001532bb032000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x00001532baacf000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x00001532bb020000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x00001532bb016000)
+	libnl-route-3.so.200 => /usr/lib64/libnl-route-3.so.200 (0x00001532baa3b000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x00001532baa18000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x00001532bb011000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libpmix.so.2 (0x00001532ba7df000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libevent_core-2.1.so.7 (0x00001532ba7ab000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libevent_pthreads-2.1.so.7 (0x00001532bb00d000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-5.0.9/lib/libhwloc.so.15 (0x00001532ba750000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x00001532ba737000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x00001532ba678000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x00001532ba400000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x00001532ba661000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x00001532ba651000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x00001532ba628000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x00001532ba000000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x00001532ba391000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x00001532b9c00000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x00001532ba2db000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x00001532b9689000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x00001532ba289000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x00001532ba234000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x00001532ba224000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x00001532ba619000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x00001532b9f5c000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x00001532b9200000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x00001532b9f54000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x00001532b9e79000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x00001532b9e62000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00001532b9e5d000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x00001532b9e4e000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x00001532b9e30000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x00001532b9667000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x00001532b8e00000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00001532b9e1e000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x00001532b963a000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x00001532b9144000)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      48.56
+8                      50.32
+16                     50.28
+32                     65.39
+64                     63.47
+128                    68.10
+256                    68.21
+512                    70.22
+1024                   73.56
+2048                   75.83
+4096                   81.10
+8192                  111.17
+16384                 118.43
+32768                 197.06
+65536                 202.81
+131072                332.56
+262144                842.54
+524288               1160.94
+1048576              2128.80
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      63.05
+2                      63.25
+4                      63.50
+8                      63.84
+16                     64.93
+32                     65.24
+64                     69.05
+128                    74.96
+256                    81.15
+512                    84.39
+1024                  104.03
+2048                  135.82
+4096                  165.77
+8192                  290.60
+16384                 389.96
+32768                 701.50
+65536                1317.32
+131072               2546.38
+262144               4833.81
+524288               9990.18
+1048576             19463.36
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    4250.96
+2                    4139.21
+4                    4143.18
+8                    4212.48
+16                   3133.28
+32                   2989.43
+64                   3006.21
+128                  2993.29
+256                  2720.03
+512                  2764.52
+1024                   93.60
+2048                   98.52
+4096                   95.06
+8192                  114.09
+16384                 166.29
+32768                 276.16
+65536                 536.26
+131072               1093.53
+262144               2375.34
+524288               4292.22
+1048576              8355.41

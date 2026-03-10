@@ -1,0 +1,223 @@
+SLURM_MEM_PER_CPU=0
+SLURM_NODEID=0
+SLURM_TASK_PID=126449
+SLURM_PRIO_PROCESS=0
+SLURM_SUBMIT_DIR=/pfs/lustrep1/users/makrotki/cug_2026/ompi/runs6x
+SLURM_CPUS_PER_TASK=7
+SLURM_GPUS_PER_NODE=8
+SLURM_PROCID=0
+SLURM_JOB_GID=327000092
+SLURMD_NODENAME=nid005154
+SLURM_JOB_END_TIME=1772999858
+SLURM_TASKS_PER_NODE=8(x64)
+SLURM_NNODES=64
+SLURM_JOB_START_TIME=1772994458
+SLURM_NTASKS_PER_NODE=8
+SLURM_JOB_NODELIST=nid[005154-005155,006273,006282,006412,006535,006553,006585,006597,006600,006602,006606,006623-006624,006647,006659,006661,006676,006679,006681,006688,006692,006765,006806,006827,006829,006845,006852,006867,006886,006917,006919,006944,006946,006965,006967,006984,006990,006996,007042,007098,007119,007156,007222,007242-007243,007319,007382,007404,007488,007545,007595,007606,007614,007616,007619,007624,007640,007642,007646,007649,007651,007656,007658]
+SLURM_CLUSTER_NAME=lumi
+SLURM_NODELIST=nid[005154-005155,006273,006282,006412,006535,006553,006585,006597,006600,006602,006606,006623-006624,006647,006659,006661,006676,006679,006681,006688,006692,006765,006806,006827,006829,006845,006852,006867,006886,006917,006919,006944,006946,006965,006967,006984,006990,006996,007042,007098,007119,007156,007222,007242-007243,007319,007382,007404,007488,007545,007595,007606,007614,007616,007619,007624,007640,007642,007646,007649,007651,007656,007658]
+SLURM_GPUS_ON_NODE=8
+SLURM_NTASKS=512
+SLURM_JOB_CPUS_PER_NODE=56(x64)
+SLURM_TOPOLOGY_ADDR=nid005154
+SLURM_THREADS_PER_CORE=1
+SLURM_JOB_NAME=YourJobname
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+SLURM_JOBID=16580847
+SLURM_CONF=/etc/slurm/slurm.conf
+SLURM_JOB_QOS=normal
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=64
+SLURM_JOB_UID=327000092
+SLURM_JOB_PARTITION=standard-g
+SLURM_HINT=nomultithread
+SLURM_JOB_USER=makrotki
+SLURM_NPROCS=512
+SLURM_SUBMIT_HOST=uan03
+SLURM_JOB_ACCOUNT=project_465002282
+SLURM_TRES_PER_TASK=cpu=7
+SLURM_GTIDS=0
+SLURM_JOB_ID=16580847
+SLURM_LOCALID=0
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) libfabric/1.22.0 => libfabric/2.3.1
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/6x
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=lnx
+FI_CXI_RDZV_EAGER_SIZE=4096
+
+Currently Loaded Modules:
+  1) craype-x86-rome                     10) cray-dsmml/0.3.1
+  2) craype-network-ofi                  11) cray-mpich/8.1.32
+  3) perftools-base/25.03.0              12) cray-libsci/25.03.0
+  4) xpmem/2.11.5-1.3_g73ade43320bc      13) PrgEnv-gnu/8.6.0
+  5) ModuleLabel/label              (S)  14) craype-accel-amd-gfx90a
+  6) lumi-tools/24.05               (S)  15) rocm/6.3.4
+  7) init-lumi/0.2                  (S)  16) libfabric/2.3.1
+  8) gcc-native/14.2                     17) openmpi/6x
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+	linux-vdso.so.1 (0x00007ffe9b7b7000)
+	libamdhip64.so.6 => /opt/rocm-6.3.4/lib/libamdhip64.so.6 (0x000015022c04a000)
+	libmpi.so.0 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libmpi.so.0 (0x000015022bc89000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x000015022ba1d000)
+	libm.so.6 => /lib64/libm.so.6 (0x000015022b933000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x000015022b906000)
+	libc.so.6 => /lib64/libc.so.6 (0x000015022b6f1000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x000015022b6ee000)
+	librocprofiler-register.so.0 => /opt/rocm-6.3.4/lib/librocprofiler-register.so.0 (0x000015022b650000)
+	librt.so.1 => /lib64/librt.so.1 (0x000015022b64b000)
+	libamd_comgr.so.2 => /opt/rocm-6.3.4/lib/libamd_comgr.so.2 (0x0000150222ee2000)
+	libhsa-runtime64.so.1 => /opt/rocm-6.3.4/lib/libhsa-runtime64.so.1 (0x0000150222bd6000)
+	libnuma.so.1 => /usr/lib64/libnuma.so.1 (0x0000150222800000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x0000150222bd3000)
+	/lib64/ld-linux-x86-64.so.2 (0x000015022d5d4000)
+	libopen-pal.so.0 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libopen-pal.so.0 (0x0000150222a8b000)
+	libfabric.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libfabric.so.1 (0x00001502226cb000)
+	libnl-route-3.so.200 => /usr/lib64/libnl-route-3.so.200 (0x0000150222637000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x0000150222a66000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x0000150222a63000)
+	libpmix.so.2 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libpmix.so.2 (0x00001502223b6000)
+	libevent_core-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libevent_core-2.1.so.7 (0x0000150222a2d000)
+	libevent_pthreads-2.1.so.7 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libevent_pthreads-2.1.so.7 (0x0000150222a29000)
+	libhwloc.so.15 => /scratch/project_465002282/marcink/software/openmpi-6x/lib/libhwloc.so.15 (0x000015022235c000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x0000150222a10000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x000015022229d000)
+	libelf.so.1 => /usr/lib64/libelf.so.1 (0x0000150222000000)
+	libdrm.so.2 => /opt/amdgpu/lib64/libdrm.so.2 (0x0000150222286000)
+	libdrm_amdgpu.so.1 => /opt/amdgpu/lib64/libdrm_amdgpu.so.1 (0x0000150222278000)
+	libcxi.so.1 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libcxi.so.1 (0x0000150222229000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x0000150221f23000)
+	libjson-c.so.5 => /scratch/project_465002282/marcink/software/libfabric-2.3.1/lib/libjson-c.so.5 (0x0000150221f11000)
+	libatomic.so.1 => /usr/lib64/libatomic.so.1 (0x000015022221f000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x0000150221ee8000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x0000150221c00000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x0000150221e79000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x0000150221800000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x0000150221b4a000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x0000150221289000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x0000150221e27000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x0000150221af5000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x0000150221ae5000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x0000150221ad8000)
+	libmpi_gtl_hsa.so.0 => /opt/cray/pe/lib64/libmpi_gtl_hsa.so.0 (0x0000150221a34000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x0000150220e00000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x0000150221e1f000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x00001502211ae000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x0000150221a1d000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x0000150221a18000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x000015022119f000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x0000150220de2000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x0000150220dc0000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x0000150220a00000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x000015022118d000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x0000150220d93000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x0000150220cd7000)
+FI_CXI_RDZV_THRESHOLD=4096
+FI_LNX_PROV_LINKS=shm+cxi
+FI_SHM_USE_XPMEM=0
+FI_CXI_RX_MATCH_MODE=hybrid
+FI_PROVIDER=cxi
+FI_CXI_RDZV_EAGER_SIZE=4096
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      54.51
+8                      55.39
+16                     54.93
+32                     54.95
+64                     55.51
+128                    61.14
+256                    90.99
+512                    92.95
+1024                   95.81
+2048                  147.25
+4096                  175.03
+8192                  272.70
+16384                 232.54
+32768                 749.25
+65536                 653.07
+131072                980.12
+262144               1571.00
+524288               2300.18
+1048576              3601.31
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      47.15
+2                      50.09
+4                      77.31
+8                      80.75
+16                     90.00
+32                    119.04
+64                    440.74
+128                   289.97
+256                   354.72
+512                   561.43
+1024                  778.26
+2048                 1851.26
+4096                 1808.73
+8192                 3632.98
+16384                6496.40
+32768                6437.72
+65536               11427.83
+131072             313780.96
+262144             149642.55
+[nid007042:97574] mtl_ofi.h:198: Error returned from fi_cq_readerr with null context. Completion flags: 0000000000000808
+*** The Open MPI OFI MTL is aborting the MPI job (via exit(3)).
+--------------------------------------------------------------------------
+
+prterun detected that one or more processes exited with non-zero status,
+thus causing the job to be terminated. The first process to do so was:
+
+   Process name: [prterun-nid005154-127122@1,312]
+   Exit code:    1
+--------------------------------------------------------------------------
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                     231.66
+2                     231.98
+[nid006600:116197] mtl_ofi.h:198: Error returned from fi_cq_readerr with null context. Completion flags: 0000000000000808
+*** The Open MPI OFI MTL is aborting the MPI job (via exit(3)).
+[nid006600:116196] mtl_ofi.h:198: Error returned from fi_cq_readerr with null context. Completion flags: 0000000000000808
+*** The Open MPI OFI MTL is aborting the MPI job (via exit(3)).
+--------------------------------------------------------------------------
+
+prterun detected that one or more processes exited with non-zero status,
+thus causing the job to be terminated. The first process to do so was:
+
+   Process name: [prterun-nid005154-129815@1,74]
+   Exit code:    1
+--------------------------------------------------------------------------

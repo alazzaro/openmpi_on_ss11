@@ -7,7 +7,8 @@ export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../../.." &> /dev
 echo "ROOT_DIR = "$ROOT_DIR
 
 if [ "$OSU_ARGS" == "" ];then
-    OSU_ARGS=" -c "
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
 fi
 
 # Enable Cray-mpich and RCCL
@@ -36,7 +37,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo $SUFFIX
     echo "========"
 
-    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+#    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    CMDS=("osu_bibw -b single -d rocm D D" "osu_bibw -b single H H")
     #CMDS=("osu_bibw -W 32 -b multiple D D")
     #CMDS=("osu_bibw -b multiple D D")
     #CMDS=("osu_bibw D D")
@@ -48,7 +50,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 
     # NCCL/RCCL
 
-    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+#    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+    CMDS=("osu_xccl_bibw -b single -d rocm D D")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
     done
