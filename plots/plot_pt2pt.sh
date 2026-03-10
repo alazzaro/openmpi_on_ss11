@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#MYUSER="marcink"
-MYUSER="alazzaro"
+MYUSER="marcink"
+#MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
 echo "User: $MYUSER"
@@ -275,7 +275,7 @@ case "${SYSTEM}" in
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_multinode_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_multinode_software_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_lnx_multinode_software_*.txt)"
-		       "$(ls ../osu/ompi/pt2pt/lumi/osu_xccl_bibw_b_multiple_d_rocm_D_D_multinode_hybrid_*.txt)"
+		       "$(ls ../osu/craype/pt2pt/lumi/osu_xccl_bibw_b_multiple_d_rocm_D_D_multinode_hybrid_*.txt)"
 		      )
 	    ;;
 	    olivia)
@@ -283,7 +283,7 @@ case "${SYSTEM}" in
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/software_matching/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
-		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode_mpirun.txt"
+		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode.txt"
 		      )
 		unset LABELS[1]
 		unset STYLES[1]
