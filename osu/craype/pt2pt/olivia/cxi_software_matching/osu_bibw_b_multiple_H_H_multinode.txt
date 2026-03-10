@@ -1,0 +1,31 @@
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.72
+2                       3.50
+4                       7.05
+8                      14.31
+16                     28.65
+32                     57.12
+64                    114.07
+128                   225.94
+256                   452.30
+512                   896.37
+1024                 1640.81
+2048                 3454.21
+4096                 6425.70
+8192                 8543.72
+16384               13336.59
+32768               27783.60
+65536               34718.91
+131072              39824.86
+262144              43036.60
+524288              44763.30
+1048576             45733.34
+2097152             46194.21
+4194304             46426.52
