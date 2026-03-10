@@ -24,12 +24,16 @@ mkdir -p ${SYSTEM}
 
 LABELS=("Cray MPI (-b multiple)"
 	"Cray MPI (-b single)"
+	"Cray MPI (-b multiple) IPC opt"
+	"Cray MPI (-b single) IPC opt"
 	"ompi ob1"
 	"ompi lnx"
 	"OSU + ${XCCL}"
        )
 STYLES=("b-o"
 	"bo:"
+	"k-^"
+	"k^:"
 	"g-^"
 	"g-o"
 	"r^:"
@@ -39,6 +43,8 @@ case "${SYSTEM}" in
             lumi)
 		FILES=("$(ls ../osu/craype/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_singlenode_hybrid_*.txt)"
 		       "$(ls ../osu/craype/pt2pt/lumi_single_buffer/osu_bibw_b_single_d_rocm_D_D_singlenode_hybrid_*.txt)"
+		       "$(ls ../osu/craype/pt2pt/lumi_ipc_opt/osu_bibw_b_multiple_d_rocm_D_D_singlenode_hybrid_*.txt)"
+		       "$(ls ../osu/craype/pt2pt/lumi_ipc_opt/osu_bibw_b_single_d_rocm_D_D_singlenode_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_ob1_singlenode_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_lnx_singlenode_software_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_xccl_bibw_b_multiple_d_rocm_D_D_singlenode_hybrid_*.txt)"
@@ -51,6 +57,10 @@ case "${SYSTEM}" in
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_lnx_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_singlenode_mpirun.txt"
 		      )
+		unset LABELS[2]
+		unset LABELS[3]
+		unset STYLES[2]
+		unset STYLES[3]
 		;;
 esac
 
