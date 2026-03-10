@@ -1,0 +1,119 @@
+Starting job 231977 on c1-1 on Olivia at Tue Mar 10 19:28:42 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) init-NRIS                      (S)   8) gcc-native/14.2
+  2) craype-x86-turin                     9) craype/2.7.34
+  3) libfabric/1.22.0                    10) cray-dsmml/0.3.1
+  4) craype-network-ofi                  11) cray-libsci/25.03.0
+  5) perftools-base/25.03.0              12) PrgEnv-gnu/8.6.0
+  6) xpmem/2.11.3-1.3_gdbda01a1eb3d      13) cray-mpich/9.0.1
+  7) CrayEnv
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+
+ 
+
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple
+cpu-bind=MAP  - c1-1, task  0  0 [3553637]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3553638]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       4.79
+2                       9.51
+4                      18.96
+8                      37.41
+16                     76.08
+32                    135.37
+64                    226.91
+128                   423.74
+256                   785.29
+512                  1709.97
+1024                 3144.01
+2048                 4017.20
+4096                 5421.10
+8192                17658.77
+16384               25364.70
+32768               38276.16
+65536               51558.56
+131072              62027.86
+262144              43916.60
+524288              38986.60
+1048576             43718.61
+2097152             42320.79
+4194304             41594.28
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency
+cpu-bind=MAP  - c1-1, task  0  0 [3554668]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3554670]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.74
+2                       0.74
+4                       0.75
+8                       0.74
+16                      0.74
+32                      0.84
+64                      0.93
+128                     0.96
+256                     0.92
+512                     1.04
+1024                    1.18
+2048                    1.52
+4096                    2.17
+8192                    1.51
+16384                   1.61
+32768                   2.02
+65536                   2.47
+131072                  3.23
+262144                  4.02
+524288                 17.90
+1048576                18.69
+2097152                37.31
+4194304                72.31
+
+Job 231977 consumed 0.4 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-10T19:28:41; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 10.0 minutes
+Elapsed wallclock time:   5.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                  CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+231977               256            0.0 %  2026-03-10T19:28:41    5.0 s  0
+231977.batch         256      1     0.1 %  2026-03-10T19:28:41    5.0 s  0
+231977.osu_bibw      128      2     0.0 %  2026-03-10T19:28:43    2.0 s  0
+231977.osu_latency   128      2     0.0 %  2026-03-10T19:28:45    1.0 s  0
+
+Used CPU time:   0.7 CPU seconds
+Unused CPU time: 21.3 CPU minutes
+
+Memory statistics, in GiB:
+ID                   Alloc   Usage
+231977               700.0        
+231977.batch         700.0     0.0
+231977.osu_bibw      700.0     1.1
+231977.osu_latency   700.0     0.0
+
+Job 231977 completed at Tue Mar 10 19:28:47 CET 2026
