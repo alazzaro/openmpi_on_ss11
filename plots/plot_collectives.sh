@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #MYUSER="marcink"
-#MYUSER="alazzaro"
-MYUSER=${MYUSER:-${USER}}
+MYUSER="alazzaro"
+#MYUSER=${MYUSER:-${USER}}
 
 echo "User: $MYUSER"
 
@@ -10,8 +10,7 @@ case "$MYUSER" in
     lazzaroa|alazzaro)
 	SYSTEM="lumi"
 	suffix="amd"
-#	NGPUS="8 128"
-	NGPUS="8"
+	NGPUS="8 128"
 	NGPUS_PER_NODE=8
 	XCCL="RCCL"
 	XCCL_TESTS="rccl-tests"
@@ -71,16 +70,16 @@ for n in ${NGPUS}; do
 	    ;;
 	    olivia)
 
-		FILES=("craype/collectives/olivia/osu_${test}_d_cuda_n${n}.txt"
-		       "ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
-		       "ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
-		       #       "ompi/collectives/olivia/ompi6/osu_xccl_${test}_n${n}_srun.txt"
-		       "ompi/collectives/olivia/osu_xccl_${test}_n${n}_srun.txt"
-		       #       "craype/collectives/olivia/osu_xccl_${test}_n${n}.txt"
-		       "ompi/nccl/olivia/${nccltest}_perf_n${n}.txt"
-		       #       "craype/collectives/olivia/all_reduce_perf_n${n}.txt"
-		       "ompi/collectives/olivia/ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
-		       #       "ompi/collectives/olivia/ompi6_coll_accelerator_off/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+		FILES=("../osu/craype/collectives/olivia/osu_${test}_d_cuda_n${n}.txt"
+		       "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+		       "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
+		       #       "../osu/ompi/collectives/olivia/ompi6/osu_xccl_${test}_n${n}_srun.txt"
+#		       "../osu/ompi/collectives/olivia/osu_xccl_${test}_n${n}_srun.txt"
+		       #       "../osu/craype/collectives/olivia/osu_xccl_${test}_n${n}.txt"
+		       "../osu/ompi/nccl/olivia/${nccltest}_perf_n${n}.txt"
+		       #       "../osu/craype/collectives/olivia/all_reduce_perf_n${n}.txt"
+		       "../osu/ompi/collectives/olivia/ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+		       #       "../osu/ompi/collectives/olivia/ompi6_coll_accelerator_off/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
 		      )
 		;;
 	esac
@@ -99,6 +98,6 @@ for n in ${NGPUS}; do
 		"r^:"
 		"k-o"
 	       )
-	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, $((n / NGPUS_PER_NODE)) node" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
+	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, $((n / NGPUS_PER_NODE)) nodes" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
     done
 done
