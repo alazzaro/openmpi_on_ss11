@@ -19,9 +19,10 @@ export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
 #export FI_MR_CACHE_MONITOR=kdreg2 # no performance contribution
 #export GTL_DISABLE_HSA_CACHE=1 # not available in 9.0.1
 #export MPICH_GPU_IPC_ENABLED=0
-export MPICH_GPU_IPC_THRESHOLD=524288 # beneficial for `-b multiple`
+#export MPICH_GPU_IPC_THRESHOLD=524288 # beneficial for `-b multiple` - test1
+export MPICH_GPU_IPC_THRESHOLD=131072 # beneficial for `-b multiple` - test 2
 #export MPICH_GPU_IPC_THRESHOLD=32768 # beneficial for `-b single`
-export MPICH_GPU_IPC_CACHE_MAX_SIZE=100 # improves performance and makes working with large buffers
+export MPICH_GPU_IPC_CACHE_MAX_SIZE=1000 # improves performance and makes working with large buffers
 # export FI_LOG_LEVEL=debug
 
 export MPICH_VERSION_DISPLAY=1
@@ -57,7 +58,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 
     # NCCL/RCCL
 
-    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+#    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
     CMDS=("osu_xccl_bibw -b multiple -d rocm D D")
 #    CMDS=("osu_xccl_bibw -b single -d rocm D D")
     for cmd in "${CMDS[@]}"; do
