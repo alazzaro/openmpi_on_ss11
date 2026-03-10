@@ -21,6 +21,7 @@ export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
 #export MPICH_GPU_IPC_ENABLED=0
 #export MPICH_GPU_IPC_THRESHOLD=524288 # beneficial for `-b multiple` - test1
 export MPICH_GPU_IPC_THRESHOLD=131072 # beneficial for `-b multiple` - test 2
+export MPICH_GPU_IPC_THRESHOLD=65536 # beneficial for `-b multiple` - test 3
 #export MPICH_GPU_IPC_THRESHOLD=32768 # beneficial for `-b single`
 export MPICH_GPU_IPC_CACHE_MAX_SIZE=1000 # improves performance and makes working with large buffers
 # export FI_LOG_LEVEL=debug
