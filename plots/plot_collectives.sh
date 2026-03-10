@@ -10,7 +10,9 @@ case "$MYUSER" in
     lazzaroa|alazzaro)
 	SYSTEM="lumi"
 	suffix="amd"
-	NGPUS="8 64"
+#	NGPUS="8 128"
+	NGPUS="8"
+	NGPUS_PER_NODE=8
 	XCCL="RCCL"
 	XCCL_TESTS="rccl-tests"
 	;;
@@ -18,6 +20,7 @@ case "$MYUSER" in
 	SYSTEM="olivia"
 	suffix="cuda"
 	NGPUS="4 64"
+	NGPUS_PER_NODE=4
 	XCCL="NCCL"
 	XCCL_TESTS="nccl-tests"
 	;;
@@ -58,7 +61,7 @@ for n in ${NGPUS}; do
 	case "${SYSTEM}" in
 	    lumi)
 
-		FILES=("$(ls ../osu/craype/collectives/lumi/osu_${test}_i_100_d_rocm_D_D_n${n}_hybrid_*.txt)"
+		FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_d_rocm_D_D_n${n}_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_${cmp}_n${n}_${TAGMODE}*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
 #		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
@@ -96,7 +99,6 @@ for n in ${NGPUS}; do
 		"r^:"
 		"k-o"
 	       )
-#	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, ${n} GPUs" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
-	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
+	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, $((n / NGPUS_PER_NODE)) node" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
     done
 done

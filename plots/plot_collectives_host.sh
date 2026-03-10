@@ -50,7 +50,7 @@ for n in ${NGPUS}; do
 	case "${SYSTEM}" in
 	    lumi)
 
-		FILES=("$(ls ../osu/craype/collectives/lumi/osu_${test}_i_100_H_H_n${n}_hybrid_*.txt)"
+		FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_H_H_n${n}_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_H_H_${cmp}_n${n}_${TAGMODE}*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_H_H_lnx_n${n}_software_*.txt)"
 		      )
