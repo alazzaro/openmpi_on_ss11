@@ -1,0 +1,200 @@
+Starting job 231733 on gpu-1-[18,27] on Olivia at Tue Mar 10 15:37:53 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) gcc-native/14.2 => gcc-native/13.2
+
+
+Currently Loaded Modules:
+  1) init-NRIS                      (S)   9) craype/2.7.34
+  2) craype-arm-grace                    10) cray-dsmml/0.3.1
+  3) libfabric/1.22.0                    11) PrgEnv-gnu/8.6.0
+  4) craype-network-ofi                  12) gcc-native/13.2
+  5) perftools-base/25.03.0              13) cray-mpich/8.1.32
+  6) xpmem/2.11.3-1.3_gdbda01a1eb3d      14) cray-libsci/25.03.0
+  7) CrayEnv                             15) craype-accel-nvidia90
+  8) cuda/12.6
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+
+ 
+
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+cpu-bind=MASK - gpu-1-18, task  0  0 [2779318]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-27, task  1  0 [3457091]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       2.02
+2                       3.96
+4                       8.06
+8                      16.23
+16                     32.19
+32                     64.24
+64                    126.09
+128                   251.45
+256                   507.02
+512                   996.08
+1024                 1767.32
+2048                 3644.45
+4096                 5956.79
+8192                 1101.08
+16384                1960.62
+32768               28831.05
+65536               35502.72
+131072              40449.48
+262144              42727.10
+524288              44130.61
+1048576             44927.33
+2097152             45316.57
+4194304             45822.42
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency D D
+cpu-bind=MASK - gpu-1-18, task  0  0 [2779929]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-27, task  1  0 [3457920]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       2.78
+2                       2.76
+4                       2.92
+8                       2.92
+16                      2.95
+32                      2.85
+64                      2.81
+128                     3.50
+256                     3.90
+512                     4.01
+1024                    4.11
+2048                    4.28
+4096                    4.75
+8192                   12.35
+16384                  13.74
+32768                  11.12
+65536                  12.52
+131072                 14.97
+262144                 20.43
+524288                 31.59
+1048576                53.15
+2097152                96.20
+4194304               182.78
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple H H
+cpu-bind=MASK - gpu-1-18, task  0  0 [2780542]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-27, task  1  0 [3458521]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.72
+2                       3.50
+4                       7.05
+8                      14.31
+16                     28.65
+32                     57.12
+64                    114.07
+128                   225.94
+256                   452.30
+512                   896.37
+1024                 1640.81
+2048                 3454.21
+4096                 6425.70
+8192                 8543.72
+16384               13336.59
+32768               27783.60
+65536               34718.91
+131072              39824.86
+262144              43036.60
+524288              44763.30
+1048576             45733.34
+2097152             46194.21
+4194304             46426.52
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency H H
+cpu-bind=MASK - gpu-1-27, task  1  0 [3459120]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-18, task  0  0 [2781154]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       2.87
+2                       2.87
+4                       2.96
+8                       2.98
+16                      2.96
+32                      2.90
+64                      2.84
+128                     3.53
+256                     3.68
+512                     3.80
+1024                    3.86
+2048                    3.99
+4096                    4.47
+8192                    5.23
+16384                   6.24
+32768                  10.42
+65536                  11.79
+131072                 14.45
+262144                 19.93
+524288                 30.73
+1048576                52.37
+2097152                95.46
+4194304               181.80
+
+Job 231733 consumed 0.0 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-10T15:37:52; waited 1.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 10.0 minutes
+Elapsed wallclock time:   14.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+231733              144            0.0 %  2026-03-10T15:37:53   14.0 s  0
+231733.batch         72      1     0.1 %  2026-03-10T15:37:53   14.0 s  0
+231733.gpubind.sh   144      2     0.0 %  2026-03-10T15:37:55    5.0 s  0
+231733.gpubind.sh   144      2     0.0 %  2026-03-10T15:38:00    3.0 s  0
+231733.gpubind.sh   144      2     0.0 %  2026-03-10T15:38:03    1.0 s  0
+231733.gpubind.sh   144      2     0.0 %  2026-03-10T15:38:04    3.0 s  0
+
+Used CPU time:   1.0 CPU seconds
+Unused CPU time: 33.6 CPU minutes
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+231733             1400.0        
+231733.batch        700.0     0.1
+231733.gpubind.sh  1400.0     0.7
+231733.gpubind.sh  1400.0     0.5
+231733.gpubind.sh  1400.0     2.0
+231733.gpubind.sh  1400.0     0.5
+
+Job 231733 completed at Tue Mar 10 15:38:08 CET 2026

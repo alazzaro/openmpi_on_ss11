@@ -1,0 +1,31 @@
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       2.87
+2                       2.87
+4                       2.96
+8                       2.98
+16                      2.96
+32                      2.90
+64                      2.84
+128                     3.53
+256                     3.68
+512                     3.80
+1024                    3.86
+2048                    3.99
+4096                    4.47
+8192                    5.23
+16384                   6.24
+32768                  10.42
+65536                  11.79
+131072                 14.45
+262144                 19.93
+524288                 30.73
+1048576                52.37
+2097152                95.46
+4194304               181.80
