@@ -1,19 +1,21 @@
 #!/bin/bash
 
 #MYUSER="marcink"
-#MYUSER="alazzaro"
-MYUSER=${MYUSER:-${USER}}
+MYUSER="alazzaro"
+#MYUSER=${MYUSER:-${USER}}
 
 echo "User: $MYUSER"
 
 case "$MYUSER" in
     lazzaroa|alazzaro)
 	SYSTEM="lumi"
-	NGPUS="8 64"
+	NGPUS="8 128"
+	NGPUS_PER_NODE=8
 	;;
     marcink)
 	SYSTEM="olivia"
 	NGPUS="4 64"
+	NGPUS_PER_NODE=4
 	;;
     *)
 	echo "User not recongnized"
@@ -48,7 +50,7 @@ for n in ${NGPUS}; do
 	case "${SYSTEM}" in
 	    lumi)
 
-		FILES=("$(ls ../osu/craype/collectives/lumi/osu_${test}_i_100_H_H_n${n}_hybrid_*.txt)"
+		FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_H_H_n${n}_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_H_H_${cmp}_n${n}_${TAGMODE}*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_H_H_lnx_n${n}_software_*.txt)"
 		      )
@@ -60,14 +62,14 @@ for n in ${NGPUS}; do
 	    ;;
 	    olivia)
 
-		FILES=("craype/collectives/olivia/osu_${test}_n${n}.txt"
-		       "ompi/collectives/olivia/osu_${test}_n${n}_${cmp}_srun.txt"
-		       "ompi/collectives/olivia/osu_${test}_n${n}_lnx_srun.txt"
-		       "ompi/collectives/olivia/ompi6/osu_${test}_n${n}_${cmp}_srun.txt"
+		FILES=("../osu/craype/collectives/olivia/osu_${test}_n${n}.txt"
+		       "../osu/ompi/collectives/olivia/osu_${test}_n${n}_${cmp}_srun.txt"
+		       "../osu/ompi/collectives/olivia/osu_${test}_n${n}_lnx_srun.txt"
+		       "../osu/ompi/collectives/olivia/ompi6/osu_${test}_n${n}_${cmp}_srun.txt"
 		      )
 		;;
 	esac
 
-	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Host, ${n} GPUs" --outfile ${SYSTEM}/osu-${test}_n${n}_host.png
+	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Host, $((n / NGPUS_PER_NODE)) nodes" --outfile ${SYSTEM}/osu-${test}_n${n}_host.png
     done
 done
