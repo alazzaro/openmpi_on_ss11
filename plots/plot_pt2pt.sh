@@ -252,9 +252,26 @@ STYLES=("b-o"
 ./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-all-HH.png
 
 
+LABELS=("Cray MPI (-b multiple), hybrid matching"
+	"Cray MPI (-b multiple), software matching"
+	"ompi cxi, hybrid matching"
+	"ompi cxi, software matching"
+	"ompi lnx"
+	"OSU + ${XCCL}"
+       )
+STYLES=("b-o"
+	"bo:"
+	"g-^"
+	"r-^"
+	"g-o"
+	"r^:"
+       )
+
+
 case "${SYSTEM}" in
             lumi)
 		FILES=("$(ls ../osu/craype/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_multinode_hybrid_*.txt)"
+		       "$(ls ../osu/craype/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_multinode_software_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_multinode_hybrid_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_multinode_software_*.txt)"
 		       "$(ls ../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_lnx_multinode_software_*.txt)"
@@ -268,21 +285,10 @@ case "${SYSTEM}" in
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode_mpirun.txt"
 		      )
+		unset LABELS[1]
+		unset STYLES[1]
 		;;
 esac
-
-LABELS=("Cray MPI (-b multiple)"
-	"ompi cxi, hybrid matching"
-	"ompi cxi, software matching"
-	"ompi lnx"
-	"OSU + ${XCCL}"
-       )
-STYLES=("b-o"
-	"g-^"
-	"r-^"
-	"g-o"
-	"r^:"
-       )
 
 #./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-all-DD.png
 ./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-all-DD.png
