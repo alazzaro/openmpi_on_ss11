@@ -34,22 +34,27 @@ run_osu_cmd() {
 }
 
 function change_dir() {
-    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
+    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
     cd $SCRIPT_DIR
 }
 
 # system-specific - check if your system supports running OpenMPI apps using srun
 export USE_SRUN=0
 
-case "$USER" in
-    lazzaroa)
-	OLDDIR=`pwd`
+OLDDIR=`pwd`
+change_dir
 
-	change_dir
+source sourceme_libfabric.sh
 
-	source sourceme_libfabric.sh
-
-        XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
+case "$SYSTEM_CONFIG" in
+    "cray_rocm")
+        if [[ -n "$XPMEM_ROOT" ]]; then
+            XPMEM_OMPI="--with-cray-xpmem=yes --with-xpmem=${XPMEM_ROOT}"
+            echo "Using XPMEM: $XPMEM_ROOT"
+        else
+            echo "Warning: XPMEM_ROOT not set, proceeding without XPMEM support"
+            XPMEM_OMPI=""
+        fi
         GPU_OMPI="--with-rocm=$ROCM_PATH"
 	OSU_COMPILE_FLAGS="--enable-rocm"
 
@@ -67,21 +72,68 @@ case "$USER" in
 
 	cd $OLDDIR
         ;;
-    marcink)
+    "cray_cuda")
+        if [[ -n "$XPMEM_ROOT" ]]; then
+            XPMEM_OMPI="--with-xpmem=${XPMEM_ROOT}"
+            echo "Using XPMEM: $XPMEM_ROOT"
+        else
+            echo "Warning: XPMEM_ROOT not set, proceeding without XPMEM support"
+            XPMEM_OMPI=""
+        fi
+        if [[ -n "$CUDA_HOME" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_HOME"
+        elif [[ -n "$CUDA_PATH" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-cuda"
+        ;;
+    "nris_cuda"|"nris_generic")
 	# seems to be needed. slurm race?
 	sleep 2
 	ml reset
 	ml load NRIS/GPU
-	# ml load OpenMPI/5.0.9-GCC-14.3.0
-	ml use /cluster/home/marcink/modules/
-	ml load openmpi/6.x-gpu
-	export OSU_HOME=/cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks/
-	export GPUBIND=/cluster/home/marcink/hpe_cug_paper/gpubind.sh
+
+	ml load OpenMPI/5.0.9-GCC-14.3.0
+	# Use configured OSU and GPUBIND paths from sourceme_libfabric.sh
+	export OSU_HOME="$USER_OSU_HOME"
+	export GPUBIND="$USER_GPUBIND"
+
 	export USE_SRUN=1
+	cd $OLDDIR
 	return 0
 	;;
-    *)
-        echo "User not recongnized"
+    "rocm_generic")
+        if [[ -n "$ROCM_PATH" ]]; then
+            GPU_OMPI="--with-rocm=$ROCM_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-rocm"
+        ;;
+    "cuda_generic")
+        if [[ -n "$CUDA_HOME" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_HOME"
+        elif [[ -n "$CUDA_PATH" ]]; then
+            GPU_OMPI="--with-cuda=$CUDA_PATH"
+        fi
+	OSU_COMPILE_FLAGS="--enable-cuda"
+        ;;
+    "cray_preinstalled"|"cray_generic"|"generic")
+        echo "No OpenMPI configuration available for this system"
+        cd $OLDDIR
         return -1
         ;;
 esac
+
+export PREFIX_OMPI=$ROOT_DIR/install_ompi # installation directory
+export OMPI_DIR=$ROOT_DIR/openmpi5
+
+export PATH=${PREFIX_OMPI}/bin:${PATH}
+export LD_LIBRARY_PATH=${PREFIX_OMPI}/lib:${LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=$PREFIX_OMPI/lib/pkgconfig:$PKG_CONFIG_PATH
+export MANPATH=$PREFIX_OMPI/man:$MANPATH
+
+export OSU_INSTALL=$ROOT_DIR/osu/osu-ompi/
+export OSU_HOME="${USER_OSU_HOME:-$OSU_INSTALL/libexec/osu-micro-benchmarks/}"
+export GPUBIND="${USER_GPUBIND:-$ROOT_DIR/select_gpu.sh}"
+
+cd $OLDDIR
+

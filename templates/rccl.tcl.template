@@ -1,0 +1,56 @@
+#%Module 1.0
+## Module file for RCCL @RCCL_VERSION@
+## ROCm Communication Collectives Library (AMD)
+
+set base "@ROOT_DIR@"
+set version "@RCCL_VERSION@"
+set rccl_root "$base/install_rccl"
+
+proc ModulesHelp { } {
+    puts stderr "RCCL @RCCL_VERSION@ - ROCm Communication Collectives Library"
+    puts stderr ""
+    puts stderr "This module provides RCCL (ROCm Communication Collectives Library)"
+    puts stderr "built from source with optimizations for multi-GPU communications on AMD hardware."
+    puts stderr ""
+    puts stderr "Features:"
+    puts stderr "- High-performance collective operations (allreduce, broadcast, etc.)"
+    puts stderr "- Multi-GPU and multi-node support"
+    puts stderr "- InfiniBand/Ethernet network support"
+    puts stderr "- Integration with MPI libraries"
+    puts stderr "- HIP stream synchronization"
+    puts stderr "- AWS OFI plugin support"
+    puts stderr ""
+    puts stderr "Prerequisites:"
+    puts stderr "- ROCm runtime and drivers"
+    puts stderr "- Compatible AMD GPU hardware (e.g., Frontier, MI series)"
+    puts stderr ""
+    puts stderr "Environment Variables:"
+    puts stderr "- RCCL_DEBUG: Set to 'INFO' for debugging information"
+    puts stderr "- RCCL_IB_DISABLE: Set to '1' to disable InfiniBand"
+    puts stderr "- RCCL_P2P_DISABLE: Set to '1' to disable peer-to-peer communication"
+    puts stderr ""
+    puts stderr "For more information:"
+    puts stderr "    https://github.com/ROCm/rccl"
+}
+
+module-whatis "RCCL @RCCL_VERSION@ - ROCm Communication Collectives Library"
+module-whatis "GPU-optimized collective operations for AMD ROCm"
+
+# Prerequisites and conflicts
+conflict rccl
+conflict nccl
+
+# Check if installation exists (TCL doesn't have isDir, so we'll skip this check)
+
+# Environment variables
+setenv RCCL_ROOT $rccl_root
+
+# Update paths
+prepend-path PATH $rccl_root/bin
+prepend-path LD_LIBRARY_PATH $rccl_root/lib
+prepend-path PKG_CONFIG_PATH $rccl_root/lib/pkgconfig
+prepend-path MANPATH $rccl_root/man
+
+# RCCL performance tuning (adjust as needed)
+# setenv RCCL_DEBUG WARN
+# setenv NCCL_DEBUG WARN  # Some apps may still look for NCCL_DEBUG
