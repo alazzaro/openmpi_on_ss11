@@ -1,0 +1,31 @@
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+using SLURM envars
+rank local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       2.78
+2                       2.76
+4                       2.92
+8                       2.92
+16                      2.95
+32                      2.85
+64                      2.81
+128                     3.50
+256                     3.90
+512                     4.01
+1024                    4.11
+2048                    4.28
+4096                    4.75
+8192                   12.35
+16384                  13.74
+32768                  11.12
+65536                  12.52
+131072                 14.97
+262144                 20.43
+524288                 31.59
+1048576                53.15
+2097152                96.20
+4194304               182.78
