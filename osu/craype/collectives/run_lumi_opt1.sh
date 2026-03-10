@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1; do
+for NNODES in 1 16; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
@@ -34,6 +34,7 @@ export MPICH_VERSION_DISPLAY=1
 export GTL_VERSION_DISPLAY=1
 
 export FI_CXI_RDZV_EAGER_SIZE=1024
+export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
 
 echo "============"
 cat $0

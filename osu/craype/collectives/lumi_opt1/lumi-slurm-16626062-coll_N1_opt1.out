@@ -36,7 +36,7 @@ Currently Loaded Modules:
 #!/bin/bash
 
 #for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1; do
+for NNODES in 1 16; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
@@ -69,6 +69,7 @@ export MPICH_VERSION_DISPLAY=1
 export GTL_VERSION_DISPLAY=1
 
 export FI_CXI_RDZV_EAGER_SIZE=1024
+export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
 
 echo "============"
 cat $0
@@ -130,6 +131,7 @@ EOF
 done
 ============
 HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+FI_CXI_RDZV_THRESHOLD=65536
 __LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
 CRAY_LMOD_MPI=cray-mpich/8.0
 LUMI_LMOD_FAMILY_MPI=cray-mpich
@@ -146,7 +148,7 @@ _ModuleTable017_=ZXMvU29mdHdhcmVTdGFjayIsICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2R
 LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
 SLURM_NODEID=0
 CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
-SLURM_TASK_PID=125824
+SLURM_TASK_PID=36644
 __LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/9.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
 _ModuleTable002_=ID0gIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycy9Nb2R1bGVMYWJlbC9sYWJlbC5sdWEiLApmdWxsTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCmxvYWRPcmRlciA9IDQsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gIk1vZHVsZUxhYmVsL2xhYmVsIiwKd1YgPSAic2xhYmVsLip6ZmluYWwiLAp9LApbIlByZ0Vudi1nbnUiXSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9QcmdFbnYtZ251LzguNi4wLmx1YSIsCmZ1bGxOYW1lID0gIlByZ0Vudi1nbnUvOC42LjAiLApsb2FkT3JkZXIgPSAxMiwKcHJvcFQgPSB7fSwKc3Rh
 PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
@@ -188,7 +190,7 @@ LESS=-M -I -R
 PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
 LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
 LMOD_FAMILY_COMPILER_VERSION=14.2
-HOSTNAME=nid005134
+HOSTNAME=nid005249
 LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
 EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
 OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
@@ -229,10 +231,10 @@ CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
 __LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1
 OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype/
 GNU_VERSION=14.2
-SLURMD_NODENAME=nid005134
+SLURMD_NODENAME=nid005249
 PE_PKGCONFIG_PRODUCTS=PE_MPICH:PE_LIBSCI:PE_DSMML:PE_XPMEM
 _ModuleTable015_=ID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnMiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
-SLURM_JOB_END_TIME=1773135201
+SLURM_JOB_END_TIME=1773137603
 LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
 CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/9.0.1/ofi
 PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
@@ -261,7 +263,7 @@ _ModuleTable012_=PSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmF
 PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
 CRAY_CPU_TARGET=x86-trento
 PE_GCC_LEVEL=14
-SLURM_JOB_START_TIME=1773133401
+SLURM_JOB_START_TIME=1773135803
 PE_LIBSCI_VOLATILE_PRGENV=GNU
 SLURM_NTASKS_PER_NODE=8
 PKGCONFIG_ENABLED=1
@@ -278,14 +280,14 @@ LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
 PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
 PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
 CRAY_TCMALLOC_MEMFS_FORCE=1
-SLURM_JOB_NODELIST=nid005134
+SLURM_JOB_NODELIST=nid005249
 HOME=/users/lazzaroa
 SLURM_CLUSTER_NAME=lumi
 CRAY_ACCEL_VENDOR=amd
 PELOCAL_PRGENV=true
 CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
 PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
-SLURM_NODELIST=nid005134
+SLURM_NODELIST=nid005249
 PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
 PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
 SLURM_GPUS_ON_NODE=8
@@ -312,7 +314,7 @@ BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
 XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
 _LUMI_INIT_FIRST_LOAD=1
 __LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
-SLURM_TOPOLOGY_ADDR=nid005134
+SLURM_TOPOLOGY_ADDR=nid005249
 SLURM_THREADS_PER_CORE=1
 PYTHON_PATH=/opt/cray/pe/python/3.11.7
 LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
@@ -340,7 +342,7 @@ LMOD_sys=Linux
 _ModuleTable010_=YXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSA4LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImdjYy1uYXRpdmUiLAp3ViA9ICJeMDAwMDAwMTQuMDAwMDAwMDAyLip6ZmluYWwiLAp9LApbImluaXQtbHVtaSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL2FwcGwvbHVtaS9tb2R1bGVzL2Vh
 PE_PKGCONFIG_LIBS=rocm-6.3.4:mpich:libsci_mpi:libsci:dsmml
 CRAY_ACCEL_TARGET=amd_gfx90a
-SLURM_JOBID=16625357
+SLURM_JOBID=16626062
 _ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2FjY2VsID0gImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmNyYXlwZV9uZXR3b3JrID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmdjY19jb21waWxlciA9ICJnY2MtbmF0aXZlIiwKbGlic2NpID0gImNyYXktbGlic2NpIiwKbXBpID0gImNyYXktbXBpY2giLAp9LAptVCA9IHsKTW9kdWxlTGFiZWwgPSB7CmZu
 SLURM_CONF=/etc/slurm/slurm.conf
 LOADEDMODULES=craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:libfabric/1.22.0:cray-mpich/9.0.1:craype-x86-trento:craype-accel-amd-gfx90a:rocm/6.3.4
@@ -424,7 +426,7 @@ PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH
 XDG_CONFIG_DIRS=/etc/xdg
 PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
 PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
-SLURM_JOB_ID=16625357
+SLURM_JOB_ID=16626062
 _ModuleTable014_=ZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndW
 JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
 PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
@@ -491,17 +493,17 @@ BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
 }
 _=/usr/bin/env
 ========
-_n8_hybrid_16625357_opt1
+_n8_hybrid_16626062_opt1
 ========
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [126226]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126227]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126228]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126229]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126230]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126231]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126232]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126233]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37026]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37027]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37028]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37029]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37030]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37031]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37032]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37033]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -510,36 +512,36 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)
-1                       5.45
-2                       4.65
-4                       4.67
-8                       4.46
-16                      5.32
-32                      5.45
-64                      5.89
-128                     9.23
-256                     7.63
-512                     8.98
-1024                   24.37
-2048                   23.46
-4096                   26.97
-8192                   67.21
-16384                  61.81
+1                       5.42
+2                       4.61
+4                       4.69
+8                       4.45
+16                      5.43
+32                      5.30
+64                      5.95
+128                     8.96
+256                     8.07
+512                     9.35
+1024                   23.46
+2048                   22.86
+4096                   25.93
+8192                   60.97
+16384                  72.62
 32768                  69.28
-65536                 162.79
-131072                170.73
-262144                198.16
-524288                257.30
-1048576               364.71
+65536                 165.53
+131072                175.55
+262144                202.13
+524288                262.29
+1048576               366.63
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [126342]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126343]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126344]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126345]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126346]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126347]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126348]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126349]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37155]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37156]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37157]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37158]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37159]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37160]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37161]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37162]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -548,34 +550,34 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI-ROCM Allreduce Latency Test v7.5.2
 # Datatype: MPI_INT.
 # Size       Avg Latency(us)
-4                       2.81
-8                       2.59
-16                      2.54
-32                      2.57
+4                       2.59
+8                       2.60
+16                      2.47
+32                      2.53
 64                      2.62
-128                     2.93
-256                     6.98
-512                     7.09
-1024                    9.97
-2048                   11.60
-4096                   14.51
-8192                   41.67
-16384                 113.33
-32768                 134.53
-65536                 143.70
-131072                144.87
-262144                154.14
-524288                184.99
-1048576               239.96
+128                     2.85
+256                     7.13
+512                     7.08
+1024                    9.95
+2048                   10.71
+4096                   13.81
+8192                   41.28
+16384                 113.79
+32768                 132.43
+65536                 142.65
+131072                143.98
+262144                153.50
+524288                181.97
+1048576               239.60
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [126473]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126474]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126475]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126476]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126477]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126478]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126479]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126480]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37256]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37257]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37258]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37259]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37260]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37261]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37262]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37263]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -584,36 +586,36 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI-ROCM Allgather Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)
-1                       3.09
-2                       3.00
-4                       2.87
-8                       3.00
-16                      3.23
-32                      3.24
-64                      3.50
-128                     4.04
-256                     7.93
+1                       3.56
+2                       2.99
+4                       2.93
+8                       3.08
+16                      3.32
+32                      3.36
+64                      3.54
+128                     4.03
+256                     8.44
 512                    11.56
-1024                   14.50
-2048                   21.24
-4096                   27.72
-8192                   44.30
-16384                  45.17
-32768                  48.23
-65536                  54.55
-131072                 68.19
-262144                 94.90
-524288                148.14
-1048576               245.91
+1024                   16.18
+2048                   21.04
+4096                   27.32
+8192                   45.75
+16384                  47.05
+32768                  50.09
+65536                  55.73
+131072                 67.91
+262144                 94.55
+524288                148.13
+1048576               245.42
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 H H
-cpu-bind=MASK - nid005134, task  0  0 [126556]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126557]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126558]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126559]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126560]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126561]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126562]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126563]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37339]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37340]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37341]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37342]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37343]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37344]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37345]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37346]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -622,34 +624,34 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI Allreduce Latency Test v7.5.2
 # Datatype: MPI_INT.
 # Size       Avg Latency(us)
-4                       2.71
-8                       2.55
-16                      2.49
-32                      2.49
-64                      2.69
-128                     2.89
-256                     3.52
-512                     7.03
-1024                    7.93
-2048                    9.52
-4096                   12.24
-8192                   17.38
-16384                  24.17
-32768                  32.00
-65536                  51.63
-131072                 82.55
-262144                153.87
-524288                282.68
-1048576               578.48
+4                       2.67
+8                       2.49
+16                      2.44
+32                      2.53
+64                      2.55
+128                     2.90
+256                     3.45
+512                     7.11
+1024                    8.80
+2048                   10.01
+4096                   12.41
+8192                   18.07
+16384                  24.20
+32768                  32.77
+65536                  49.90
+131072                 84.60
+262144                152.80
+524288                286.88
+1048576               592.21
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 H H
-cpu-bind=MASK - nid005134, task  0  0 [126647]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126648]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126649]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126650]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126651]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126652]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126653]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126654]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37460]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37461]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37462]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37463]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37464]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37465]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37466]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37467]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -658,36 +660,36 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI All-to-All Personalized Exchange Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)
-1                       5.38
-2                       4.52
-4                       4.56
-8                       4.38
-16                      5.35
-32                      5.17
-64                      5.82
-128                     8.80
-256                     7.61
-512                     9.07
-1024                   10.54
-2048                   10.30
-4096                   11.30
-8192                   13.51
-16384                  16.33
-32768                  22.94
-65536                  45.50
-131072                 71.26
-262144                130.20
-524288                189.52
-1048576               434.98
+1                       5.17
+2                       4.67
+4                       4.60
+8                       4.43
+16                      5.41
+32                      5.24
+64                      5.86
+128                     8.47
+256                     7.79
+512                     9.18
+1024                   10.61
+2048                   10.53
+4096                   11.56
+8192                   12.80
+16384                  16.18
+32768                  23.00
+65536                  41.02
+131072                 65.65
+262144                118.24
+524288                184.94
+1048576               331.13
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 H H
-cpu-bind=MASK - nid005134, task  0  0 [126738]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126739]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126740]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126741]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126742]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126743]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126744]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126745]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37549]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37550]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37551]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37552]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37553]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37554]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37555]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37556]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 CRAY GTL 0.1.0
@@ -696,36 +698,36 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 # OSU MPI Allgather Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)
-1                       3.32
+1                       3.24
 2                       2.96
-4                       2.78
-8                       3.02
-16                      3.31
-32                      3.35
-64                      3.54
-128                     4.02
-256                     5.59
-512                     6.61
-1024                    7.91
-2048                    9.44
-4096                   13.23
-8192                   19.23
-16384                  29.77
-32768                  56.73
-65536                 112.80
-131072                218.84
-262144                395.70
-524288                819.02
-1048576              1660.50
+4                       2.82
+8                       3.04
+16                      3.27
+32                      3.37
+64                      3.51
+128                     4.01
+256                     5.40
+512                     6.66
+1024                   10.04
+2048                    9.85
+4096                   12.62
+8192                   18.18
+16384                  32.90
+32768                  57.44
+65536                 110.06
+131072                214.54
+262144                419.23
+524288                819.50
+1048576              1637.94
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_alltoall -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [126852]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [126853]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [126854]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [126855]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [126856]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [126857]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [126858]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [126859]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37625]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37626]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37627]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37628]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37629]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37630]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37631]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37632]: mask 0xfe00000000000000fe00000000000000 set
 #Using RCCL
 #Using RCCL
 #Using RCCL
@@ -741,36 +743,36 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 
 # OSU RCCL-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
 # Size       Avg Latency(us)
-1                      27.30
-2                      26.74
-4                      26.59
-8                      26.81
-16                     26.73
-32                     27.02
-64                     27.01
-128                    26.93
-256                    27.14
-512                    27.28
-1024                   27.53
-2048                   28.54
-4096                   30.24
-8192                   31.17
-16384                  34.55
-32768                  41.80
-65536                  41.85
-131072                 49.21
-262144                 67.05
-524288                100.91
-1048576               170.90
+1                      34.33
+2                      33.32
+4                      33.49
+8                      33.58
+16                     33.26
+32                     33.31
+64                     33.38
+128                    33.50
+256                    32.76
+512                    33.25
+1024                   33.65
+2048                   33.98
+4096                   35.29
+8192                   35.62
+16384                  38.66
+32768                  45.01
+65536                  49.38
+131072                 54.47
+262144                 69.25
+524288                102.33
+1048576               169.99
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allreduce -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [127045]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [127046]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [127047]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [127048]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [127049]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [127050]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [127051]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [127052]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [37877]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [37878]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [37879]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [37880]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [37881]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [37882]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [37883]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [37884]: mask 0xfe00000000000000fe00000000000000 set
 #Using RCCL
 #Using RCCL
 #Using RCCL
@@ -786,34 +788,34 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 
 # OSU RCCL-ROCM Allreduce Latency Test v7.5.2
 # Size       Avg Latency(us)
-4                      34.45
-8                      33.06
-16                     33.00
-32                     35.26
-64                     38.21
-128                    43.64
-256                    43.65
-512                    44.11
-1024                   44.36
-2048                   45.15
-4096                   46.46
-8192                   48.01
-16384                  49.09
-32768                  48.93
-65536                  48.49
-131072                 49.18
-262144                 92.74
-524288                115.77
-1048576               127.39
+4                      35.17
+8                      33.83
+16                     33.48
+32                     35.01
+64                     38.50
+128                    44.03
+256                    44.04
+512                    44.72
+1024                   44.79
+2048                   45.51
+4096                   46.73
+8192                   48.31
+16384                  49.45
+32768                  49.08
+65536                  48.91
+131072                 49.37
+262144                 93.35
+524288                116.40
+1048576               128.12
 -- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//xccl/collective/osu_xccl_allgather -i 100 -d rocm D D
-cpu-bind=MASK - nid005134, task  0  0 [127258]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [127259]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [127260]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [127261]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [127262]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [127263]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [127264]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [127265]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [38082]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [38083]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [38084]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [38085]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [38086]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [38087]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [38088]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [38089]: mask 0xfe00000000000000fe00000000000000 set
 #Using RCCL
 #Using RCCL
 #Using RCCL
@@ -829,37 +831,37 @@ BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
 
 # OSU RCCL-ROCM Allgather Latency Test v7.5.2
 # Size       Avg Latency(us)
-1                      34.32
-2                      33.38
-4                      33.62
-8                      33.57
-16                     33.51
-32                     33.51
-64                     33.69
-128                    33.79
-256                    33.74
-512                    33.90
-1024                   34.61
-2048                   37.38
-4096                   37.70
-8192                   37.68
-16384                  37.95
-32768                  39.11
-65536                  59.10
-131072                 61.66
-262144                 67.85
-524288                 82.89
-1048576               116.53
+1                      34.64
+2                      33.34
+4                      33.38
+8                      33.97
+16                     33.62
+32                     33.57
+64                     34.52
+128                    33.96
+256                    33.88
+512                    33.87
+1024                   34.68
+2048                   37.72
+4096                   37.91
+8192                   37.73
+16384                  38.00
+32768                  39.29
+65536                  58.35
+131072                 61.04
+262144                 67.32
+524288                 82.22
+1048576               116.14
 RCCL-tests
 -- srun alltoall_perf -d uint8 -b 1 -e 128M -f 2 -g 1
-cpu-bind=MASK - nid005134, task  0  0 [127397]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [127398]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [127399]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [127400]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [127401]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [127402]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [127403]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [127404]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [38223]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [38224]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [38225]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [38226]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [38227]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [38228]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [38229]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [38230]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 # Collective test starting: alltoall_perf
@@ -867,61 +869,61 @@ MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 #
 rccl-tests: Version develop_deprecated:40b1b17
 # Using devices
-#  Rank  0 Group  0 Pid 127397 on  nid005134 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  1 Group  0 Pid 127398 on  nid005134 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank  2 Group  0 Pid 127399 on  nid005134 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank  3 Group  0 Pid 127400 on  nid005134 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank  4 Group  0 Pid 127401 on  nid005134 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank  5 Group  0 Pid 127402 on  nid005134 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank  6 Group  0 Pid 127403 on  nid005134 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank  7 Group  0 Pid 127404 on  nid005134 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  0 Group  0 Pid  38223 on  nid005249 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  38224 on  nid005249 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  38225 on  nid005249 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  38226 on  nid005249 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  38227 on  nid005249 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  38228 on  nid005249 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  38229 on  nid005249 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  38230 on  nid005249 device  0 [0000:c6:00] AMD Instinct MI250X
 #
 #                                                              out-of-place                       in-place          
 #       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
 #        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
-           0             0     uint8    none      -1     1.46    0.00    0.00      0     0.08    0.00    0.00    N/A
-           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
-           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
-           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
-           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     2.69    0.00    0.00      0     0.08    0.00    0.00    N/A
            0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
            0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
-         128            16     uint8    none      -1    12.98    0.01    0.01      0    12.21    0.01    0.01    N/A
-         256            32     uint8    none      -1    12.94    0.02    0.02      0    11.84    0.02    0.02    N/A
-         512            64     uint8    none      -1    12.10    0.04    0.04      0    12.44    0.04    0.04    N/A
-        1024           128     uint8    none      -1    12.10    0.08    0.07      0    11.89    0.09    0.08    N/A
-        2048           256     uint8    none      -1    12.05    0.17    0.15      0    11.81    0.17    0.15    N/A
-        4096           512     uint8    none      -1    12.51    0.33    0.29      0    11.69    0.35    0.31    N/A
-        8192          1024     uint8    none      -1    12.06    0.68    0.59      0    12.41    0.66    0.58    N/A
-       16384          2048     uint8    none      -1    13.10    1.25    1.09      0    12.72    1.29    1.13    N/A
-       32768          4096     uint8    none      -1    15.44    2.12    1.86      0    14.45    2.27    1.98    N/A
-       65536          8192     uint8    none      -1    15.78    4.15    3.63      0    14.82    4.42    3.87    N/A
-      131072         16384     uint8    none      -1    19.02    6.89    6.03      0    18.87    6.95    6.08    N/A
-      262144         32768     uint8    none      -1    26.31    9.96    8.72      0    26.24    9.99    8.74    N/A
-      524288         65536     uint8    none      -1    26.71   19.63   17.17      0    26.09   20.10   17.59    N/A
-     1048576        131072     uint8    none      -1    31.96   32.81   28.71      0    32.15   32.61   28.53    N/A
-     2097152        262144     uint8    none      -1    49.39   42.46   37.16      0    50.09   41.87   36.64    N/A
-     4194304        524288     uint8    none      -1    84.63   49.56   43.37      0    84.58   49.59   43.39    N/A
-     8388608       1048576     uint8    none      -1    154.5   54.31   47.52      0    153.7   54.56   47.74    N/A
-    16777216       2097152     uint8    none      -1    263.0   63.79   55.82      0    262.9   63.83   55.85    N/A
-    33554432       4194304     uint8    none      -1    483.2   69.44   60.76      0    481.9   69.63   60.93    N/A
-    67108864       8388608     uint8    none      -1    923.0   72.71   63.62      0    922.8   72.72   63.63    N/A
-   134217728      16777216     uint8    none      -1   1801.3   74.51   65.20      0   1802.5   74.46   65.15    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0     uint8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+         128            16     uint8    none      -1    13.08    0.01    0.01      0    11.79    0.01    0.01    N/A
+         256            32     uint8    none      -1    13.06    0.02    0.02      0    11.61    0.02    0.02    N/A
+         512            64     uint8    none      -1    12.80    0.04    0.03      0    12.10    0.04    0.04    N/A
+        1024           128     uint8    none      -1    13.12    0.08    0.07      0    11.64    0.09    0.08    N/A
+        2048           256     uint8    none      -1    12.49    0.16    0.14      0    11.66    0.18    0.15    N/A
+        4096           512     uint8    none      -1    12.95    0.32    0.28      0    11.37    0.36    0.32    N/A
+        8192          1024     uint8    none      -1    12.48    0.66    0.57      0    12.23    0.67    0.59    N/A
+       16384          2048     uint8    none      -1    13.48    1.22    1.06      0    12.59    1.30    1.14    N/A
+       32768          4096     uint8    none      -1    15.05    2.18    1.90      0    14.25    2.30    2.01    N/A
+       65536          8192     uint8    none      -1    15.93    4.11    3.60      0    14.48    4.53    3.96    N/A
+      131072         16384     uint8    none      -1    18.43    7.11    6.22      0    18.62    7.04    6.16    N/A
+      262144         32768     uint8    none      -1    26.61    9.85    8.62      0    26.27    9.98    8.73    N/A
+      524288         65536     uint8    none      -1    26.91   19.48   17.05      0    25.72   20.39   17.84    N/A
+     1048576        131072     uint8    none      -1    32.11   32.66   28.58      0    32.22   32.55   28.48    N/A
+     2097152        262144     uint8    none      -1    50.76   41.31   36.15      0    49.93   42.00   36.75    N/A
+     4194304        524288     uint8    none      -1    84.29   49.76   43.54      0    83.94   49.97   43.72    N/A
+     8388608       1048576     uint8    none      -1    154.9   54.15   47.38      0    154.3   54.35   47.56    N/A
+    16777216       2097152     uint8    none      -1    263.3   63.71   55.75      0    263.8   63.60   55.65    N/A
+    33554432       4194304     uint8    none      -1    482.1   69.60   60.90      0    482.2   69.58   60.88    N/A
+    67108864       8388608     uint8    none      -1    926.4   72.44   63.39      0    927.5   72.36   63.31    N/A
+   134217728      16777216     uint8    none      -1   1808.0   74.24   64.96      0   1806.2   74.31   65.02    N/A
 # Errors with asterisks indicate errors that have exceeded the maximum threshold.
 # Out of bounds values : 0 OK
-# Avg bus bandwidth    : 15.79 
+# Avg bus bandwidth    : 15.7613 
 #
 # Collective test concluded: alltoall_perf
 
 -- srun all_reduce_perf -d uint8 -b 1 -e 128M -f 2 -g 1
-cpu-bind=MASK - nid005134, task  0  0 [127599]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [127600]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [127601]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [127602]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [127603]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [127604]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [127605]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [127606]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [38442]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [38443]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [38444]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [38445]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [38446]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [38447]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [38448]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [38449]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 # Collective test starting: all_reduce_perf
@@ -929,61 +931,61 @@ MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 #
 rccl-tests: Version develop_deprecated:40b1b17
 # Using devices
-#  Rank  0 Group  0 Pid 127599 on  nid005134 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  1 Group  0 Pid 127600 on  nid005134 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank  2 Group  0 Pid 127601 on  nid005134 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank  3 Group  0 Pid 127602 on  nid005134 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank  4 Group  0 Pid 127603 on  nid005134 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank  5 Group  0 Pid 127604 on  nid005134 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank  6 Group  0 Pid 127605 on  nid005134 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank  7 Group  0 Pid 127606 on  nid005134 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  0 Group  0 Pid  38442 on  nid005249 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  38443 on  nid005249 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  38444 on  nid005249 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  38445 on  nid005249 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  38446 on  nid005249 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  38447 on  nid005249 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  38448 on  nid005249 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  38449 on  nid005249 device  0 [0000:c6:00] AMD Instinct MI250X
 #
 #                                                              out-of-place                       in-place          
 #       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
 #        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
-           1             1     uint8     sum      -1    51.65    0.00    0.00      0    27.50    0.00    0.00      0
-           2             2     uint8     sum      -1    29.96    0.00    0.00      0    27.12    0.00    0.00      0
-           4             4     uint8     sum      -1    27.95    0.00    0.00      0    21.26    0.00    0.00      0
-           8             8     uint8     sum      -1    21.21    0.00    0.00      0    21.87    0.00    0.00      0
-          16            16     uint8     sum      -1    21.14    0.00    0.00      0    20.99    0.00    0.00      0
-          32            32     uint8     sum      -1    23.56    0.00    0.00      0    23.10    0.00    0.00      0
-          64            64     uint8     sum      -1    26.27    0.00    0.00      0    27.06    0.00    0.00      0
-         128           128     uint8     sum      -1    32.93    0.00    0.01      0    33.45    0.00    0.01      0
-         256           256     uint8     sum      -1    32.60    0.01    0.01      0    32.65    0.01    0.01      0
-         512           512     uint8     sum      -1    33.93    0.02    0.03      0    32.37    0.02    0.03      0
-        1024          1024     uint8     sum      -1    32.66    0.03    0.05      0    33.37    0.03    0.05      0
-        2048          2048     uint8     sum      -1    33.18    0.06    0.11      0    33.25    0.06    0.11      0
-        4096          4096     uint8     sum      -1    34.27    0.12    0.21      0    33.71    0.12    0.21      0
-        8192          8192     uint8     sum      -1    35.39    0.23    0.41      0    34.91    0.23    0.41      0
-       16384         16384     uint8     sum      -1    38.20    0.43    0.75      0    38.58    0.42    0.74      0
-       32768         32768     uint8     sum      -1    38.30    0.86    1.50      0    38.27    0.86    1.50      0
-       65536         65536     uint8     sum      -1    38.71    1.69    2.96      0    38.16    1.72    3.01      0
-      131072        131072     uint8     sum      -1    38.32    3.42    5.99      0    38.36    3.42    5.98      0
-      262144        262144     uint8     sum      -1    75.34    3.48    6.09      0    73.93    3.55    6.21      0
-      524288        524288     uint8     sum      -1    99.25    5.28    9.24      0    99.10    5.29    9.26      0
-     1048576       1048576     uint8     sum      -1    111.1    9.44   16.52      0    110.6    9.48   16.59      0
-     2097152       2097152     uint8     sum      -1    135.3   15.50   27.13      0    136.0   15.42   26.99      0
-     4194304       4194304     uint8     sum      -1    185.1   22.66   39.66      0    185.4   22.63   39.60      0
-     8388608       8388608     uint8     sum      -1    287.1   29.21   51.12      0    286.7   29.26   51.20      0
-    16777216      16777216     uint8     sum      -1    298.6   56.18   98.32      0    294.3   57.01   99.78      0
-    33554432      33554432     uint8     sum      -1    515.1   65.14  114.00      0    502.2   66.82  116.93      0
-    67108864      67108864     uint8     sum      -1    954.0   70.34  123.10      0    921.9   72.79  127.38      0
-   134217728     134217728     uint8     sum      -1   1835.6   73.12  127.96      0   1762.8   76.14  133.24      0
+           1             1     uint8     sum      -1    43.80    0.00    0.00      0    27.45    0.00    0.00      0
+           2             2     uint8     sum      -1    31.55    0.00    0.00      0    27.37    0.00    0.00      0
+           4             4     uint8     sum      -1    26.89    0.00    0.00      0    21.52    0.00    0.00      0
+           8             8     uint8     sum      -1    21.38    0.00    0.00      0    22.04    0.00    0.00      0
+          16            16     uint8     sum      -1    21.29    0.00    0.00      0    21.48    0.00    0.00      0
+          32            32     uint8     sum      -1    23.59    0.00    0.00      0    22.75    0.00    0.00      0
+          64            64     uint8     sum      -1    26.19    0.00    0.00      0    27.17    0.00    0.00      0
+         128           128     uint8     sum      -1    33.02    0.00    0.01      0    33.61    0.00    0.01      0
+         256           256     uint8     sum      -1    32.66    0.01    0.01      0    32.83    0.01    0.01      0
+         512           512     uint8     sum      -1    33.63    0.02    0.03      0    32.69    0.02    0.03      0
+        1024          1024     uint8     sum      -1    32.76    0.03    0.05      0    33.32    0.03    0.05      0
+        2048          2048     uint8     sum      -1    33.55    0.06    0.11      0    33.47    0.06    0.11      0
+        4096          4096     uint8     sum      -1    34.44    0.12    0.21      0    34.04    0.12    0.21      0
+        8192          8192     uint8     sum      -1    35.58    0.23    0.40      0    34.93    0.23    0.41      0
+       16384         16384     uint8     sum      -1    38.35    0.43    0.75      0    39.00    0.42    0.74      0
+       32768         32768     uint8     sum      -1    38.39    0.85    1.49      0    38.64    0.85    1.48      0
+       65536         65536     uint8     sum      -1    38.79    1.69    2.96      0    38.32    1.71    2.99      0
+      131072        131072     uint8     sum      -1    38.33    3.42    5.98      0    38.35    3.42    5.98      0
+      262144        262144     uint8     sum      -1    75.68    3.46    6.06      0    74.13    3.54    6.19      0
+      524288        524288     uint8     sum      -1    99.35    5.28    9.23      0    99.41    5.27    9.23      0
+     1048576       1048576     uint8     sum      -1    112.0    9.37   16.39      0    111.0    9.45   16.53      0
+     2097152       2097152     uint8     sum      -1    135.4   15.49   27.11      0    135.9   15.43   27.01      0
+     4194304       4194304     uint8     sum      -1    185.6   22.60   39.54      0    186.0   22.55   39.47      0
+     8388608       8388608     uint8     sum      -1    288.4   29.09   50.91      0    287.5   29.18   51.06      0
+    16777216      16777216     uint8     sum      -1    298.9   56.14   98.24      0    294.1   57.05   99.83      0
+    33554432      33554432     uint8     sum      -1    516.5   64.96  113.69      0    504.1   66.56  116.48      0
+    67108864      67108864     uint8     sum      -1    954.6   70.30  123.02      0    921.8   72.80  127.40      0
+   134217728     134217728     uint8     sum      -1   1834.4   73.17  128.04      0   1763.5   76.11  133.19      0
 # Errors with asterisks indicate errors that have exceeded the maximum threshold.
 # Out of bounds values : 0 OK
-# Avg bus bandwidth    : 22.5791 
+# Avg bus bandwidth    : 22.5478 
 #
 # Collective test concluded: all_reduce_perf
 
 -- srun all_gather_perf -d uint8 -b 1 -e 128M -f 2 -g 1
-cpu-bind=MASK - nid005134, task  0  0 [127779]: mask 0xfe00000000000000fe set
-cpu-bind=MASK - nid005134, task  1  1 [127780]: mask 0xfe00000000000000fe00 set
-cpu-bind=MASK - nid005134, task  2  2 [127781]: mask 0xfe00000000000000fe0000 set
-cpu-bind=MASK - nid005134, task  3  3 [127782]: mask 0xfe00000000000000fe000000 set
-cpu-bind=MASK - nid005134, task  4  4 [127783]: mask 0xfe00000000000000fe00000000 set
-cpu-bind=MASK - nid005134, task  5  5 [127784]: mask 0xfe00000000000000fe0000000000 set
-cpu-bind=MASK - nid005134, task  6  6 [127785]: mask 0xfe00000000000000fe000000000000 set
-cpu-bind=MASK - nid005134, task  7  7 [127787]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005249, task  0  0 [38607]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005249, task  1  1 [38608]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005249, task  2  2 [38609]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005249, task  3  3 [38610]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005249, task  4  4 [38611]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005249, task  5  5 [38612]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005249, task  6  6 [38613]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005249, task  7  7 [38614]: mask 0xfe00000000000000fe00000000000000 set
 MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
 MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 # Collective test starting: all_gather_perf
@@ -991,49 +993,49 @@ MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
 #
 rccl-tests: Version develop_deprecated:40b1b17
 # Using devices
-#  Rank  0 Group  0 Pid 127779 on  nid005134 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  1 Group  0 Pid 127780 on  nid005134 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank  2 Group  0 Pid 127781 on  nid005134 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank  3 Group  0 Pid 127782 on  nid005134 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank  4 Group  0 Pid 127783 on  nid005134 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank  5 Group  0 Pid 127784 on  nid005134 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank  6 Group  0 Pid 127785 on  nid005134 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank  7 Group  0 Pid 127787 on  nid005134 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  0 Group  0 Pid  38607 on  nid005249 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  38608 on  nid005249 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  38609 on  nid005249 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  38610 on  nid005249 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  38611 on  nid005249 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  38612 on  nid005249 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  38613 on  nid005249 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  38614 on  nid005249 device  0 [0000:c6:00] AMD Instinct MI250X
 #
 #                                                              out-of-place                       in-place          
 #       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
 #        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
-           0             0     uint8    none      -1     2.04    0.00    0.00      0     0.15    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-           0             0     uint8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
-         128            16     uint8    none      -1    24.64    0.01    0.00      0    25.57    0.01    0.00      0
-         256            32     uint8    none      -1    28.33    0.01    0.01      0    25.57    0.01    0.01      0
-         512            64     uint8    none      -1    24.93    0.02    0.02      0    22.51    0.02    0.02      0
-        1024           128     uint8    none      -1    21.92    0.05    0.04      0    21.80    0.05    0.04      0
-        2048           256     uint8    none      -1    21.98    0.09    0.08      0    22.00    0.09    0.08      0
-        4096           512     uint8    none      -1    22.90    0.18    0.16      0    21.74    0.19    0.16      0
-        8192          1024     uint8    none      -1    22.43    0.37    0.32      0    22.93    0.36    0.31      0
-       16384          2048     uint8    none      -1    24.92    0.66    0.58      0    24.69    0.66    0.58      0
-       32768          4096     uint8    none      -1    25.83    1.27    1.11      0    24.90    1.32    1.15      0
-       65536          8192     uint8    none      -1    26.07    2.51    2.20      0    25.28    2.59    2.27      0
-      131072         16384     uint8    none      -1    25.70    5.10    4.46      0    25.80    5.08    4.45      0
-      262144         32768     uint8    none      -1    26.39    9.93    8.69      0    26.19   10.01    8.76      0
-      524288         65536     uint8    none      -1    44.88   11.68   10.22      0    42.66   12.29   10.75      0
-     1048576        131072     uint8    none      -1    45.30   23.15   20.25      0    45.03   23.29   20.37      0
-     2097152        262144     uint8    none      -1    50.77   41.31   36.14      0    51.36   40.83   35.73      0
-     4194304        524288     uint8    none      -1    66.49   63.08   55.20      0    65.71   63.83   55.85      0
-     8388608       1048576     uint8    none      -1    102.0   82.23   71.95      0    100.5   83.46   73.03      0
-    16777216       2097152     uint8    none      -1    158.2  106.06   92.80      0    157.1  106.83   93.47      0
-    33554432       4194304     uint8    none      -1    270.5  124.06  108.55      0    269.8  124.38  108.83      0
-    67108864       8388608     uint8    none      -1    499.0  134.47  117.66      0    498.7  134.56  117.74      0
-   134217728      16777216     uint8    none      -1    958.7  140.00  122.50      0    961.9  139.54  122.10      0
+           0             0     uint8    none      -1     2.64    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0     uint8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+         128            16     uint8    none      -1    24.78    0.01    0.00      0    25.65    0.00    0.00      0
+         256            32     uint8    none      -1    28.27    0.01    0.01      0    25.40    0.01    0.01      0
+         512            64     uint8    none      -1    25.06    0.02    0.02      0    22.48    0.02    0.02      0
+        1024           128     uint8    none      -1    22.54    0.05    0.04      0    21.97    0.05    0.04      0
+        2048           256     uint8    none      -1    22.08    0.09    0.08      0    21.90    0.09    0.08      0
+        4096           512     uint8    none      -1    23.62    0.17    0.15      0    21.93    0.19    0.16      0
+        8192          1024     uint8    none      -1    23.16    0.35    0.31      0    23.04    0.36    0.31      0
+       16384          2048     uint8    none      -1    25.30    0.65    0.57      0    24.79    0.66    0.58      0
+       32768          4096     uint8    none      -1    26.29    1.25    1.09      0    24.86    1.32    1.15      0
+       65536          8192     uint8    none      -1    26.06    2.51    2.20      0    25.29    2.59    2.27      0
+      131072         16384     uint8    none      -1    26.14    5.01    4.39      0    25.78    5.09    4.45      0
+      262144         32768     uint8    none      -1    26.68    9.82    8.60      0    26.28    9.97    8.73      0
+      524288         65536     uint8    none      -1    44.57   11.76   10.29      0    42.67   12.29   10.75      0
+     1048576        131072     uint8    none      -1    45.64   22.98   20.10      0    45.37   23.11   20.22      0
+     2097152        262144     uint8    none      -1    51.60   40.64   35.56      0    51.42   40.78   35.69      0
+     4194304        524288     uint8    none      -1    66.99   62.61   54.79      0    66.23   63.33   55.41      0
+     8388608       1048576     uint8    none      -1    102.5   81.86   71.63      0    101.0   83.03   72.65      0
+    16777216       2097152     uint8    none      -1    159.7  105.05   91.92      0    158.5  105.87   92.64      0
+    33554432       4194304     uint8    none      -1    274.7  122.14  106.87      0    271.9  123.42  107.99      0
+    67108864       8388608     uint8    none      -1    504.9  132.92  116.30      0    504.4  133.04  116.41      0
+   134217728      16777216     uint8    none      -1    969.4  138.46  121.15      0    971.6  138.15  120.88      0
 # Errors with asterisks indicate errors that have exceeded the maximum threshold.
 # Out of bounds values : 0 OK
-# Avg bus bandwidth    : 23.369 
+# Avg bus bandwidth    : 23.1523 
 #
 # Collective test concluded: all_gather_perf
 
