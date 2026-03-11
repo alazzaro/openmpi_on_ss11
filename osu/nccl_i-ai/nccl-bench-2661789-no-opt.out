@@ -1,0 +1,62 @@
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+WITHOUT OPTIMIZATION
+
+Currently Loaded Modules:
+  1) brics/userenv/2.7   2) brics/default/1.0   3) libfabric/1.22.0
+
+ 
+
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size      Bandwidth (MB/s)
+1                       0.04
+2                       0.07
+4                       0.17
+8                       0.41
+16                      0.86
+32                      1.69
+64                      3.33
+128                     6.66
+256                    13.70
+512                    26.91
+1024                   52.68
+2048                  102.20
+4096                  206.14
+8192                  397.16
+16384                 749.85
+32768                1246.38
+65536                1445.73
+131072               2490.69
+262144               2645.56
+524288               2758.76
+1048576              3544.67
+2097152              3504.60
+4194304              3633.45
+#Using NCCL
+#Using NCCL
+# Send Buffer on DEVICE (D) and Receive Buffer on DEVICE (D)
+# Size          Latency (us)
+1                      58.02
+2                      58.07
+4                      57.96
+8                      41.37
+16                     40.89
+32                     40.93
+64                     40.93
+128                    41.07
+256                    41.33
+512                    41.44
+1024                   41.40
+2048                   41.65
+4096                   42.23
+8192                   42.81
+16384                  47.67
+32768                  55.57
+65536                  85.32
+131072                111.76
+262144                174.75
+524288                306.97
+1048576               461.00
+2097152               880.87
+4194304              1707.78
