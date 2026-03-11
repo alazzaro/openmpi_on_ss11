@@ -4,6 +4,8 @@
 MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
+for MYUSER in alazzaro marcink; do
+
 echo "User: $MYUSER"
 
 case "$MYUSER" in
@@ -73,3 +75,5 @@ for n in ${NGPUS}; do
 	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Host, $((n / NGPUS_PER_NODE)) nodes" --outfile ${SYSTEM}/osu-${test}_n${n}_host.png
     done
 done
+
+done # MYUSER
