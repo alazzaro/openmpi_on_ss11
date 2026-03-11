@@ -1,0 +1,183 @@
+Starting job 231975 on c1-1 on Olivia at Tue Mar 10 19:27:10 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) init-NRIS                      (S)   8) gcc-native/14.2
+  2) craype-x86-turin                     9) craype/2.7.34
+  3) libfabric/1.22.0                    10) cray-dsmml/0.3.1
+  4) craype-network-ofi                  11) cray-libsci/25.03.0
+  5) perftools-base/25.03.0              12) PrgEnv-gnu/8.6.0
+  6) xpmem/2.11.3-1.3_gdbda01a1eb3d      13) cray-mpich/9.0.1
+  7) CrayEnv
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+
+ 
+
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+cpu-bind=MAP  - c1-1, task  0  0 [3530559]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3530560]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       4.79
+2                       9.55
+4                      18.04
+8                      36.75
+16                     77.63
+32                    131.43
+64                    195.48
+128                   401.19
+256                   851.07
+512                  1404.24
+1024                 2496.25
+2048                 3639.63
+4096                 4926.27
+8192                17967.07
+16384               28071.58
+32768               37429.12
+65536               53627.53
+131072              67835.53
+262144              45489.33
+524288              37457.27
+1048576             45885.73
+2097152             42387.74
+4194304             41594.19
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency D D
+cpu-bind=MAP  - c1-1, task  0  0 [3531100]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3531101]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.75
+2                       0.75
+4                       0.75
+8                       0.75
+16                      0.75
+32                      0.86
+64                      0.95
+128                     0.94
+256                     0.97
+512                     1.02
+1024                    1.16
+2048                    1.58
+4096                    2.24
+8192                    1.38
+16384                   1.58
+32768                   2.01
+65536                   2.40
+131072                  3.14
+262144                  4.07
+524288                 17.79
+1048576                18.62
+2097152                37.24
+4194304                72.10
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple H H
+cpu-bind=MAP  - c1-1, task  0  0 [3531640]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3531641]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       4.65
+2                       9.21
+4                      18.31
+8                      36.09
+16                     74.16
+32                    127.76
+64                    194.35
+128                   391.29
+256                   785.94
+512                  1412.03
+1024                 2667.90
+2048                 3665.43
+4096                 4763.10
+8192                18122.64
+16384               25090.40
+32768               39923.57
+65536               55998.66
+131072              37911.49
+262144              46426.18
+524288              39907.50
+1048576             28610.70
+2097152             42423.54
+4194304             41630.15
+-- srun /cluster/projects/nn9999k/marcink/software/osu-craype-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency H H
+cpu-bind=MAP  - c1-1, task  0  0 [3532991]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [3532993]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.74
+2                       0.75
+4                       0.74
+8                       0.74
+16                      0.75
+32                      0.85
+64                      0.94
+128                     0.91
+256                     0.96
+512                     1.01
+1024                    1.18
+2048                    1.57
+4096                    2.27
+8192                    1.36
+16384                   1.56
+32768                   1.99
+65536                   2.37
+131072                  3.17
+262144                  3.97
+524288                  9.76
+1048576                18.78
+2097152                37.11
+4194304                72.13
+
+Job 231975 consumed 0.6 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-10T19:27:09; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 10.0 minutes
+Elapsed wallclock time:   8.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                  CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+231975               256            0.0 %  2026-03-10T19:27:09    8.0 s  0
+231975.batch         256      1     0.0 %  2026-03-10T19:27:09    8.0 s  0
+231975.osu_bibw      128      2     0.0 %  2026-03-10T19:27:12    1.0 s  0
+231975.osu_latency   128      2     0.0 %  2026-03-10T19:27:13    1.0 s  0
+231975.osu_bibw      128      2     0.0 %  2026-03-10T19:27:14    2.0 s  0
+231975.osu_latency   128      2     0.0 %  2026-03-10T19:27:16    1.0 s  0
+
+Used CPU time:   0.8 CPU seconds
+Unused CPU time: 34.1 CPU minutes
+
+Memory statistics, in GiB:
+ID                   Alloc   Usage
+231975               700.0        
+231975.batch         700.0     0.0
+231975.osu_bibw      700.0     1.1
+231975.osu_latency   700.0     0.0
+231975.osu_bibw      700.0     1.0
+231975.osu_latency   700.0     0.0
+
+Job 231975 completed at Tue Mar 10 19:27:17 CET 2026

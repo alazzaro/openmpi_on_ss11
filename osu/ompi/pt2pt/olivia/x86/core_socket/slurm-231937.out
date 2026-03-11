@@ -1,0 +1,284 @@
+Starting job 231937 on c1-1 on Olivia at Tue Mar 10 18:48:07 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple
+cpu-bind=MAP  - c1-1, task  0  0 [2976245]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [2976247]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       4.39
+2                       9.13
+4                      16.84
+8                      35.06
+16                     74.14
+32                    151.54
+64                    206.81
+128                   449.78
+256                   440.45
+512                   946.12
+1024                 1986.71
+2048                 2810.77
+4096                 5701.64
+8192                23662.58
+16384               35404.38
+32768               51163.31
+65536               69628.76
+131072              79004.34
+262144              69232.90
+524288              44944.59
+1048576             43827.71
+2097152             39695.17
+4194304             40841.48
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple
+[c1-1:2977155] Rank 0 bound to package[0][core:0]
+[c1-1:2977155] Rank 1 bound to package[1][core:128]
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       4.23
+2                       9.32
+4                      17.06
+8                      37.13
+16                     73.95
+32                    152.25
+64                    223.37
+128                   463.55
+256                   397.16
+512                   844.94
+1024                 1946.89
+2048                 2837.34
+4096                 5456.75
+8192                23730.94
+16384               36479.85
+32768               54670.07
+65536               74131.06
+131072              79084.73
+262144              70619.21
+524288              46549.30
+1048576             41676.16
+2097152             42031.36
+4194304             40266.76
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency
+cpu-bind=MAP  - c1-1, task  0  0 [2977731]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [2977734]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.96
+2                       0.95
+4                       0.96
+8                       0.93
+16                      0.94
+32                      0.94
+64                      1.01
+128                     0.93
+256                     1.42
+512                     1.46
+1024                    1.54
+2048                    1.64
+4096                    1.71
+8192                    1.00
+16384                   1.09
+32768                   1.40
+65536                   1.81
+131072                  2.28
+262144                  3.39
+524288                  6.21
+1048576                19.01
+2097152                37.04
+4194304                71.79
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency
+[c1-1:2979110] Rank 0 bound to package[0][core:0]
+[c1-1:2979110] Rank 1 bound to package[1][core:128]
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.95
+2                       0.95
+4                       0.94
+8                       0.97
+16                      0.94
+32                      0.94
+64                      0.97
+128                     0.92
+256                     1.44
+512                     1.43
+1024                    1.53
+2048                    1.63
+4096                    1.71
+8192                    1.00
+16384                   1.08
+32768                   1.45
+65536                   1.83
+131072                  2.30
+262144                  3.47
+524288                  6.52
+1048576                19.09
+2097152                37.17
+4194304                71.81
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple
+cpu-bind=MAP  - c1-1, task  0  0 [2979886]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [2979887]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       9.84
+2                      19.81
+4                      39.55
+8                      78.11
+16                    141.74
+32                    288.42
+64                    260.54
+128                   420.90
+256                   983.62
+512                  1967.31
+1024                 3574.20
+2048                 6914.46
+4096                13179.59
+8192                28837.42
+16384               31602.13
+32768               46545.95
+65536               67343.65
+131072              76023.24
+262144              68833.97
+524288              46112.09
+1048576             43404.13
+2097152             40778.92
+4194304             41168.96
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple
+[c1-1:2980428] Rank 0 bound to package[0][core:0]
+[c1-1:2980428] Rank 1 bound to package[1][core:128]
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                      10.03
+2                      19.53
+4                      39.76
+8                      79.03
+16                    141.50
+32                    281.83
+64                    255.52
+128                   424.81
+256                   955.06
+512                  2084.66
+1024                 3524.61
+2048                 7583.89
+4096                13549.58
+8192                22343.73
+16384               30930.44
+32768               48742.58
+65536               66262.85
+131072              74560.72
+262144              69739.42
+524288              50094.39
+1048576             42322.76
+2097152             42384.90
+4194304             41297.06
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency
+cpu-bind=MAP  - c1-1, task  0  0 [2982053]: mask 0x1 set
+cpu-bind=MAP  - c1-1, task  1  1 [2982054]: mask 0x100000000000000000000000000000000 set
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.56
+2                       0.55
+4                       0.55
+8                       0.56
+16                      0.66
+32                      0.66
+64                      0.66
+128                     0.68
+256                     0.73
+512                     0.99
+1024                    0.99
+2048                    1.00
+4096                    1.01
+8192                    1.03
+16384                   1.09
+32768                   1.46
+65536                   1.97
+131072                  2.55
+262144                  3.61
+524288                 11.92
+1048576                18.59
+2097152                36.73
+4194304                71.79
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-x86/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency
+[c1-1:2982595] Rank 0 bound to package[0][core:0]
+[c1-1:2982595] Rank 1 bound to package[1][core:128]
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                       0.55
+2                       0.55
+4                       0.55
+8                       0.55
+16                      0.66
+32                      0.66
+64                      0.67
+128                     0.68
+256                     0.73
+512                     0.98
+1024                    0.99
+2048                    0.99
+4096                    1.01
+8192                    1.04
+16384                   1.09
+32768                   1.49
+65536                   1.86
+131072                  2.45
+262144                  3.57
+524288                 10.70
+1048576                18.73
+2097152                37.10
+4194304                71.90
+
+Job 231937 consumed 1.3 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-10T18:48:06; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   18.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                  CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+231937               256            0.0 %  2026-03-10T18:48:06   18.0 s  0
+231937.batch         256      1     0.0 %  2026-03-10T18:48:06   18.0 s  0
+231937.osu_bibw      128      2     0.0 %  2026-03-10T18:48:10    2.0 s  0
+231937.prted         256      1     0.0 %  2026-03-10T18:48:06    8.0 s  0
+231937.osu_latency   128      2     0.0 %  2026-03-10T18:48:14    2.0 s  0
+231937.prted         256      1     0.0 %  2026-03-10T18:48:06   11.0 s  0
+231937.osu_bibw      128      2     0.0 %  2026-03-10T18:48:17    2.0 s  0
+231937.prted         256      1     0.0 %  2026-03-10T18:48:06   15.0 s  0
+231937.osu_latency   128      2     0.0 %  2026-03-10T18:48:21    1.0 s  0
+231937.prted         256      1     0.0 %  2026-03-10T18:48:06   19.0 s  0
+
+Used CPU time:   0.9 CPU seconds
+Unused CPU time: 1.3 CPU hours
+
+Memory statistics, in GiB:
+ID                   Alloc   Usage
+231937               700.0        
+231937.batch         700.0     0.0
+231937.osu_bibw      700.0     1.2
+231937.prted         700.0     1.2
+231937.osu_latency   700.0     0.2
+231937.prted         700.0     0.2
+231937.osu_bibw      700.0     1.0
+231937.prted         700.0     1.0
+231937.osu_latency   700.0     0.0
+231937.prted         700.0     0.1
+
+Job 231937 completed at Tue Mar 10 18:48:28 CET 2026
