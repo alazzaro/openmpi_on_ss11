@@ -1,0 +1,32 @@
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 65536 maxBytes 4294967296 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+       65536           128     float    none      -1   1036.9    0.06    0.06      0    611.5    0.11    0.11    N/A
+      131072           256     float    none      -1    605.8    0.22    0.21      0    600.5    0.22    0.22    N/A
+      262144           512     float    none      -1    597.3    0.44    0.44      0    597.4    0.44    0.44    N/A
+      524288          1024     float    none      -1    606.2    0.86    0.86      0    603.2    0.87    0.86    N/A
+     1048576          2048     float    none      -1    598.4    1.75    1.74      0    604.0    1.74    1.72    N/A
+     2097152          4096     float    none      -1    620.0    3.38    3.36      0    634.0    3.31    3.28    N/A
+     4194304          8192     float    none      -1    637.2    6.58    6.53      0    675.7    6.21    6.16    N/A
+     8388608         16384     float    none      -1   1128.3    7.43    7.38      0   1331.9    6.30    6.25    N/A
+    16777216         32768     float    none      -1   1590.9   10.55   10.46      0   1714.4    9.79    9.71    N/A
+    33554432         65536     float    none      -1   3430.9    9.78    9.70      0   3497.0    9.60    9.52    N/A
+    67108864        131072     float    none      -1   7860.1    8.54    8.47      0   8024.1    8.36    8.30    N/A
+   134217728        262144     float    none      -1    16920    7.93    7.87      0    16834    7.97    7.91    N/A
+   268435456        524288     float    none      -1    32035    8.38    8.31      0    32287    8.31    8.25    N/A
+   536870912       1048576     float    none      -1    62312    8.62    8.55      0    62372    8.61    8.54    N/A
+  1073741824       2097152     float    none      -1   121080    8.87    8.80      0   121026    8.87    8.80    N/A
+  2147483648       4194304     float    none      -1   233341    9.20    9.13      0   233652    9.19    9.12    N/A
+  4294967296       8388608     float    none      -1   451652    9.51    9.44      0   459009    9.36    9.28    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.87576 
+#
+# Collective test concluded: alltoall_perf
+
