@@ -173,14 +173,13 @@ case "${SYSTEM}" in
 	    ;;
 	    olivia)
 		FILES=("../osu/craype/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode.txt"
+		       "../osu/craype/pt2pt/olivia/cxi_software_matching/osu_bibw_b_multiple_D_D_multinode.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/software_matching/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
 		       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
 		       "../osu/craype/pt2pt/olivia/osu_xccl_bibw_b_multiple_D_D_multinode.txt"
 		       "../osu/slingshot11_peak_bibw.txt"
 		      )
-		unset LABELS[1]
-		unset STYLES[1]
 		;;
 esac
 
