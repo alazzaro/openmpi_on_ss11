@@ -64,6 +64,11 @@ def parse_nccl_file(path):
             if size < 4:
                 continue
 
+            # Skip small XCCL allreduce sizes
+            if "all_reduce" in str(path):
+                if size < 128:
+                    continue
+
             sizes.append(size)
             values.append(time_us)
             if size >= 1048576:
