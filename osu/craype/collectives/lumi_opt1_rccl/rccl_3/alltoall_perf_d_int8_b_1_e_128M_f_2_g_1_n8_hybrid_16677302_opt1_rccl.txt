@@ -3,14 +3,6 @@
 #
 rccl-tests: Version develop_deprecated:40b1b17
 # Using devices
-#  Rank  0 Group  0 Pid  43779 on  nid005258 device  0 [0000:d1:00] AMD Instinct MI250X
-#  Rank  1 Group  0 Pid  43780 on  nid005258 device  0 [0000:d6:00] AMD Instinct MI250X
-#  Rank  2 Group  0 Pid  43781 on  nid005258 device  0 [0000:c9:00] AMD Instinct MI250X
-#  Rank  3 Group  0 Pid  43782 on  nid005258 device  0 [0000:ce:00] AMD Instinct MI250X
-#  Rank  4 Group  0 Pid  43783 on  nid005258 device  0 [0000:d9:00] AMD Instinct MI250X
-#  Rank  5 Group  0 Pid  43784 on  nid005258 device  0 [0000:de:00] AMD Instinct MI250X
-#  Rank  6 Group  0 Pid  43785 on  nid005258 device  0 [0000:c1:00] AMD Instinct MI250X
-#  Rank  7 Group  0 Pid  43786 on  nid005258 device  0 [0000:c6:00] AMD Instinct MI250X
 #
 #                                                              out-of-place                       in-place          
 #       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
