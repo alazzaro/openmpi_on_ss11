@@ -5,6 +5,7 @@ MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
 for MYUSER in alazzaro marcink; do
+#for MYUSER in alazzaro; do
 
 echo "User: $MYUSER"
 
@@ -66,7 +67,9 @@ for n in ${NGPUS}; do
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_${cmp}_n${n}_${TAGMODE}*.txt)"
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
 #		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
-		       "$(ls ../osu/ompi/collectives/lumi_opt1/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+#		       "$(ls ../osu/craype/collectives/lumi_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+#		       "$(ls ../osu/craype/collectives/lumi/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+		       "$(ls ../osu/craype/collectives/lumi_opt1_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
 		       "../osu/ompi/collectives/lumi_marcin_6.x/osu_${test}_d_rocm_lnx_n${n}.txt"
 		      )
 	    ;;
@@ -91,6 +94,7 @@ for n in ${NGPUS}; do
 		"ompi5 lnx"
 #		"${XCCL} (OSU)"
 		"${XCCL} (${XCCL_TESTS})"
+#		"${XCCL} (${XCCL_TESTS}) opt"
 		"ompi6 ${cmp}"
 	       )
 	STYLES=("b-o"
@@ -98,6 +102,7 @@ for n in ${NGPUS}; do
 		"g-o"
 #		"ro:"
 		"r^:"
+#		"r-o"
 		"k-o"
 	       )
 	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, $((n / NGPUS_PER_NODE)) nodes" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
