@@ -1,0 +1,43 @@
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0      int8    none      -1     0.41    0.00    0.00       0     0.28    0.00    0.00    N/A
+           0             0      int8    none      -1     0.28    0.00    0.00       0     0.31    0.00    0.00    N/A
+           0             0      int8    none      -1     0.30    0.00    0.00       0     0.31    0.00    0.00    N/A
+           0             0      int8    none      -1     0.31    0.00    0.00       0     0.30    0.00    0.00    N/A
+           0             0      int8    none      -1     0.29    0.00    0.00       0     0.29    0.00    0.00    N/A
+           0             0      int8    none      -1     0.28    0.00    0.00       0     0.28    0.00    0.00    N/A
+           0             0      int8    none      -1     0.28    0.00    0.00       0     0.29    0.00    0.00    N/A
+           0             0      int8    none      -1     0.26    0.00    0.00       0     0.26    0.00    0.00    N/A
+           0             0      int8    none      -1     0.26    0.00    0.00       0     0.26    0.00    0.00    N/A
+           0             0      int8    none      -1     0.26    0.00    0.00       0     0.26    0.00    0.00    N/A
+        1024            16      int8    none      -1   180.38    0.01    0.01       0   174.87    0.01    0.01    N/A
+        2048            32      int8    none      -1   175.75    0.01    0.01       0   183.87    0.01    0.01    N/A
+        4096            64      int8    none      -1   180.56    0.02    0.02       0   174.55    0.02    0.02    N/A
+        8192           128      int8    none      -1   182.50    0.04    0.04       0   182.88    0.04    0.04    N/A
+       16384           256      int8    none      -1   164.65    0.10    0.10       0   156.59    0.10    0.10    N/A
+       32768           512      int8    none      -1   157.93    0.21    0.20       0   156.97    0.21    0.21    N/A
+       65536          1024      int8    none      -1   158.07    0.41    0.41       0   161.57    0.41    0.40    N/A
+      131072          2048      int8    none      -1   178.34    0.73    0.72       0   172.95    0.76    0.75    N/A
+      262144          4096      int8    none      -1   176.92    1.48    1.46       0   187.38    1.40    1.38    N/A
+      524288          8192      int8    none      -1   210.86    2.49    2.45       0   211.23    2.48    2.44    N/A
+     1048576         16384      int8    none      -1   268.80    3.90    3.84       0   269.95    3.88    3.82    N/A
+     2097152         32768      int8    none      -1   384.10    5.46    5.37       0   387.45    5.41    5.33    N/A
+     4194304         65536      int8    none      -1   741.60    5.66    5.57       0   741.69    5.66    5.57    N/A
+     8388608        131072      int8    none      -1  1250.90    6.71    6.60       0  1276.86    6.57    6.47    N/A
+    16777216        262144      int8    none      -1  2613.62    6.42    6.32       0  2551.58    6.58    6.47    N/A
+    33554432        524288      int8    none      -1  5379.11    6.24    6.14       0  5434.50    6.17    6.08    N/A
+    67108864       1048576      int8    none      -1  4131.06   16.24   15.99       0  4141.23   16.21   15.95    N/A
+   134217728       2097152      int8    none      -1  8510.54   15.77   15.52       0  8587.07   15.63   15.39    N/A
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 2.52167 
+#
+# Collective test concluded: alltoall_perf
+#
+
