@@ -1,0 +1,521 @@
+Starting job 235759 on gpu-1-[4,14,18,33,35,65-68,82-83,94-96,98,104] on Olivia at Thu Mar 12 08:49:54 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+
+Currently Loaded Modules:
+  1) init-NRIS                                      (S)
+  2) NRIS/GPU
+  3) GCCcore/14.3.0
+  4) zlib/1.3.1-GCCcore-14.3.0
+  5) binutils/2.44-GCCcore-14.3.0
+  6) GCC/14.3.0
+  7) CUDA/12.9.1
+  8) numactl/2.0.19-GCCcore-14.3.0
+  9) libfabric/2.3.1-GCCcore-14.3.0
+ 10) OpenMPI/5.0.9-GCC-14.3.0
+ 11) aws-ofi-nccl/1.17.3-GCCcore-14.3.0-CUDA-12.9.1
+ 12) NCCL/2.29.2-GCCcore-14.3.0-CUDA-12.9.1
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+
+ 
+
+-- srun all_gather_perf
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid 452143 on    gpu-1-4 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  1 Group  0 Pid 452144 on    gpu-1-4 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  2 Group  0 Pid 452145 on    gpu-1-4 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  3 Group  0 Pid 452146 on    gpu-1-4 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  4 Group  0 Pid 1498725 on   gpu-1-14 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  5 Group  0 Pid 1498726 on   gpu-1-14 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  6 Group  0 Pid 1498727 on   gpu-1-14 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  7 Group  0 Pid 1498728 on   gpu-1-14 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  8 Group  0 Pid 3311317 on   gpu-1-18 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  9 Group  0 Pid 3311318 on   gpu-1-18 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 10 Group  0 Pid 3311319 on   gpu-1-18 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 11 Group  0 Pid 3311320 on   gpu-1-18 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 12 Group  0 Pid 2014232 on   gpu-1-33 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 13 Group  0 Pid 2014233 on   gpu-1-33 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 14 Group  0 Pid 2014234 on   gpu-1-33 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 15 Group  0 Pid 2014235 on   gpu-1-33 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 16 Group  0 Pid 3967997 on   gpu-1-35 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 17 Group  0 Pid 3967998 on   gpu-1-35 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 18 Group  0 Pid 3967999 on   gpu-1-35 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 19 Group  0 Pid 3968000 on   gpu-1-35 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 20 Group  0 Pid 3411982 on   gpu-1-65 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 21 Group  0 Pid 3411983 on   gpu-1-65 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 22 Group  0 Pid 3411984 on   gpu-1-65 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 23 Group  0 Pid 3411985 on   gpu-1-65 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 24 Group  0 Pid 3326396 on   gpu-1-66 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 25 Group  0 Pid 3326397 on   gpu-1-66 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 26 Group  0 Pid 3326398 on   gpu-1-66 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 27 Group  0 Pid 3326399 on   gpu-1-66 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 28 Group  0 Pid 4135275 on   gpu-1-67 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 29 Group  0 Pid 4135276 on   gpu-1-67 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 30 Group  0 Pid 4135277 on   gpu-1-67 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 31 Group  0 Pid 4135278 on   gpu-1-67 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 32 Group  0 Pid 1755301 on   gpu-1-68 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 33 Group  0 Pid 1755302 on   gpu-1-68 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 34 Group  0 Pid 1755303 on   gpu-1-68 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 35 Group  0 Pid 1755304 on   gpu-1-68 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 36 Group  0 Pid 1010323 on   gpu-1-82 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 37 Group  0 Pid 1010324 on   gpu-1-82 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 38 Group  0 Pid 1010325 on   gpu-1-82 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 39 Group  0 Pid 1010326 on   gpu-1-82 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 40 Group  0 Pid 1646041 on   gpu-1-83 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 41 Group  0 Pid 1646042 on   gpu-1-83 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 42 Group  0 Pid 1646043 on   gpu-1-83 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 43 Group  0 Pid 1646044 on   gpu-1-83 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 44 Group  0 Pid 600022 on   gpu-1-94 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 45 Group  0 Pid 600023 on   gpu-1-94 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 46 Group  0 Pid 600024 on   gpu-1-94 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 47 Group  0 Pid 600025 on   gpu-1-94 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 48 Group  0 Pid 3306199 on   gpu-1-95 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 49 Group  0 Pid 3306200 on   gpu-1-95 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 50 Group  0 Pid 3306201 on   gpu-1-95 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 51 Group  0 Pid 3306202 on   gpu-1-95 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 52 Group  0 Pid 3055910 on   gpu-1-96 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 53 Group  0 Pid 3055911 on   gpu-1-96 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 54 Group  0 Pid 3055912 on   gpu-1-96 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 55 Group  0 Pid 3055913 on   gpu-1-96 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 56 Group  0 Pid 2202002 on   gpu-1-98 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 57 Group  0 Pid 2202003 on   gpu-1-98 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 58 Group  0 Pid 2202004 on   gpu-1-98 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 59 Group  0 Pid 2202005 on   gpu-1-98 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 60 Group  0 Pid 1338661 on  gpu-1-104 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 61 Group  0 Pid 1338662 on  gpu-1-104 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 62 Group  0 Pid 1338663 on  gpu-1-104 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 63 Group  0 Pid 1338664 on  gpu-1-104 device  3 [0039:01:00] NVIDIA GH200 120GB
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0     float    none      -1     0.33    0.00    0.00       0     0.24    0.00    0.00       0
+           0             0     float    none      -1     0.26    0.00    0.00       0     0.33    0.00    0.00       0
+           0             0     float    none      -1     0.32    0.00    0.00       0     0.31    0.00    0.00       0
+           0             0     float    none      -1     0.30    0.00    0.00       0     0.29    0.00    0.00       0
+           0             0     float    none      -1     0.28    0.00    0.00       0     0.27    0.00    0.00       0
+           0             0     float    none      -1     0.28    0.00    0.00       0     0.25    0.00    0.00       0
+           0             0     float    none      -1     0.25    0.00    0.00       0     0.25    0.00    0.00       0
+           0             0     float    none      -1     0.24    0.00    0.00       0     0.24    0.00    0.00       0
+           0             0     float    none      -1     0.24    0.00    0.00       0     0.23    0.00    0.00       0
+           0             0     float    none      -1     0.23    0.00    0.00       0     0.23    0.00    0.00       0
+        1024             4     float    none      -1   146.37    0.01    0.01       0   145.29    0.01    0.01       0
+        2048             8     float    none      -1   141.00    0.01    0.01       0   141.48    0.01    0.01       0
+        4096            16     float    none      -1   142.75    0.03    0.03       0   141.93    0.03    0.03       0
+        8192            32     float    none      -1   143.74    0.06    0.06       0   145.34    0.06    0.06       0
+       16384            64     float    none      -1   145.81    0.11    0.11       0   144.64    0.11    0.11       0
+       32768           128     float    none      -1   157.62    0.21    0.20       0   154.44    0.21    0.21       0
+       65536           256     float    none      -1   175.43    0.37    0.37       0   174.06    0.38    0.37       0
+      131072           512     float    none      -1   185.09    0.71    0.70       0   186.69    0.70    0.69       0
+      262144          1024     float    none      -1   253.67    1.03    1.02       0   250.95    1.04    1.03       0
+      524288          2048     float    none      -1   227.75    2.30    2.27       0   277.29    1.89    1.86       0
+     1048576          4096     float    none      -1   253.01    4.14    4.08       0   239.78    4.37    4.30       0
+     2097152          8192     float    none      -1   391.68    5.35    5.27       0   388.17    5.40    5.32       0
+     4194304         16384     float    none      -1   530.66    7.90    7.78       0   469.68    8.93    8.79       0
+     8388608         32768     float    none      -1   572.12   14.66   14.43    9840   550.13   15.25   15.01   11104
+    16777216         65536     float    none      -1   832.07   20.16   19.85    4672   839.97   19.97   19.66    6192
+    33554432        131072     float    none      -1  2477.91   13.54   13.33       0  1424.35   23.56   23.19       0
+    67108864        262144     float    none      -1   806.38   83.22   81.92       0   803.03   83.57   82.26       0
+   134217728        524288     float    none      -1  40428.7    3.32    3.27       0  26913.8    4.99    4.91       0
+# Out of bounds values : 256 FAILED
+# Avg bus bandwidth    : 5.75939 
+#
+# Collective test concluded: all_gather_perf
+#
+
+ .. gpu-1-18 pid 3311317: Test failure common.cu:1188
+ .. gpu-1-68 pid 1755301: Test failure common.cu:1188
+ .. gpu-1-66 pid 3326396: Test failure common.cu:1188
+ .. gpu-1-14 pid 1498725: Test failure common.cu:1188
+ .. gpu-1-18 pid 3311320: Test failure common.cu:1188
+ .. gpu-1-96 pid 3055911: Test failure common.cu:1188
+ .. gpu-1-68 pid 1755304: Test failure common.cu:1188
+ .. gpu-1-82 pid 1010323: Test failure common.cu:1188
+ .. gpu-1-4 pid 452146: Test failure common.cu:1188
+ .. gpu-1-67 pid 4135275: Test failure common.cu:1188
+ .. gpu-1-66 pid 3326399: Test failure common.cu:1188
+ .. gpu-1-94 pid 600022: Test failure common.cu:1188
+ .. gpu-1-18 pid 3311319: Test failure common.cu:1188
+ .. gpu-1-18 pid 3311318: Test failure common.cu:1188
+ .. gpu-1-65 pid 3411983: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202002: Test failure common.cu:1188
+ .. gpu-1-33 pid 2014233: Test failure common.cu:1188
+ .. gpu-1-35 pid 3968000: Test failure common.cu:1188
+ .. gpu-1-14 pid 1498727: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306200: Test failure common.cu:1188
+ .. gpu-1-83 pid 1646041: Test failure common.cu:1188
+ .. gpu-1-104 pid 1338663: Test failure common.cu:1188
+ .. gpu-1-96 pid 3055910: Test failure common.cu:1188
+ .. gpu-1-96 pid 3055913: Test failure common.cu:1188
+ .. gpu-1-96 pid 3055912: Test failure common.cu:1188
+ .. gpu-1-4 pid 452145: Test failure common.cu:1188
+ .. gpu-1-4 pid 452144: Test failure common.cu:1188
+ .. gpu-1-4 pid 452143: Test failure common.cu:1188
+ .. gpu-1-67 pid 4135278: Test failure common.cu:1188
+ .. gpu-1-67 pid 4135276: Test failure common.cu:1188
+ .. gpu-1-67 pid 4135277: Test failure common.cu:1188
+ .. gpu-1-66 pid 3326398: Test failure common.cu:1188
+ .. gpu-1-82 pid 1010324: Test failure common.cu:1188
+ .. gpu-1-82 pid 1010326: Test failure common.cu:1188
+ .. gpu-1-82 pid 1010325: Test failure common.cu:1188
+ .. gpu-1-66 pid 3326397: Test failure common.cu:1188
+ .. gpu-1-94 pid 600023: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202005: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202004: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202003: Test failure common.cu:1188
+ .. gpu-1-94 pid 600025: Test failure common.cu:1188
+ .. gpu-1-68 pid 1755302: Test failure common.cu:1188
+ .. gpu-1-33 pid 2014235: Test failure common.cu:1188
+ .. gpu-1-94 pid 600024: Test failure common.cu:1188
+ .. gpu-1-68 pid 1755303: Test failure common.cu:1188
+ .. gpu-1-33 pid 2014234: Test failure common.cu:1188
+ .. gpu-1-33 pid 2014232: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306199: Test failure common.cu:1188
+ .. gpu-1-104 pid 1338661: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306202: Test failure common.cu:1188
+ .. gpu-1-35 pid 3967999: Test failure common.cu:1188
+ .. gpu-1-65 pid 3411985: Test failure common.cu:1188
+ .. gpu-1-104 pid 1338662: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306201: Test failure common.cu:1188
+ .. gpu-1-35 pid 3967998: Test failure common.cu:1188
+ .. gpu-1-104 pid 1338664: Test failure common.cu:1188
+ .. gpu-1-83 pid 1646044: Test failure common.cu:1188
+ .. gpu-1-14 pid 1498726: Test failure common.cu:1188
+ .. gpu-1-35 pid 3967997: Test failure common.cu:1188
+ .. gpu-1-83 pid 1646042: Test failure common.cu:1188
+ .. gpu-1-14 pid 1498728: Test failure common.cu:1188
+ .. gpu-1-65 pid 3411982: Test failure common.cu:1188
+ .. gpu-1-83 pid 1646043: Test failure common.cu:1188
+ .. gpu-1-65 pid 3411984: Test failure common.cu:1188
+--------------------------------------------------------------------------
+prterun detected that one or more processes exited with non-zero status,
+thus causing the job to be terminated. The first process to do so was:
+
+   Process name: [prterun-gpu-1-4-451511@1,8]
+   Exit code:    7
+--------------------------------------------------------------------------
+-- srun all_reduce_perf
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid 452857 on    gpu-1-4 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  1 Group  0 Pid 452858 on    gpu-1-4 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  2 Group  0 Pid 452859 on    gpu-1-4 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  3 Group  0 Pid 452860 on    gpu-1-4 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  4 Group  0 Pid 1499419 on   gpu-1-14 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  5 Group  0 Pid 1499420 on   gpu-1-14 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  6 Group  0 Pid 1499421 on   gpu-1-14 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  7 Group  0 Pid 1499422 on   gpu-1-14 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  8 Group  0 Pid 3312010 on   gpu-1-18 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  9 Group  0 Pid 3312011 on   gpu-1-18 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 10 Group  0 Pid 3312012 on   gpu-1-18 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 11 Group  0 Pid 3312013 on   gpu-1-18 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 12 Group  0 Pid 2015509 on   gpu-1-33 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 13 Group  0 Pid 2015510 on   gpu-1-33 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 14 Group  0 Pid 2015511 on   gpu-1-33 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 15 Group  0 Pid 2015512 on   gpu-1-33 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 16 Group  0 Pid 3969272 on   gpu-1-35 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 17 Group  0 Pid 3969273 on   gpu-1-35 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 18 Group  0 Pid 3969274 on   gpu-1-35 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 19 Group  0 Pid 3969275 on   gpu-1-35 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 20 Group  0 Pid 3413257 on   gpu-1-65 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 21 Group  0 Pid 3413258 on   gpu-1-65 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 22 Group  0 Pid 3413259 on   gpu-1-65 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 23 Group  0 Pid 3413260 on   gpu-1-65 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 24 Group  0 Pid 3327672 on   gpu-1-66 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 25 Group  0 Pid 3327673 on   gpu-1-66 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 26 Group  0 Pid 3327674 on   gpu-1-66 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 27 Group  0 Pid 3327675 on   gpu-1-66 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 28 Group  0 Pid 4136550 on   gpu-1-67 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 29 Group  0 Pid 4136551 on   gpu-1-67 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 30 Group  0 Pid 4136552 on   gpu-1-67 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 31 Group  0 Pid 4136553 on   gpu-1-67 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 32 Group  0 Pid 1756580 on   gpu-1-68 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 33 Group  0 Pid 1756581 on   gpu-1-68 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 34 Group  0 Pid 1756582 on   gpu-1-68 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 35 Group  0 Pid 1756583 on   gpu-1-68 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 36 Group  0 Pid 1011014 on   gpu-1-82 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 37 Group  0 Pid 1011015 on   gpu-1-82 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 38 Group  0 Pid 1011016 on   gpu-1-82 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 39 Group  0 Pid 1011017 on   gpu-1-82 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 40 Group  0 Pid 1647315 on   gpu-1-83 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 41 Group  0 Pid 1647316 on   gpu-1-83 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 42 Group  0 Pid 1647317 on   gpu-1-83 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 43 Group  0 Pid 1647318 on   gpu-1-83 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 44 Group  0 Pid 601296 on   gpu-1-94 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 45 Group  0 Pid 601297 on   gpu-1-94 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 46 Group  0 Pid 601298 on   gpu-1-94 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 47 Group  0 Pid 601299 on   gpu-1-94 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 48 Group  0 Pid 3306885 on   gpu-1-95 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 49 Group  0 Pid 3306886 on   gpu-1-95 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 50 Group  0 Pid 3306887 on   gpu-1-95 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 51 Group  0 Pid 3306888 on   gpu-1-95 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 52 Group  0 Pid 3057190 on   gpu-1-96 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 53 Group  0 Pid 3057191 on   gpu-1-96 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 54 Group  0 Pid 3057192 on   gpu-1-96 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 55 Group  0 Pid 3057193 on   gpu-1-96 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 56 Group  0 Pid 2202683 on   gpu-1-98 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 57 Group  0 Pid 2202684 on   gpu-1-98 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 58 Group  0 Pid 2202685 on   gpu-1-98 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 59 Group  0 Pid 2202686 on   gpu-1-98 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 60 Group  0 Pid 1339935 on  gpu-1-104 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 61 Group  0 Pid 1339936 on  gpu-1-104 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 62 Group  0 Pid 1339937 on  gpu-1-104 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 63 Group  0 Pid 1339938 on  gpu-1-104 device  3 [0039:01:00] NVIDIA GH200 120GB
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0     float     sum      -1     0.40    0.00    0.00       0     0.33    0.00    0.00       0
+           0             0     float     sum      -1     0.27    0.00    0.00       0     0.26    0.00    0.00       0
+           4             1     float     sum      -1    93.14    0.00    0.00       0    39.63    0.00    0.00       0
+           8             2     float     sum      -1    40.52    0.00    0.00       0    40.77    0.00    0.00       0
+          16             4     float     sum      -1    38.84    0.00    0.00       0    39.64    0.00    0.00       0
+          32             8     float     sum      -1    38.46    0.00    0.00       0    39.59    0.00    0.00       0
+          64            16     float     sum      -1    46.37    0.00    0.00       0    46.26    0.00    0.00       0
+         128            32     float     sum      -1    46.53    0.00    0.01       0    45.72    0.00    0.01       0
+         256            64     float     sum      -1    49.54    0.01    0.01       0    46.18    0.01    0.01       0
+         512           128     float     sum      -1    49.99    0.01    0.02       0    48.30    0.01    0.02       0
+        1024           256     float     sum      -1    50.32    0.02    0.04       0    50.56    0.02    0.04       0
+        2048           512     float     sum      -1    54.50    0.04    0.07       0    53.63    0.04    0.08       0
+        4096          1024     float     sum      -1    58.82    0.07    0.14       0    58.14    0.07    0.14       0
+        8192          2048     float     sum      -1    63.00    0.13    0.26       0    60.33    0.14    0.27       0
+       16384          4096     float     sum      -1    64.31    0.25    0.50       0    61.84    0.26    0.52       0
+       32768          8192     float     sum      -1    65.64    0.50    0.98       0    63.44    0.52    1.02       0
+       65536         16384     float     sum      -1    74.99    0.87    1.72       0    72.77    0.90    1.77       0
+      131072         32768     float     sum      -1   101.57    1.29    2.54       0    96.93    1.35    2.66       0
+      262144         65536     float     sum      -1    97.44    2.69    5.30       0    96.70    2.71    5.34    1024
+      524288        131072     float     sum      -1   107.60    4.87    9.59    1024   108.21    4.85    9.54       0
+     1048576        262144     float     sum      -1   131.24    7.99   15.73    1984   130.18    8.06   15.86       0
+     2097152        524288     float     sum      -1   208.30   10.07   19.82    1024   541.68    3.87    7.62    1088
+     4194304       1048576     float     sum      -1   461.17    9.09   17.91    5376   462.82    9.06   17.84    2112
+     8388608       2097152     float     sum      -1   648.69   12.93   25.46    3328   646.65   12.97   25.54    4608
+    16777216       4194304     float     sum      -1  1164.38   14.41   28.37       0   852.95   19.67   38.72       0
+    33554432       8388608     float     sum      -1  2092.13   16.04   31.58       0   928.89   36.12   71.12       0
+    67108864      16777216     float     sum      -1  13580.1    4.94    9.73       0  7113.01    9.43   18.57       0
+   134217728      33554432     float     sum      -1   186075    0.72    1.42       0   117105    1.15    2.26       0
+# Out of bounds values : 576 FAILED
+# Avg bus bandwidth    : 6.96679 
+#
+# Collective test concluded: all_reduce_perf
+#
+
+ .. gpu-1-96 pid 3057191: Test failure common.cu:1188
+ .. gpu-1-66 pid 3327672: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202684: Test failure common.cu:1188
+ .. gpu-1-96 pid 3057192: Test failure common.cu:1188
+ .. gpu-1-66 pid 3327674: Test failure common.cu:1188
+ .. gpu-1-4 pid 452858: Test failure common.cu:1188
+ .. gpu-1-65 pid 3413259: Test failure common.cu:1188
+ .. gpu-1-67 pid 4136550: Test failure common.cu:1188
+ .. gpu-1-35 pid 3969274: Test failure common.cu:1188
+ .. gpu-1-82 pid 1011015: Test failure common.cu:1188
+ .. gpu-1-33 pid 2015511: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202683: Test failure common.cu:1188
+ .. gpu-1-94 pid 601296: Test failure common.cu:1188
+ .. gpu-1-14 pid 1499419: Test failure common.cu:1188
+ .. gpu-1-68 pid 1756581: Test failure common.cu:1188
+ .. gpu-1-96 pid 3057193: Test failure common.cu:1188
+ .. gpu-1-18 pid 3312012: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306885: Test failure common.cu:1188
+ .. gpu-1-96 pid 3057190: Test failure common.cu:1188
+ .. gpu-1-104 pid 1339935: Test failure common.cu:1188
+ .. gpu-1-4 pid 452860: Test failure common.cu:1188
+ .. gpu-1-83 pid 1647318: Test failure common.cu:1188
+ .. gpu-1-4 pid 452859: Test failure common.cu:1188
+ .. gpu-1-4 pid 452857: Test failure common.cu:1188
+ .. gpu-1-65 pid 3413260: Test failure common.cu:1188
+ .. gpu-1-65 pid 3413257: Test failure common.cu:1188
+ .. gpu-1-66 pid 3327673: Test failure common.cu:1188
+ .. gpu-1-67 pid 4136552: Test failure common.cu:1188
+ .. gpu-1-65 pid 3413258: Test failure common.cu:1188
+ .. gpu-1-66 pid 3327675: Test failure common.cu:1188
+ .. gpu-1-67 pid 4136551: Test failure common.cu:1188
+ .. gpu-1-82 pid 1011017: Test failure common.cu:1188
+ .. gpu-1-67 pid 4136553: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202686: Test failure common.cu:1188
+ .. gpu-1-94 pid 601297: Test failure common.cu:1188
+ .. gpu-1-82 pid 1011014: Test failure common.cu:1188
+ .. gpu-1-94 pid 601298: Test failure common.cu:1188
+ .. gpu-1-82 pid 1011016: Test failure common.cu:1188
+ .. gpu-1-94 pid 601299: Test failure common.cu:1188
+ .. gpu-1-98 pid 2202685: Test failure common.cu:1188
+ .. gpu-1-14 pid 1499420: Test failure common.cu:1188
+ .. gpu-1-33 pid 2015512: Test failure common.cu:1188
+ .. gpu-1-68 pid 1756583: Test failure common.cu:1188
+ .. gpu-1-18 pid 3312013: Test failure common.cu:1188
+ .. gpu-1-68 pid 1756582: Test failure common.cu:1188
+ .. gpu-1-68 pid 1756580: Test failure common.cu:1188
+ .. gpu-1-14 pid 1499421: Test failure common.cu:1188
+ .. gpu-1-33 pid 2015510: Test failure common.cu:1188
+ .. gpu-1-14 pid 1499422: Test failure common.cu:1188
+ .. gpu-1-33 pid 2015509: Test failure common.cu:1188
+ .. gpu-1-18 pid 3312011: Test failure common.cu:1188
+ .. gpu-1-83 pid 1647316: Test failure common.cu:1188
+ .. gpu-1-18 pid 3312010: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306887: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306888: Test failure common.cu:1188
+ .. gpu-1-104 pid 1339937: Test failure common.cu:1188
+ .. gpu-1-95 pid 3306886: Test failure common.cu:1188
+ .. gpu-1-104 pid 1339938: Test failure common.cu:1188
+ .. gpu-1-35 pid 3969275: Test failure common.cu:1188
+ .. gpu-1-104 pid 1339936: Test failure common.cu:1188
+ .. gpu-1-35 pid 3969273: Test failure common.cu:1188
+ .. gpu-1-35 pid 3969272: Test failure common.cu:1188
+ .. gpu-1-83 pid 1647317: Test failure common.cu:1188
+ .. gpu-1-83 pid 1647315: Test failure common.cu:1188
+--------------------------------------------------------------------------
+prterun detected that one or more processes exited with non-zero status,
+thus causing the job to be terminated. The first process to do so was:
+
+   Process name: [prterun-gpu-1-4-452221@1,53]
+   Exit code:    7
+--------------------------------------------------------------------------
+-- srun alltoall_perf
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid 453567 on    gpu-1-4 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  1 Group  0 Pid 453568 on    gpu-1-4 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  2 Group  0 Pid 453569 on    gpu-1-4 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  3 Group  0 Pid 453570 on    gpu-1-4 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  4 Group  0 Pid 1500109 on   gpu-1-14 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  5 Group  0 Pid 1500110 on   gpu-1-14 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank  6 Group  0 Pid 1500111 on   gpu-1-14 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank  7 Group  0 Pid 1500112 on   gpu-1-14 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank  8 Group  0 Pid 3312685 on   gpu-1-18 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank  9 Group  0 Pid 3312686 on   gpu-1-18 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 10 Group  0 Pid 3312687 on   gpu-1-18 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 11 Group  0 Pid 3312688 on   gpu-1-18 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 12 Group  0 Pid 2016920 on   gpu-1-33 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 13 Group  0 Pid 2016921 on   gpu-1-33 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 14 Group  0 Pid 2016922 on   gpu-1-33 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 15 Group  0 Pid 2016923 on   gpu-1-33 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 16 Group  0 Pid 3970683 on   gpu-1-35 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 17 Group  0 Pid 3970684 on   gpu-1-35 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 18 Group  0 Pid 3970685 on   gpu-1-35 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 19 Group  0 Pid 3970686 on   gpu-1-35 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 20 Group  0 Pid 3414669 on   gpu-1-65 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 21 Group  0 Pid 3414670 on   gpu-1-65 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 22 Group  0 Pid 3414671 on   gpu-1-65 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 23 Group  0 Pid 3414672 on   gpu-1-65 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 24 Group  0 Pid 3329084 on   gpu-1-66 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 25 Group  0 Pid 3329085 on   gpu-1-66 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 26 Group  0 Pid 3329086 on   gpu-1-66 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 27 Group  0 Pid 3329087 on   gpu-1-66 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 28 Group  0 Pid 4137961 on   gpu-1-67 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 29 Group  0 Pid 4137962 on   gpu-1-67 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 30 Group  0 Pid 4137963 on   gpu-1-67 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 31 Group  0 Pid 4137964 on   gpu-1-67 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 32 Group  0 Pid 1757992 on   gpu-1-68 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 33 Group  0 Pid 1757993 on   gpu-1-68 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 34 Group  0 Pid 1757994 on   gpu-1-68 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 35 Group  0 Pid 1757995 on   gpu-1-68 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 36 Group  0 Pid 1011704 on   gpu-1-82 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 37 Group  0 Pid 1011705 on   gpu-1-82 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 38 Group  0 Pid 1011706 on   gpu-1-82 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 39 Group  0 Pid 1011707 on   gpu-1-82 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 40 Group  0 Pid 1648726 on   gpu-1-83 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 41 Group  0 Pid 1648727 on   gpu-1-83 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 42 Group  0 Pid 1648728 on   gpu-1-83 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 43 Group  0 Pid 1648729 on   gpu-1-83 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 44 Group  0 Pid 602711 on   gpu-1-94 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 45 Group  0 Pid 602712 on   gpu-1-94 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 46 Group  0 Pid 602713 on   gpu-1-94 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 47 Group  0 Pid 602714 on   gpu-1-94 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 48 Group  0 Pid 3307565 on   gpu-1-95 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 49 Group  0 Pid 3307566 on   gpu-1-95 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 50 Group  0 Pid 3307567 on   gpu-1-95 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 51 Group  0 Pid 3307568 on   gpu-1-95 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 52 Group  0 Pid 3058602 on   gpu-1-96 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 53 Group  0 Pid 3058603 on   gpu-1-96 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 54 Group  0 Pid 3058604 on   gpu-1-96 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 55 Group  0 Pid 3058605 on   gpu-1-96 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 56 Group  0 Pid 2203359 on   gpu-1-98 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 57 Group  0 Pid 2203360 on   gpu-1-98 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 58 Group  0 Pid 2203362 on   gpu-1-98 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 59 Group  0 Pid 2203361 on   gpu-1-98 device  3 [0039:01:00] NVIDIA GH200 120GB
+#  Rank 60 Group  0 Pid 1341346 on  gpu-1-104 device  0 [0009:01:00] NVIDIA GH200 120GB
+#  Rank 61 Group  0 Pid 1341347 on  gpu-1-104 device  1 [0019:01:00] NVIDIA GH200 120GB
+#  Rank 62 Group  0 Pid 1341348 on  gpu-1-104 device  2 [0029:01:00] NVIDIA GH200 120GB
+#  Rank 63 Group  0 Pid 1341349 on  gpu-1-104 device  3 [0039:01:00] NVIDIA GH200 120GB
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0     float    none      -1     0.43    0.00    0.00       0     0.26    0.00    0.00    N/A
+           0             0     float    none      -1     0.28    0.00    0.00       0     0.30    0.00    0.00    N/A
+           0             0     float    none      -1     0.32    0.00    0.00       0     0.31    0.00    0.00    N/A
+           0             0     float    none      -1     0.31    0.00    0.00       0     0.32    0.00    0.00    N/A
+           0             0     float    none      -1     0.33    0.00    0.00       0     0.32    0.00    0.00    N/A
+           0             0     float    none      -1     0.29    0.00    0.00       0     0.29    0.00    0.00    N/A
+           0             0     float    none      -1     0.27    0.00    0.00       0     0.27    0.00    0.00    N/A
+           0             0     float    none      -1     0.26    0.00    0.00       0     0.26    0.00    0.00    N/A
+           0             0     float    none      -1     0.25    0.00    0.00       0     0.24    0.00    0.00    N/A
+           0             0     float    none      -1     0.25    0.00    0.00       0     0.24    0.00    0.00    N/A
+        1024             4     float    none      -1   180.20    0.01    0.01       0   173.03    0.01    0.01    N/A
+        2048             8     float    none      -1   172.70    0.01    0.01       0   170.84    0.01    0.01    N/A
+        4096            16     float    none      -1   172.92    0.02    0.02       0   171.68    0.02    0.02    N/A
+        8192            32     float    none      -1   171.62    0.05    0.05       0   170.97    0.05    0.05    N/A
+       16384            64     float    none      -1   153.52    0.11    0.11       0   155.08    0.11    0.10    N/A
+       32768           128     float    none      -1   155.45    0.21    0.21       0   157.06    0.21    0.21    N/A
+       65536           256     float    none      -1   163.58    0.40    0.39       0   158.12    0.41    0.41    N/A
+      131072           512     float    none      -1   178.43    0.73    0.72       0   176.54    0.74    0.73    N/A
+      262144          1024     float    none      -1   178.82    1.47    1.44       0   181.88    1.44    1.42    N/A
+      524288          2048     float    none      -1   212.26    2.47    2.43       0   210.81    2.49    2.45    N/A
+     1048576          4096     float    none      -1   270.03    3.88    3.82       0   276.89    3.79    3.73    N/A
+     2097152          8192     float    none      -1   382.90    5.48    5.39       0   372.58    5.63    5.54    N/A
+     4194304         16384     float    none      -1   740.74    5.66    5.57       0   736.85    5.69    5.60    N/A
+     8388608         32768     float    none      -1  1256.52    6.68    6.57       0  1255.23    6.68    6.58    N/A
+    16777216         65536     float    none      -1  2594.44    6.47    6.37       0  2798.56    5.99    5.90    N/A
+    33554432        131072     float    none      -1  5426.76    6.18    6.09       0  5393.84    6.22    6.12    N/A
+    67108864        262144     float    none      -1  4053.14   16.56   16.30       0  4349.29   15.43   15.19    N/A
+   134217728        524288     float    none      -1  8774.82   15.30   15.06       0  8316.20   16.14   15.89    N/A
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 2.50918 
+#
+# Collective test concluded: alltoall_perf
+#
+
+
+Job 235759 consumed 0.0 billing hours and 0.9 GPU hours from project nn9997k.
+
+Submitted 2026-03-12T08:49:53; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   50.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID            CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+235759        4608            0.0 %  2026-03-12T08:49:53   50.0 s  0
+235759.batch   288      1     0.0 %  2026-03-12T08:49:53   50.0 s  0
+235759.prted  4608     16     0.0 %  2026-03-12T08:49:53   18.0 s  0
+235759.prted  4608     16     0.0 %  2026-03-12T08:49:53   37.0 s  0
+235759.prted  4608     16     0.0 %  2026-03-12T08:49:53   52.0 s  0
+
+Used CPU time:   1.5 CPU seconds
+Unused CPU time: 2.7 CPU days
+
+Memory statistics, in GiB:
+ID             Alloc   Usage
+235759        11200.0        
+235759.batch   700.0     0.2
+235759.prted  11200.0    54.6
+235759.prted  11200.0    52.3
+235759.prted  11200.0    54.1
+
+Job 235759 completed at Thu Mar 12 08:50:47 CET 2026

@@ -1,0 +1,43 @@
+# nccl-tests version 2.17.9 nccl-headers=22902 nccl-library=22902
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)         
+           0             0     float    none      -1     0.33    0.00    0.00       0     0.24    0.00    0.00       0
+           0             0     float    none      -1     0.25    0.00    0.00       0     0.32    0.00    0.00       0
+           0             0     float    none      -1     0.30    0.00    0.00       0     0.30    0.00    0.00       0
+           0             0     float    none      -1     0.29    0.00    0.00       0     0.32    0.00    0.00       0
+           0             0     float    none      -1     0.28    0.00    0.00       0     0.29    0.00    0.00       0
+           0             0     float    none      -1     0.29    0.00    0.00       0     0.27    0.00    0.00       0
+           0             0     float    none      -1     0.27    0.00    0.00       0     0.27    0.00    0.00       0
+           0             0     float    none      -1     0.26    0.00    0.00       0     0.26    0.00    0.00       0
+           0             0     float    none      -1     0.24    0.00    0.00       0     0.24    0.00    0.00       0
+           0             0     float    none      -1     0.26    0.00    0.00       0     0.25    0.00    0.00       0
+        1024             4     float    none      -1   106.04    0.01    0.01       0   102.25    0.01    0.01       0
+        2048             8     float    none      -1   100.33    0.02    0.02       0    97.63    0.02    0.02       0
+        4096            16     float    none      -1   101.19    0.04    0.04       0   101.00    0.04    0.04       0
+        8192            32     float    none      -1   108.77    0.08    0.07       0   108.03    0.08    0.07       0
+       16384            64     float    none      -1   112.57    0.15    0.14       0   111.70    0.15    0.14       0
+       32768           128     float    none      -1   115.35    0.28    0.28       0   114.23    0.29    0.28       0
+       65536           256     float    none      -1   120.64    0.54    0.53       0   121.92    0.54    0.53       0
+      131072           512     float    none      -1   124.08    1.06    1.04       0   124.49    1.05    1.04       0
+      262144          1024     float    none      -1   190.61    1.38    1.35       0   159.75    1.64    1.62       0
+      524288          2048     float    none      -1   154.95    3.38    3.33       0   152.82    3.43    3.38       0
+     1048576          4096     float    none      -1   251.28    4.17    4.11       0   252.81    4.15    4.08       0
+     2097152          8192     float    none      -1   488.16    4.30    4.23       0   440.65    4.76    4.68       0
+     4194304         16384     float    none      -1   505.94    8.29    8.16       0   570.88    7.35    7.23       0
+     8388608         32768     float    none      -1   611.84   13.71   13.50    8064   601.93   13.94   13.72    7104
+    16777216         65536     float    none      -1   838.32   20.01   19.70    3152   811.32   20.68   20.36    5504
+    33554432        131072     float    none      -1   446.71   75.11   73.94       0  3168.45   10.59   10.42       0
+    67108864        262144     float    none      -1   884.20   75.90   74.71       0   800.99   83.78   82.47       0
+   134217728        524288     float    none      -1  44281.8    3.03    2.98       0  54930.7    2.44    2.41       0
+# Out of bounds values : 253 FAILED
+# Avg bus bandwidth    : 6.44042 
+#
+# Collective test concluded: all_gather_perf
+#
+
