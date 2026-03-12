@@ -13,7 +13,7 @@ case "$MYUSER" in
     lazzaroa|alazzaro)
 	SYSTEM="lumi"
 	suffix="amd"
-	NGPUS="8 128"
+	NGPUS="8 128 512"
 	NGPUS_PER_NODE=8
 	XCCL="RCCL"
 	XCCL_TESTS="rccl-tests"
