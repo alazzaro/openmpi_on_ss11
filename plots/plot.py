@@ -66,8 +66,8 @@ def parse_nccl_file(path):
 
             sizes.append(size)
             values.append(time_us)
-#            if size >= 1048576:
-#                break
+            if size >= 1048576:
+                break
 
     quantity = "Latency"
     unit = "us"
