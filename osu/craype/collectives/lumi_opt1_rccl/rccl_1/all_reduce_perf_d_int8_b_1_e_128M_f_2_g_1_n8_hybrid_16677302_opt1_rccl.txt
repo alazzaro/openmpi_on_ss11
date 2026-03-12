@@ -1,0 +1,51 @@
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  42746 on  nid005258 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  42747 on  nid005258 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  42748 on  nid005258 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  42749 on  nid005258 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  42750 on  nid005258 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  42751 on  nid005258 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  42752 on  nid005258 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  42753 on  nid005258 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    43.56    0.00    0.00      0    27.43    0.00    0.00      0
+           2             2      int8     sum      -1    29.69    0.00    0.00      0    27.65    0.00    0.00      0
+           4             4      int8     sum      -1    27.48    0.00    0.00      0    21.23    0.00    0.00      0
+           8             8      int8     sum      -1    21.23    0.00    0.00      0    21.96    0.00    0.00      0
+          16            16      int8     sum      -1    21.27    0.00    0.00      0    21.43    0.00    0.00      0
+          32            32      int8     sum      -1    23.62    0.00    0.00      0    22.74    0.00    0.00      0
+          64            64      int8     sum      -1    26.28    0.00    0.00      0    26.99    0.00    0.00      0
+         128           128      int8     sum      -1    32.99    0.00    0.01      0    33.20    0.00    0.01      0
+         256           256      int8     sum      -1    32.74    0.01    0.01      0    32.78    0.01    0.01      0
+         512           512      int8     sum      -1    33.28    0.02    0.03      0    32.53    0.02    0.03      0
+        1024          1024      int8     sum      -1    32.37    0.03    0.06      0    33.28    0.03    0.05      0
+        2048          2048      int8     sum      -1    33.07    0.06    0.11      0    33.17    0.06    0.11      0
+        4096          4096      int8     sum      -1    34.05    0.12    0.21      0    33.62    0.12    0.21      0
+        8192          8192      int8     sum      -1    35.70    0.23    0.40      0    34.90    0.23    0.41      0
+       16384         16384      int8     sum      -1    38.13    0.43    0.75      0    38.78    0.42    0.74      0
+       32768         32768      int8     sum      -1    38.27    0.86    1.50      0    38.48    0.85    1.49      0
+       65536         65536      int8     sum      -1    38.71    1.69    2.96      0    38.02    1.72    3.02      0
+      131072        131072      int8     sum      -1    38.46    3.41    5.96      0    38.60    3.40    5.94      0
+      262144        262144      int8     sum      -1    75.71    3.46    6.06      0    73.97    3.54    6.20      0
+      524288        524288      int8     sum      -1    99.56    5.27    9.22      0    99.34    5.28    9.24      0
+     1048576       1048576      int8     sum      -1    112.2    9.35   16.36      0    111.3    9.42   16.49      0
+     2097152       2097152      int8     sum      -1    135.3   15.50   27.13      0    135.5   15.47   27.08      0
+     4194304       4194304      int8     sum      -1    185.4   22.62   39.58      0    185.8   22.58   39.51      0
+     8388608       8388608      int8     sum      -1    288.0   29.13   50.97      0    286.8   29.25   51.19      0
+    16777216      16777216      int8     sum      -1    301.2   55.70   97.47      0    296.8   56.53   98.93      0
+    33554432      33554432      int8     sum      -1    519.0   64.66  113.15      0    506.4   66.26  115.95      0
+    67108864      67108864      int8     sum      -1    958.5   70.02  122.53      0    926.7   72.42  126.73      0
+   134217728     134217728      int8     sum      -1   1844.3   72.77  127.35      0   1772.7   75.71  132.50      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 22.4585 
+#
+# Collective test concluded: all_reduce_perf
+
