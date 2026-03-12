@@ -33,22 +33,22 @@ export MPICH_VERSION_DISPLAY=1
 export GTL_VERSION_DISPLAY=1
 
 export HSA_FORCE_FINE_GRAIN_PCIE=1
-export FI_CXI_RDZV_THRESHOLD=0
+#export FI_CXI_RDZV_THRESHOLD=0
 export FI_MR_CACHE_MONITOR=kdreg2 # not useful, can avoid deadline on RCCL
 #export FI_MR_CACHE_MONITOR=userfaultfd # not useful, can avoid deadline on RCCL
-export FI_CXI_RDZV_EAGER_SIZE=0
-export FI_CXI_RDZV_PROTO="alt_read"
-export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
-export FI_CXI_DEFAULT_TX_SIZE=1024
-export FI_CXI_DISABLE_HOST_REGISTER=1
-export FI_CXI_DISABLE_NON_INJECT_MSG_IDC="1"
-export FI_CXI_RDZV_GET_MIN="0"
+#export FI_CXI_RDZV_EAGER_SIZE=0
+#export FI_CXI_RDZV_PROTO="alt_read"
+#export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
+#export FI_CXI_DEFAULT_TX_SIZE=1024
+#export FI_CXI_DISABLE_HOST_REGISTER=1
+#export FI_CXI_DISABLE_NON_INJECT_MSG_IDC="1"
+#export FI_CXI_RDZV_GET_MIN="0"
 
 export NCCL_CROSS_NIC=1
 export NCCL_NET_GDR_LEVEL=PHB
-export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+export NCCL_SOCKET_IFNAME=hsn
 export NCCL_NET="AWS Libfabric"
-export NCCL_MIN_NCHANNELS="4"
+#export NCCL_MIN_NCHANNELS="4"
 
 echo "============"
 cat $0
@@ -71,15 +71,20 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	unset MPICH_GPU_SUPPORT_ENABLED
 	unset MPICH_SMP_SINGLE_COPY_MODE
 #	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
-#	FLAGS="-d int8 -b 1 -e 128M -f 2 -g 1"
+	FLAGS="-d int8 -b 1 -e 128M -f 2 -g 1"
 	# Values taken from https://www.olcf.ornl.gov/wp-content/uploads/OLCF_AI_Training_0417_2024.pdf
 	# Page 15 and 16
-	FLAGS="-b 64K -e 4G -f 2 -g 1"
+#	FLAGS="-b 64K -e 4G -f 2 -g 1"
+	for i in 1 2 3 4 5; do
+	sleep 5
+	mkdir -p \${OUTPUT_DIR}/rccl_\$i
 	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
     	for cmd in "\${CMDS[@]}"; do
 	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
 	    echo -- srun \$cmd
-	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+#	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/rccl_\$i/\${logname}"\${SUFFIX}.txt"
+	done
 	done
     )
 done

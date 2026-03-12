@@ -1,13 +1,39 @@
 #!/bin/bash
-if false; then
-for d in `ls ../osu/ompi/nccl/olivia/nccl_stability_test/`; do
+
+#MYUSER="marcink"
+MYUSER="alazzaro"
+#MYUSER=${MYUSER:-${USER}}
+
+echo "User: $MYUSER"
+
+case "$MYUSER" in
+    lazzaroa|alazzaro)
+	DIRECTORY="../osu/craype/collectives/lumi_opt1_rccl"
+        NGPUS="128"
+	DIR_SUFFIX="rccl_"
+        ;;
+    marcink)
+	DIRECTORY="../osu/ompi/nccl/olivia/nccl_stability_test/*"
+        NGPUS="64"
+	DIR_SUFFIX=""
+        ;;
+    *)
+        echo "User not recongnized"
+        exit -1
+esac
+
+
+
+#if false; then
+for d in `ls -d ${DIRECTORY}`; do
     echo $d
     for test in all_gather_perf all_reduce_perf  alltoall_perf; do
-	FILES=("../osu/ompi/nccl/olivia/nccl_stability_test/$d/1/${test}_n64.txt"
-	       "../osu/ompi/nccl/olivia/nccl_stability_test/$d/2/${test}_n64.txt"
-	       "../osu/ompi/nccl/olivia/nccl_stability_test/$d/3/${test}_n64.txt"
-	       "../osu/ompi/nccl/olivia/nccl_stability_test/$d/4/${test}_n64.txt"
-	       "../osu/ompi/nccl/olivia/nccl_stability_test/$d/5/${test}_n64.txt"
+	ls ${d}/${DIR_SUFFIX}1/${test}*_n${NGPUS}*.txt
+	FILES=("$(ls ${d}/${DIR_SUFFIX}1/${test}*_n${NGPUS}*.txt)"
+	       "$(ls ${d}/${DIR_SUFFIX}2/${test}*_n${NGPUS}*.txt)"
+	       "$(ls ${d}/${DIR_SUFFIX}3/${test}*_n${NGPUS}*.txt)"
+	       "$(ls ${d}/${DIR_SUFFIX}4/${test}*_n${NGPUS}*.txt)"
+	       "$(ls ${d}/${DIR_SUFFIX}5/${test}*_n${NGPUS}*.txt)"
 	      )
 	LABELS=("1"
 		"2"
@@ -21,11 +47,12 @@ for d in `ls ../osu/ompi/nccl/olivia/nccl_stability_test/`; do
 		"r^:"
 		"ro:"
 	       )
-	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "$test $d" --outfile ${test}_${d}.png
+	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "$test `basename $d`" --outfile ${test}_`basename ${d}`.png
     done
 done
-fi
+#fi
 
+if false; then
 for test in all_gather_perf all_reduce_perf  alltoall_perf; do
     FILES=("../osu/ompi/nccl/olivia/nccl_stability_test/float_crossnic0/1/${test}_n64.txt"
 	   "../osu/ompi/nccl/olivia/nccl_stability_test/float_crossnic1/2/${test}_n64.txt"
@@ -44,3 +71,4 @@ for test in all_gather_perf all_reduce_perf  alltoall_perf; do
 	   )
     ./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "$test $d" --outfile ${test}_types_performance.png
 done
+fi
