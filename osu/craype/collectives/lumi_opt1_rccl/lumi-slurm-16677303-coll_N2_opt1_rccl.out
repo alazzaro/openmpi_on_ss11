@@ -1,0 +1,1643 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) craype-network-ofi                  10) cray-dsmml/0.3.1
+  2) perftools-base/25.03.0              11) cray-libsci/25.03.0
+  3) xpmem/2.11.5-1.3_g73ade43320bc      12) PrgEnv-gnu/8.6.0
+  4) ModuleLabel/label              (S)  13) libfabric/1.22.0
+  5) lumi-tools/24.05               (S)  14) cray-mpich/9.0.1
+  6) init-lumi/0.2                  (S)  15) craype-x86-trento
+  7) cray-python/3.11.7                  16) craype-accel-amd-gfx90a
+  8) gcc-native/14.2                     17) rocm/6.3.4
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+/opt/cray/libfabric/1.22.0
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+============
+#!/bin/bash
+
+#for NNODES in 1 2 4 8 16 32 64; do
+for NNODES in 1 2 16; do
+#for NNODES in 2; do
+#for NNODES in 64; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt1_rccl.out
+#SBATCH --time=0:30:00
+
+export SLURM_CPUS_PER_TASK=7
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable Cray-mpich and RCCL
+USE_CPE=1 source \$ROOT_DIR/sourceme_rccl.sh
+
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+export MPICH_VERSION_DISPLAY=1
+export GTL_VERSION_DISPLAY=1
+
+export HSA_FORCE_FINE_GRAIN_PCIE=1
+#export FI_CXI_RDZV_THRESHOLD=0
+export FI_MR_CACHE_MONITOR=kdreg2 # not useful, can avoid deadline on RCCL
+#export FI_MR_CACHE_MONITOR=userfaultfd # not useful, can avoid deadline on RCCL
+#export FI_CXI_RDZV_EAGER_SIZE=0
+#export FI_CXI_RDZV_PROTO="alt_read"
+#export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
+#export FI_CXI_DEFAULT_TX_SIZE=1024
+#export FI_CXI_DISABLE_HOST_REGISTER=1
+#export FI_CXI_DISABLE_NON_INJECT_MSG_IDC="1"
+#export FI_CXI_RDZV_GET_MIN="0"
+
+export NCCL_CROSS_NIC=1
+export NCCL_NET_GDR_LEVEL=PHB
+export NCCL_SOCKET_IFNAME=hsn
+export NCCL_NET="AWS Libfabric"
+#export NCCL_MIN_NCHANNELS="4"
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt1_rccl"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    echo "RCCL-tests"
+    (
+	unset MPICH_GPU_SUPPORT_ENABLED
+	unset MPICH_SMP_SINGLE_COPY_MODE
+#	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+	FLAGS="-d int8 -b 1 -e 128M -f 2 -g 1"
+	# Values taken from https://www.olcf.ornl.gov/wp-content/uploads/OLCF_AI_Training_0417_2024.pdf
+	# Page 15 and 16
+#	FLAGS="-b 64K -e 4G -f 2 -g 1"
+	for i in 1 2 3 4 5; do
+	mkdir -p \${OUTPUT_DIR}/rccl_\$i
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- srun \$cmd
+#	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/rccl_\$i/\${logname}"\${SUFFIX}.txt"
+	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/rccl_\$i/\${logname}"\${SUFFIX}.txt"
+	done
+	done
+    )
+done
+
+EOF
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+SLURM_MEM_PER_CPU=0
+CRAYPE_LINK_TYPE=dynamic
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/9.0.1/gtl/lib:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+_ModuleTable017_=ZXMvU29mdHdhcmVTdGFjayIsICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjayIsICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9LApzeXN0ZW1CYXNlTVBBVEggPSAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4Oi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL2xtb2QvbW9kdWxlZmlsZXMvQ29yZTovb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQ6L2FwcGwvbHVtaS9tb2R1bGVzL1NvZnR3YXJlU3RhY2s6L2FwcGwvbHVtaS9t
+LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=58266
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/9.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=ID0gIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycy9Nb2R1bGVMYWJlbC9sYWJlbC5sdWEiLApmdWxsTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCmxvYWRPcmRlciA9IDQsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gIk1vZHVsZUxhYmVsL2xhYmVsIiwKd1YgPSAic2xhYmVsLip6ZmluYWwiLAp9LApbIlByZ0Vudi1nbnUiXSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9QcmdFbnYtZ251LzguNi4wLmx1YSIsCmZ1bGxOYW1lID0gIlByZ0Vudi1nbnUvOC42LjAiLApsb2FkT3JkZXIgPSAxMiwKcHJvcFQgPSB7fSwKc3Rh
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.17 41302 193.167.209.165 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:CRAYPE:PERFTOOLS:CRAYPAT:CRAY_ACCEL:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=9.0.1
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLW5ldHdvcmstb2ZpLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJjcmF5cGUteDg2LXRyZW50byJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVm
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005397
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+SLURM_CPUS_PER_TASK=7
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/16
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+PE_LD_LIBRARY_PATH=system
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=eS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLWFjY2VsLWFtZC1nZng5MGEubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLWFjY2VsLWFtZC1nZng5MGEiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtYWNjZWwtYW1kLWdmeDkwYSIsCndWID0gIk0uKnpmaW5hbCIsCn0sClsiY3JheXBlLW5ldHdvcmstb2ZpIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+ROCM_PATH=/opt/rocm-6.3.4
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+SLURM_JOB_GID=10013986
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/9.0.1/gtl/lib:1;/opt/cray/libfabric/1.22.0/lib64:1;/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005397
+PE_PKGCONFIG_PRODUCTS=PE_MPICH:PE_LIBSCI:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnMiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1773306248
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/9.0.1/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+_ModuleTable004_=ZS9sbW9kL21vZHVsZWZpbGVzL2NvbXBpbGVyL2dudS8xMi4wL2NyYXktbGlic2NpLzI1LjAzLjAubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1saWJzY2kvMjUuMDMuMCIsCmxvYWRPcmRlciA9IDExLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbGlic2NpIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKWyJjcmF5LW1waWNoIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9k
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8(x2)
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PE_MPICH_PKGCONFIG_LIBS=mpich
+OSTYPE=linux
+XDG_SESSION_ID=1008048
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=9.0.1
+SLURM_NNODES=2
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+HSA_FORCE_FINE_GRAIN_PCIE=1
+_ModuleTable012_=PSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAwMDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJh
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+NCCL_CROSS_NIC=1
+CRAY_CPU_TARGET=x86-trento
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1773304448
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:1;/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:1;/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/craype/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+NCCL_NET=AWS Libfabric
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+CRAY_TCMALLOC_MEMFS_FORCE=1
+SLURM_JOB_NODELIST=nid[005397-005398]
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+CRAY_ACCEL_VENDOR=amd
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid[005397-005398]
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=single_node_vni
+HOST=uan03
+SSH_CLIENT=178.197.255.17 41302 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=16
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-trento/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56(x2)
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid005397
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+GTL_VERSION_DISPLAY=1
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_MPICH:1;PE_LIBSCI:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+MPICH_VERSION_DISPLAY=1
+LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=YXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSA4LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImdjYy1uYXRpdmUiLAp3ViA9ICJeMDAwMDAwMTQuMDAwMDAwMDAyLip6ZmluYWwiLAp9LApbImluaXQtbHVtaSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL2FwcGwvbHVtaS9tb2R1bGVzL2Vh
+PE_PKGCONFIG_LIBS=rocm-6.3.4:mpich:libsci_mpi:libsci:dsmml
+CRAY_ACCEL_TARGET=amd_gfx90a
+SLURM_JOBID=16677303
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2FjY2VsID0gImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmNyYXlwZV9uZXR3b3JrID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmdjY19jb21waWxlciA9ICJnY2MtbmF0aXZlIiwKbGlic2NpID0gImNyYXktbGlic2NpIiwKbXBpID0gImNyYXktbXBpY2giLAp9LAptVCA9IHsKTW9kdWxlTGFiZWwgPSB7CmZu
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:libfabric/1.22.0:cray-mpich/9.0.1:craype-x86-trento:craype-accel-amd-gfx90a:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=a0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktcHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZSIsCndWID0gIl4wMDAwMDAwMi4wMDAwMDAwMDcuMDAwMDAwMDM0Lip6ZmluYWwiLAp9LApbImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIl0gPSB7CmZuID0gIi9vcHQvY3Jh
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/mpich/9.0.1/ofi/man:1;/opt/cray/pe/mpich/9.0.1/man/mpich:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=Y2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJQcmdFbnYtZ251IiwKd1YgPSAiXjAwMDAwMDA4LjAwMDAwMDAwNi4qemZpbmFsIiwKfSwKWyJjcmF5LWRzbW1sIl0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvY3JheS1kc21tbC8wLjMuMS5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LWRzbW1sLzAuMy4xIiwKbG9hZE9yZGVyID0gMTAsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheS1kc21tbCIsCndWID0gIl4wMDAwMDAwMC4wMDAwMDAwMDMuMDAwMDAwMDAxLip6ZmluYWwiLAp9LApbImNyYXktbGlic2NpIl0gPSB7CmZuID0gIi9vcHQvY3JheS9w
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/16
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/9.0.1
+_ModuleTable013_=c2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxl
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=2
+_ModuleTable016_=L2NvbXBpbGVyL2dudS8xMi4wIgosICIvYXBwbC9sdW1pL21vZHVsZXMvZWFzeWJ1aWxkL3N5c3RlbSIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvcGVyZnRvb2xzLzI1LjAzLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL25ldC9vZmkvMS4wIiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9MaW51eCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmUiLCAiL29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jcmF5cGUtdGFyZ2V0cy9kZWZhdWx0IgosICIvYXBwbC9sdW1pL21vZHVs
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=YXVsdC9jcmF5cGUteDg2LXRyZW50by5sdWEiLApmdWxsTmFtZSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmxvYWRPcmRlciA9IDE1LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZS14ODYtdHJlbnRvIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9w
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=9.0.1
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=18
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+FI_MR_CACHE_MONITOR=kdreg2
+SLURM_JOB_PARTITION=standard-g
+LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable018_=b2R1bGVzL1N0eWxlTW9kaWZpZXJzOi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjazovb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9Cg==
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=16
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan03
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+NCCL_NET_GDR_LEVEL=PHB
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/mpich/9.0.1/ofi/man:/opt/cray/pe/mpich/9.0.1/man/mpich:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=9.0.1
+XDG_RUNTIME_DIR=/run/user/10013986
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16677303
+_ModuleTable014_=ZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndW
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:1;CRAYPE:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ACCEL:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/9.0.1.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-trento.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-accel-amd-gfx90a.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/libfabric/1.22.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config
+LMOD_SETTARG_FULL_SUPPORT=no
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=c3lidWlsZC9zeXN0ZW1cIikiLAp9LApmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvaW5pdC1MVU1JLVNvZnR3YXJlU3RhY2svaW5pdC1sdW1pLzAuMi5sdWEiLApmdWxsTmFtZSA9ICJpbml0LWx1bWkvMC4yIiwKbG9hZE9yZGVyID0gNiwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiaW5pdC1sdW1pIiwKd1YgPSAiMDAwMDAwMDAwLjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKbGliZmFicmljID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMvbGliZmFicmljLzEuMjIuMCIsCmZ1bGxOYW1lID0gImxpYmZhYnJpYy8xLjIyLjAiLApsb2FkT3JkZXIgPSAxMywKcHJvcFQg
+PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0
+NCCL_SOCKET_IFNAME=hsn
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;mpich:1;libsci_mpi:1;libsci:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=L21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wL2NyYXktbXBpY2gvOS4wLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1tcGljaC85LjAuMSIsCmxvYWRPcmRlciA9IDE0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2gvOS4wLjEiLAp3ViA9ICIwMDAwMDAwMDkuMDAwMDAwMDAwLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA3LApwcm9wVCA9IHt9LApzdGFj
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n16_hybrid_16677303_opt1_rccl
+========
+RCCL-tests
+-- srun alltoall_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [58675]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [58676]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [58677]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [58678]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [58679]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [58680]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [58681]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [58682]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [9443]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [9444]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [9445]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [9446]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [9447]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [9448]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [9449]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [9450]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  58675 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  58676 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  58677 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  58678 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  58679 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  58680 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  58681 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  58682 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   9443 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   9444 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   9445 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   9446 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   9447 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   9448 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   9449 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   9450 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+pthread_mutex_unlock: No such file or directory
+9447 init_mutex /rocm_smi_card0: unlock timed lock, ret: 1
+9449 re-init the mutex /rocm_smi_card0 since no one use it. ret:131 ptr:(nil)
+srun: error: nid005398: task 8: Segmentation fault (core dumped)
+srun: Terminating StepId=16677303.0
+slurmstepd: error: *** STEP 16677303.0 ON nid005397 CANCELLED AT 2026-03-12T10:34:18 ***
+srun: error: nid005397: tasks 0-7: Terminated
+srun: error: nid005398: tasks 9-15: Terminated
+srun: Force Terminated StepId=16677303.0
+-- srun all_reduce_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [58972]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [58973]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [58974]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [58975]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [58976]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [58977]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [58978]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [58979]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [9708]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [9709]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [9710]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [9711]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [9712]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [9713]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [9714]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [9715]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  58972 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  58973 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  58974 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  58975 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  58976 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  58977 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  58978 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  58979 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   9708 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   9709 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   9710 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   9711 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   9712 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   9713 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   9714 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   9715 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    81.57    0.00    0.00      0    94.71    0.00    0.00      0
+           2             2      int8     sum      -1    85.32    0.00    0.00      0    55.76    0.00    0.00      0
+           4             4      int8     sum      -1    53.80    0.00    0.00      0    51.21    0.00    0.00      0
+           8             8      int8     sum      -1    51.57    0.00    0.00      0    52.17    0.00    0.00      0
+          16            16      int8     sum      -1    51.49    0.00    0.00      0    51.62    0.00    0.00      0
+          32            32      int8     sum      -1    53.06    0.00    0.00      0    52.21    0.00    0.00      0
+          64            64      int8     sum      -1    32.96    0.00    0.00      0    35.07    0.00    0.00      0
+         128           128      int8     sum      -1    34.19    0.00    0.01      0    34.87    0.00    0.01      0
+         256           256      int8     sum      -1    35.50    0.01    0.01      0    33.58    0.01    0.01      0
+         512           512      int8     sum      -1    37.10    0.01    0.03      0    36.09    0.01    0.03      0
+        1024          1024      int8     sum      -1    37.50    0.03    0.05      0    37.76    0.03    0.05      0
+        2048          2048      int8     sum      -1    39.78    0.05    0.10      0    39.92    0.05    0.10      0
+        4096          4096      int8     sum      -1    40.20    0.10    0.19      0    38.71    0.11    0.20      0
+        8192          8192      int8     sum      -1    38.66    0.21    0.40      0    37.36    0.22    0.41      0
+       16384         16384      int8     sum      -1    39.73    0.41    0.77      0    40.16    0.41    0.76      0
+       32768         32768      int8     sum      -1    41.26    0.79    1.49      0    42.42    0.77    1.45      0
+       65536         65536      int8     sum      -1    50.21    1.31    2.45      0    50.34    1.30    2.44      0
+      131072        131072      int8     sum      -1    62.55    2.10    3.93      0    63.95    2.05    3.84      0
+      262144        262144      int8     sum      -1    94.14    2.78    5.22      0    94.38    2.78    5.21      0
+      524288        524288      int8     sum      -1    147.6    3.55    6.66      0    147.0    3.57    6.69      0
+     1048576       1048576      int8     sum      -1    168.6    6.22   11.66      0    168.3    6.23   11.68      0
+     2097152       2097152      int8     sum      -1    204.6   10.25   19.22      0    203.6   10.30   19.31      0
+     4194304       4194304      int8     sum      -1    289.3   14.50   27.18      0    291.9   14.37   26.95      0
+     8388608       8388608      int8     sum      -1    384.0   21.85   40.96      0    382.0   21.96   41.17      0
+    16777216      16777216      int8     sum      -1   1407.6   11.92   22.35      0    705.1   23.79   44.61      0
+    33554432      33554432      int8     sum      -1   1029.8   32.58   61.10      0    986.4   34.02   63.78      0
+    67108864      67108864      int8     sum      -1   1652.7   40.60   76.13      0   1631.9   41.12   77.11      0
+   134217728     134217728      int8     sum      -1   4401.5   30.49   57.17      0   2965.5   45.26   84.86      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 12.9957 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d int8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16677303.2
+cpu-bind=MASK - nid005397, task  0  0 [59183]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [59184]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [59185]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [59186]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [59187]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [59188]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [59189]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [9930]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  7  7 [59190]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  9  1 [9931]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [9932]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [9933]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [9934]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [9935]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [9936]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [9937]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  59183 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  59184 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  59185 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  59186 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  59187 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  59188 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  59189 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  59190 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   9930 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   9931 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   9932 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   9933 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   9934 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   9935 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   9936 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   9937 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     2.28    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         256            16      int8    none      -1    45.98    0.01    0.01      0    46.15    0.01    0.01      0
+         512            32      int8    none      -1    47.91    0.01    0.01      0    46.05    0.01    0.01      0
+        1024            64      int8    none      -1    46.74    0.02    0.02      0    44.10    0.02    0.02      0
+        2048           128      int8    none      -1    43.72    0.05    0.04      0    43.89    0.05    0.04      0
+        4096           256      int8    none      -1    44.09    0.09    0.09      0    44.03    0.09    0.09      0
+        8192           512      int8    none      -1    46.17    0.18    0.17      0    44.82    0.18    0.17      0
+       16384          1024      int8    none      -1    46.73    0.35    0.33      0    47.32    0.35    0.32      0
+       32768          2048      int8    none      -1    51.71    0.63    0.59      0    51.87    0.63    0.59      0
+       65536          4096      int8    none      -1    111.6    0.59    0.55      0    71.59    0.92    0.86      0
+      131072          8192      int8    none      -1    322.5    0.41    0.38      0    71.21    1.84    1.73      0
+      262144         16384      int8    none      -1    122.7    2.14    2.00      0    131.9    1.99    1.86      0
+      524288         32768      int8    none      -1    359.7    1.46    1.37      0    613.8    0.85    0.80      0
+     1048576         65536      int8    none      -1    49657    0.02    0.02      0    36515    0.03    0.03      0
+     2097152        131072      int8    none      -1    35546    0.06    0.06      0    36439    0.06    0.05      0
+     4194304        262144      int8    none      -1    59032    0.07    0.07      0    45121    0.09    0.09      0
+     8388608        524288      int8    none      -1    551.7   15.21   14.26      0    460.2   18.23   17.09      0
+    16777216       1048576      int8    none      -1    600.1   27.96   26.21      0    597.0   28.10   26.35      0
+    33554432       2097152      int8    none      -1    624.9   53.69   50.34      0    623.1   53.85   50.49      0
+    67108864       4194304      int8    none      -1    742.4   90.40   84.75      0    739.4   90.77   85.09      0
+   134217728       8388608      int8    none      -1   1428.0   93.99   88.11      0   1420.7   94.47   88.57      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 9.70754 
+#
+# Collective test concluded: all_gather_perf
+
+-- srun alltoall_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005398, task  8  0 [10249]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [10250]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [10251]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [10252]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [10253]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [10254]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [10255]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [10256]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [59502]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [59503]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [59504]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [59505]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [59506]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [59507]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [59508]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [59509]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  59502 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  59503 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  59504 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  59505 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  59506 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  59507 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  59508 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  59509 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  10249 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  10250 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  10251 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  10252 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  10253 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  10254 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  10255 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  10256 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     2.27    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+         256            16      int8    none      -1    53.15    0.00    0.00      0    44.41    0.01    0.01    N/A
+         512            32      int8    none      -1    44.60    0.01    0.01      0    44.40    0.01    0.01    N/A
+        1024            64      int8    none      -1    44.43    0.02    0.02      0    44.33    0.02    0.02    N/A
+        2048           128      int8    none      -1    44.20    0.05    0.04      0    44.20    0.05    0.04    N/A
+        4096           256      int8    none      -1    41.80    0.10    0.09      0    42.18    0.10    0.09    N/A
+        8192           512      int8    none      -1    43.28    0.19    0.18      0    42.33    0.19    0.18    N/A
+       16384          1024      int8    none      -1    41.29    0.40    0.37      0    42.53    0.39    0.36    N/A
+       32768          2048      int8    none      -1    42.64    0.77    0.72      0    42.38    0.77    0.72    N/A
+       65536          4096      int8    none      -1    43.47    1.51    1.41      0    42.39    1.55    1.45    N/A
+      131072          8192      int8    none      -1   4137.3    0.03    0.03      0    43.72    3.00    2.81    N/A
+      262144         16384      int8    none      -1   4750.4    0.06    0.05      0   3311.3    0.08    0.07    N/A
+      524288         32768      int8    none      -1    59.40    8.83    8.27      0    58.80    8.92    8.36    N/A
+     1048576         65536      int8    none      -1    87.14   12.03   11.28      0    85.98   12.19   11.43    N/A
+     2097152        131072      int8    none      -1    143.4   14.63   13.71      0    138.4   15.15   14.21    N/A
+     4194304        262144      int8    none      -1    245.0   17.12   16.05      0    238.2   17.61   16.51    N/A
+     8388608        524288      int8    none      -1    438.7   19.12   17.93      0    429.9   19.52   18.30    N/A
+    16777216       1048576      int8    none      -1    960.5   17.47   16.38      0    906.8   18.50   17.35    N/A
+    33554432       2097152      int8    none      -1   1902.8   17.63   16.53      0   2113.2   15.88   14.89    N/A
+    67108864       4194304      int8    none      -1   3775.7   17.77   16.66      0   4091.8   16.40   15.38    N/A
+   134217728       8388608      int8    none      -1   8047.0   16.68   15.64      0   7415.4   18.10   16.97    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 4.90252 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d int8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16677303.4
+cpu-bind=MASK - nid005398, task  8  0 [10460]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [10461]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [10462]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [10463]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [10464]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [10465]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [10466]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [10467]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [59730]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [59731]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [59732]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [59733]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [59734]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [59735]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [59736]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [59737]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  59730 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  59731 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  59732 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  59733 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  59734 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  59735 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  59736 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  59737 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  10460 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  10461 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  10462 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  10463 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  10464 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  10465 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  10466 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  10467 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    118.9    0.00    0.00      0    55.44    0.00    0.00      0
+           2             2      int8     sum      -1    83.90    0.00    0.00      0    54.64    0.00    0.00      0
+           4             4      int8     sum      -1    54.04    0.00    0.00      0    51.47    0.00    0.00      0
+           8             8      int8     sum      -1    51.28    0.00    0.00      0    51.76    0.00    0.00      0
+          16            16      int8     sum      -1    51.31    0.00    0.00      0    50.72    0.00    0.00      0
+          32            32      int8     sum      -1    62.44    0.00    0.00      0    52.19    0.00    0.00      0
+          64            64      int8     sum      -1    33.56    0.00    0.00      0    35.16    0.00    0.00      0
+         128           128      int8     sum      -1    34.46    0.00    0.01      0    35.58    0.00    0.01      0
+         256           256      int8     sum      -1    35.27    0.01    0.01      0    34.63    0.01    0.01      0
+         512           512      int8     sum      -1    36.22    0.01    0.03      0    35.90    0.01    0.03      0
+        1024          1024      int8     sum      -1    37.30    0.03    0.05      0    38.24    0.03    0.05      0
+        2048          2048      int8     sum      -1    39.48    0.05    0.10      0    40.03    0.05    0.10      0
+        4096          4096      int8     sum      -1    40.51    0.10    0.19      0    39.60    0.10    0.19      0
+        8192          8192      int8     sum      -1    39.52    0.21    0.39      0    38.00    0.22    0.40      0
+       16384         16384      int8     sum      -1    40.09    0.41    0.77      0    40.08    0.41    0.77      0
+       32768         32768      int8     sum      -1    43.66    0.75    1.41      0    40.93    0.80    1.50      0
+       65536         65536      int8     sum      -1    50.46    1.30    2.43      0    48.17    1.36    2.55      0
+      131072        131072      int8     sum      -1    65.54    2.00    3.75      0    64.51    2.03    3.81      0
+      262144        262144      int8     sum      -1    94.38    2.78    5.21      0    94.25    2.78    5.22      0
+      524288        524288      int8     sum      -1    149.5    3.51    6.57      0    148.6    3.53    6.62      0
+     1048576       1048576      int8     sum      -1    168.4    6.23   11.67      0    168.5    6.22   11.67      0
+     2097152       2097152      int8     sum      -1    205.9   10.18   19.10      0    205.0   10.23   19.18      0
+     4194304       4194304      int8     sum      -1    293.3   14.30   26.81      0    291.9   14.37   26.94      0
+     8388608       8388608      int8     sum      -1    384.6   21.81   40.89      0    383.7   21.86   40.99      0
+    16777216      16777216      int8     sum      -1   1328.7   12.63   23.68      0    586.2   28.62   53.67      0
+    33554432      33554432      int8     sum      -1   1031.5   32.53   60.99      0    987.2   33.99   63.73      0
+    67108864      67108864      int8     sum      -1   1649.1   40.69   76.30      0   1628.6   41.21   77.26      0
+   134217728     134217728      int8     sum      -1   4636.4   28.95   54.28      0   2953.8   45.44   85.20      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 13.1168 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005398, task  8  0 [10666]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [10667]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [10668]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [10669]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [10670]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [10671]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [10672]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [10673]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [59960]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [59961]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [59962]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [59963]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [59964]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [59965]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [59966]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [59967]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  59960 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  59961 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  59962 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  59963 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  59964 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  59965 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  59966 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  59967 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  10666 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  10667 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  10668 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  10669 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  10670 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  10671 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  10672 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  10673 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     2.08    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         256            16      int8    none      -1    46.39    0.01    0.01      0    47.22    0.01    0.01      0
+         512            32      int8    none      -1    48.24    0.01    0.01      0    45.72    0.01    0.01      0
+        1024            64      int8    none      -1    46.59    0.02    0.02      0    44.64    0.02    0.02      0
+        2048           128      int8    none      -1    44.07    0.05    0.04      0    43.91    0.05    0.04      0
+        4096           256      int8    none      -1    44.33    0.09    0.09      0    44.23    0.09    0.09      0
+        8192           512      int8    none      -1    45.85    0.18    0.17      0    44.83    0.18    0.17      0
+       16384          1024      int8    none      -1    46.86    0.35    0.33      0    47.23    0.35    0.33      0
+       32768          2048      int8    none      -1    52.48    0.62    0.59      0    52.22    0.63    0.59      0
+       65536          4096      int8    none      -1    154.3    0.42    0.40      0    70.61    0.93    0.87      0
+      131072          8192      int8    none      -1    170.0    0.77    0.72      0    72.32    1.81    1.70      0
+      262144         16384      int8    none      -1    169.3    1.55    1.45      0    123.0    2.13    2.00      0
+      524288         32768      int8    none      -1    367.9    1.42    1.34      0    616.5    0.85    0.80      0
+     1048576         65536      int8    none      -1    45978    0.02    0.02      0    46433    0.02    0.02      0
+     2097152        131072      int8    none      -1    44050    0.05    0.04      0    37961    0.06    0.05      0
+     4194304        262144      int8    none      -1    56037    0.07    0.07      0    44083    0.10    0.09      0
+     8388608        524288      int8    none      -1   1243.6    6.75    6.32      0    467.0   17.96   16.84      0
+    16777216       1048576      int8    none      -1    940.0   17.85   16.73      0    584.0   28.73   26.93      0
+    33554432       2097152      int8    none      -1    619.4   54.17   50.78      0    618.5   54.25   50.86      0
+    67108864       4194304      int8    none      -1    740.0   90.69   85.02      0    736.6   91.11   85.42      0
+   134217728       8388608      int8    none      -1   1428.8   93.94   88.07      0   1419.3   94.56   88.65      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 9.42327 
+#
+# Collective test concluded: all_gather_perf
+
+-- srun alltoall_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005398, task  8  0 [10977]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [10978]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [10979]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [10980]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [10981]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [10982]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [10983]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [10984]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [60303]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [60304]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [60305]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [60306]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [60307]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [60308]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [60309]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [60310]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  60303 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  60304 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  60305 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  60306 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  60307 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  60308 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  60309 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  60310 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  10977 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  10978 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  10979 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  10980 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  10981 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  10982 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  10983 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  10984 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.95    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+         256            16      int8    none      -1    52.82    0.00    0.00      0    45.49    0.01    0.01    N/A
+         512            32      int8    none      -1    44.99    0.01    0.01      0    44.17    0.01    0.01    N/A
+        1024            64      int8    none      -1    44.49    0.02    0.02      0    44.44    0.02    0.02    N/A
+        2048           128      int8    none      -1    44.28    0.05    0.04      0    45.00    0.05    0.04    N/A
+        4096           256      int8    none      -1    41.92    0.10    0.09      0    41.73    0.10    0.09    N/A
+        8192           512      int8    none      -1    42.45    0.19    0.18      0    41.66    0.20    0.18    N/A
+       16384          1024      int8    none      -1    41.97    0.39    0.37      0    42.14    0.39    0.36    N/A
+       32768          2048      int8    none      -1    42.03    0.78    0.73      0    42.15    0.78    0.73    N/A
+       65536          4096      int8    none      -1    43.44    1.51    1.41      0    42.30    1.55    1.45    N/A
+      131072          8192      int8    none      -1   4446.7    0.03    0.03      0   5178.5    0.03    0.02    N/A
+      262144         16384      int8    none      -1   4832.2    0.05    0.05      0   4188.6    0.06    0.06    N/A
+      524288         32768      int8    none      -1    59.04    8.88    8.33      0    58.82    8.91    8.36    N/A
+     1048576         65536      int8    none      -1    86.82   12.08   11.32      0    86.26   12.16   11.40    N/A
+     2097152        131072      int8    none      -1    145.0   14.47   13.56      0    141.8   14.79   13.87    N/A
+     4194304        262144      int8    none      -1    242.3   17.31   16.23      0    237.8   17.64   16.53    N/A
+     8388608        524288      int8    none      -1    528.8   15.86   14.87      0    430.9   19.47   18.25    N/A
+    16777216       1048576      int8    none      -1    902.2   18.60   17.43      0    956.3   17.54   16.45    N/A
+    33554432       2097152      int8    none      -1   1869.8   17.95   16.82      0   1901.7   17.64   16.54    N/A
+    67108864       4194304      int8    none      -1   3612.9   18.57   17.41      0   3738.3   17.95   16.83    N/A
+   134217728       8388608      int8    none      -1   8143.2   16.48   15.45      0   7587.7   17.69   16.58    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 4.86009 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d int8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16677303.7
+cpu-bind=MASK - nid005398, task  8  0 [11229]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [11230]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [11231]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [11232]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [11233]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [11234]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [11235]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [11236]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [60533]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [60534]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [60535]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [60536]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [60537]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [60538]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [60539]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [60540]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  60533 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  60534 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  60535 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  60536 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  60537 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  60538 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  60539 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  60540 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  11229 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  11230 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  11231 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  11232 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  11233 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  11234 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  11235 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  11236 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    89.09    0.00    0.00      0    55.13    0.00    0.00      0
+           2             2      int8     sum      -1    57.24    0.00    0.00      0    55.36    0.00    0.00      0
+           4             4      int8     sum      -1    54.62    0.00    0.00      0    51.42    0.00    0.00      0
+           8             8      int8     sum      -1    51.39    0.00    0.00      0    51.68    0.00    0.00      0
+          16            16      int8     sum      -1    89.39    0.00    0.00      0    51.46    0.00    0.00      0
+          32            32      int8     sum      -1    52.65    0.00    0.00      0    52.24    0.00    0.00      0
+          64            64      int8     sum      -1    33.62    0.00    0.00      0    35.45    0.00    0.00      0
+         128           128      int8     sum      -1    34.32    0.00    0.01      0    34.62    0.00    0.01      0
+         256           256      int8     sum      -1    35.77    0.01    0.01      0    33.59    0.01    0.01      0
+         512           512      int8     sum      -1    36.59    0.01    0.03      0    35.67    0.01    0.03      0
+        1024          1024      int8     sum      -1    37.55    0.03    0.05      0    38.22    0.03    0.05      0
+        2048          2048      int8     sum      -1    39.88    0.05    0.10      0    39.63    0.05    0.10      0
+        4096          4096      int8     sum      -1    40.47    0.10    0.19      0    39.73    0.10    0.19      0
+        8192          8192      int8     sum      -1    38.50    0.21    0.40      0    37.55    0.22    0.41      0
+       16384         16384      int8     sum      -1    40.46    0.40    0.76      0    40.05    0.41    0.77      0
+       32768         32768      int8     sum      -1    42.89    0.76    1.43      0    40.82    0.80    1.51      0
+       65536         65536      int8     sum      -1    47.99    1.37    2.56      0    47.17    1.39    2.61      0
+      131072        131072      int8     sum      -1    61.54    2.13    3.99      0    65.10    2.01    3.77      0
+      262144        262144      int8     sum      -1    93.76    2.80    5.24      0    93.90    2.79    5.23      0
+      524288        524288      int8     sum      -1    148.2    3.54    6.63      0    148.2    3.54    6.63      0
+     1048576       1048576      int8     sum      -1    169.4    6.19   11.60      0    168.6    6.22   11.66      0
+     2097152       2097152      int8     sum      -1    204.7   10.25   19.21      0    204.1   10.27   19.26      0
+     4194304       4194304      int8     sum      -1    291.5   14.39   26.98      0    291.1   14.41   27.02      0
+     8388608       8388608      int8     sum      -1    383.9   21.85   40.97      0    383.7   21.86   40.99      0
+    16777216      16777216      int8     sum      -1   1304.3   12.86   24.12      0    703.0   23.86   44.75      0
+    33554432      33554432      int8     sum      -1   1029.3   32.60   61.12      0    985.4   34.05   63.85      0
+    67108864      67108864      int8     sum      -1   1653.7   40.58   76.09      0   1630.7   41.15   77.16      0
+   134217728     134217728      int8     sum      -1   4392.3   30.56   57.30      0   2967.2   45.23   84.81      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 13.029 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [60723]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [60724]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [60725]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [60726]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [60727]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [60728]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [60729]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [60730]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [11388]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [11389]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [11390]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [11391]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [11392]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [11393]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [11394]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [11395]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  60723 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  60724 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  60725 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  60726 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  60727 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  60728 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  60729 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  60730 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  11388 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  11389 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  11390 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  11391 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  11392 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  11393 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  11394 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  11395 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.81    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         256            16      int8    none      -1    46.25    0.01    0.01      0    45.73    0.01    0.01      0
+         512            32      int8    none      -1    126.4    0.00    0.00      0    46.37    0.01    0.01      0
+        1024            64      int8    none      -1    46.35    0.02    0.02      0    44.57    0.02    0.02      0
+        2048           128      int8    none      -1    44.37    0.05    0.04      0    43.96    0.05    0.04      0
+        4096           256      int8    none      -1    44.20    0.09    0.09      0    44.11    0.09    0.09      0
+        8192           512      int8    none      -1    45.70    0.18    0.17      0    44.71    0.18    0.17      0
+       16384          1024      int8    none      -1    46.93    0.35    0.33      0    47.32    0.35    0.32      0
+       32768          2048      int8    none      -1    51.94    0.63    0.59      0    51.91    0.63    0.59      0
+       65536          4096      int8    none      -1    156.4    0.42    0.39      0    70.85    0.92    0.87      0
+      131072          8192      int8    none      -1    118.1    1.11    1.04      0    72.60    1.81    1.69      0
+      262144         16384      int8    none      -1    124.9    2.10    1.97      0    122.2    2.14    2.01      0
+      524288         32768      int8    none      -1    366.0    1.43    1.34      0    606.4    0.86    0.81      0
+     1048576         65536      int8    none      -1    39982    0.03    0.02      0    41816    0.03    0.02      0
+     2097152        131072      int8    none      -1    42197    0.05    0.05      0    37691    0.06    0.05      0
+     4194304        262144      int8    none      -1    49882    0.08    0.08      0    45378    0.09    0.09      0
+     8388608        524288      int8    none      -1    462.6   18.14   17.00      0    460.7   18.21   17.07      0
+    16777216       1048576      int8    none      -1    594.1   28.24   26.48      0    587.6   28.55   26.77      0
+    33554432       2097152      int8    none      -1    625.4   53.66   50.30      0    623.4   53.82   50.46      0
+    67108864       4194304      int8    none      -1    742.5   90.39   84.74      0    738.1   90.92   85.24      0
+   134217728       8388608      int8    none      -1   1429.0   93.92   88.05      0   1419.2   94.58   88.66      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 9.78052 
+#
+# Collective test concluded: all_gather_perf
+
+-- srun alltoall_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [61055]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [61056]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [61057]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [61058]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [61059]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [61060]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [61061]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [61062]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [11687]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [11688]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [11689]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [11690]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [11691]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [11692]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [11693]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [11694]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  61055 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  61056 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  61057 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  61058 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  61059 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  61060 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  61061 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  61062 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  11687 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  11688 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  11689 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  11690 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  11691 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  11692 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  11693 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  11694 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.87    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.07    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+         256            16      int8    none      -1    52.12    0.00    0.00      0    45.08    0.01    0.01    N/A
+         512            32      int8    none      -1    44.31    0.01    0.01      0    44.53    0.01    0.01    N/A
+        1024            64      int8    none      -1    44.47    0.02    0.02      0    44.67    0.02    0.02    N/A
+        2048           128      int8    none      -1    45.25    0.05    0.04      0    44.73    0.05    0.04    N/A
+        4096           256      int8    none      -1    42.02    0.10    0.09      0    43.28    0.09    0.09    N/A
+        8192           512      int8    none      -1    42.59    0.19    0.18      0    41.97    0.20    0.18    N/A
+       16384          1024      int8    none      -1    41.96    0.39    0.37      0    42.53    0.39    0.36    N/A
+       32768          2048      int8    none      -1    41.79    0.78    0.74      0    42.33    0.77    0.73    N/A
+       65536          4096      int8    none      -1    41.75    1.57    1.47      0    42.34    1.55    1.45    N/A
+      131072          8192      int8    none      -1   4798.1    0.03    0.03      0   4370.6    0.03    0.03    N/A
+      262144         16384      int8    none      -1   4706.3    0.06    0.05      0   2514.4    0.10    0.10    N/A
+      524288         32768      int8    none      -1    59.41    8.82    8.27      0    59.05    8.88    8.32    N/A
+     1048576         65536      int8    none      -1    86.31   12.15   11.39      0    85.89   12.21   11.44    N/A
+     2097152        131072      int8    none      -1    134.0   15.66   14.68      0    138.4   15.15   14.21    N/A
+     4194304        262144      int8    none      -1    244.2   17.17   16.10      0    239.9   17.48   16.39    N/A
+     8388608        524288      int8    none      -1    443.0   18.94   17.75      0    427.7   19.61   18.39    N/A
+    16777216       1048576      int8    none      -1    959.1   17.49   16.40      0    909.0   18.46   17.30    N/A
+    33554432       2097152      int8    none      -1   1823.7   18.40   17.25      0   1862.4   18.02   16.89    N/A
+    67108864       4194304      int8    none      -1   3595.9   18.66   17.50      0   3914.8   17.14   16.07    N/A
+   134217728       8388608      int8    none      -1   8438.3   15.91   14.91      0   7624.9   17.60   16.50    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 4.92473 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [61281]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [61282]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [61283]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [61284]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [61285]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [61286]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [61287]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [61288]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [11939]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [11940]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [11941]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [11942]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [11943]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [11944]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [11945]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [11946]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  61281 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  61282 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  61283 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  61284 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  61285 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  61286 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  61287 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  61288 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  11939 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  11940 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  11941 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  11942 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  11943 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  11944 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  11945 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  11946 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    71.83    0.00    0.00      0    55.10    0.00    0.00      0
+           2             2      int8     sum      -1    57.17    0.00    0.00      0    54.62    0.00    0.00      0
+           4             4      int8     sum      -1    55.12    0.00    0.00      0    51.14    0.00    0.00      0
+           8             8      int8     sum      -1    50.91    0.00    0.00      0    51.45    0.00    0.00      0
+          16            16      int8     sum      -1    51.22    0.00    0.00      0    51.24    0.00    0.00      0
+          32            32      int8     sum      -1    52.28    0.00    0.00      0    51.54    0.00    0.00      0
+          64            64      int8     sum      -1    33.02    0.00    0.00      0    34.92    0.00    0.00      0
+         128           128      int8     sum      -1    34.54    0.00    0.01      0    35.15    0.00    0.01      0
+         256           256      int8     sum      -1    35.17    0.01    0.01      0    33.53    0.01    0.01      0
+         512           512      int8     sum      -1    36.19    0.01    0.03      0    35.76    0.01    0.03      0
+        1024          1024      int8     sum      -1    37.44    0.03    0.05      0    38.20    0.03    0.05      0
+        2048          2048      int8     sum      -1    39.39    0.05    0.10      0    39.62    0.05    0.10      0
+        4096          4096      int8     sum      -1    40.55    0.10    0.19      0    39.35    0.10    0.20      0
+        8192          8192      int8     sum      -1    38.57    0.21    0.40      0    37.67    0.22    0.41      0
+       16384         16384      int8     sum      -1    39.76    0.41    0.77      0    39.66    0.41    0.77      0
+       32768         32768      int8     sum      -1    41.87    0.78    1.47      0    42.83    0.77    1.43      0
+       65536         65536      int8     sum      -1    48.18    1.36    2.55      0    49.61    1.32    2.48      0
+      131072        131072      int8     sum      -1    61.35    2.14    4.01      0    65.05    2.01    3.78      0
+      262144        262144      int8     sum      -1    93.68    2.80    5.25      0    94.13    2.79    5.22      0
+      524288        524288      int8     sum      -1    147.5    3.56    6.67      0    147.3    3.56    6.67      0
+     1048576       1048576      int8     sum      -1    169.0    6.21   11.64      0    169.0    6.20   11.63      0
+     2097152       2097152      int8     sum      -1    204.9   10.23   19.19      0    204.2   10.27   19.26      0
+     4194304       4194304      int8     sum      -1    290.9   14.42   27.03      0    291.6   14.38   26.97      0
+     8388608       8388608      int8     sum      -1    383.4   21.88   41.03      0    383.8   21.86   40.98      0
+    16777216      16777216      int8     sum      -1   1541.4   10.88   20.41      0    584.5   28.70   53.82      0
+    33554432      33554432      int8     sum      -1   1074.9   31.22   58.53      0    990.8   33.86   63.50      0
+    67108864      67108864      int8     sum      -1   1647.6   40.73   76.37      0   1628.8   41.20   77.25      0
+   134217728     134217728      int8     sum      -1   4528.8   29.64   55.57      0   2954.1   45.43   85.19      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 13.0539 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d int8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16677303.11
+cpu-bind=MASK - nid005397, task  0  0 [61500]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [61501]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [61502]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [61503]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [61504]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [61505]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [61506]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [61507]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [12129]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [12130]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [12131]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [12132]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [12133]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [12134]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [12135]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [12136]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  61500 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  61501 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  61502 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  61503 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  61504 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  61505 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  61506 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  61507 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  12129 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  12130 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  12131 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  12132 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  12133 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  12134 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  12135 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  12136 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.57    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.13    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         256            16      int8    none      -1    46.28    0.01    0.01      0    46.42    0.01    0.01      0
+         512            32      int8    none      -1    48.71    0.01    0.01      0    45.88    0.01    0.01      0
+        1024            64      int8    none      -1    46.44    0.02    0.02      0    44.35    0.02    0.02      0
+        2048           128      int8    none      -1    44.21    0.05    0.04      0    44.13    0.05    0.04      0
+        4096           256      int8    none      -1    44.39    0.09    0.09      0    44.49    0.09    0.09      0
+        8192           512      int8    none      -1    46.03    0.18    0.17      0    45.36    0.18    0.17      0
+       16384          1024      int8    none      -1    46.93    0.35    0.33      0    47.41    0.35    0.32      0
+       32768          2048      int8    none      -1    52.09    0.63    0.59      0    52.19    0.63    0.59      0
+       65536          4096      int8    none      -1    72.54    0.90    0.85      0    71.90    0.91    0.85      0
+      131072          8192      int8    none      -1    155.8    0.84    0.79      0    72.08    1.82    1.70      0
+      262144         16384      int8    none      -1    123.2    2.13    1.99      0    123.3    2.13    1.99      0
+      524288         32768      int8    none      -1    352.1    1.49    1.40      0    346.4    1.51    1.42      0
+     1048576         65536      int8    none      -1    40391    0.03    0.02      0    41757    0.03    0.02      0
+     2097152        131072      int8    none      -1    46089    0.05    0.04      0    44440    0.05    0.04      0
+     4194304        262144      int8    none      -1    53566    0.08    0.07      0    43637    0.10    0.09      0
+     8388608        524288      int8    none      -1   1437.6    5.84    5.47      0    458.2   18.31   17.16      0
+    16777216       1048576      int8    none      -1    587.8   28.54   26.76      0    584.4   28.71   26.91      0
+    33554432       2097152      int8    none      -1    623.2   53.84   50.48      0    622.8   53.87   50.51      0
+    67108864       4194304      int8    none      -1    739.9   90.70   85.03      0    736.3   91.15   85.45      0
+   134217728       8388608      int8    none      -1   1429.4   93.90   88.03      0   1419.8   94.53   88.62      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 9.61107 
+#
+# Collective test concluded: all_gather_perf
+
+-- srun alltoall_perf -d int8 -b 1 -e 128M -f 2 -g 1
+srun: Step created for StepId=16677303.12
+cpu-bind=MASK - nid005397, task  0  0 [61843]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [61844]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [61845]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [61846]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [61847]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [61848]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [61849]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [12440]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  7  7 [61850]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  9  1 [12441]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [12442]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [12443]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [12444]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [12445]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [12446]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [12447]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  61843 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  61844 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  61845 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  61846 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  61847 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  61848 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  61849 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  61850 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  12440 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  12441 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  12442 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  12443 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  12444 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  12445 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  12446 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  12447 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.79    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.08    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+           0             0      int8    none      -1     0.07    0.00    0.00      0     0.08    0.00    0.00    N/A
+         256            16      int8    none      -1    52.14    0.00    0.00      0    44.39    0.01    0.01    N/A
+         512            32      int8    none      -1    44.93    0.01    0.01      0    44.14    0.01    0.01    N/A
+        1024            64      int8    none      -1    44.01    0.02    0.02      0    45.94    0.02    0.02    N/A
+        2048           128      int8    none      -1    44.07    0.05    0.04      0    44.26    0.05    0.04    N/A
+        4096           256      int8    none      -1    42.47    0.10    0.09      0    42.24    0.10    0.09    N/A
+        8192           512      int8    none      -1    42.18    0.19    0.18      0    41.93    0.20    0.18    N/A
+       16384          1024      int8    none      -1    41.40    0.40    0.37      0    42.19    0.39    0.36    N/A
+       32768          2048      int8    none      -1    41.99    0.78    0.73      0    41.82    0.78    0.73    N/A
+       65536          4096      int8    none      -1    42.57    1.54    1.44      0    42.24    1.55    1.45    N/A
+      131072          8192      int8    none      -1   4987.1    0.03    0.02      0   4876.5    0.03    0.03    N/A
+      262144         16384      int8    none      -1   3515.5    0.07    0.07      0    45.04    5.82    5.46    N/A
+      524288         32768      int8    none      -1    59.02    8.88    8.33      0    58.79    8.92    8.36    N/A
+     1048576         65536      int8    none      -1    86.23   12.16   11.40      0    85.64   12.24   11.48    N/A
+     2097152        131072      int8    none      -1    144.0   14.56   13.65      0    142.2   14.75   13.82    N/A
+     4194304        262144      int8    none      -1    241.8   17.35   16.27      0    239.7   17.50   16.40    N/A
+     8388608        524288      int8    none      -1    439.2   19.10   17.91      0    431.1   19.46   18.24    N/A
+    16777216       1048576      int8    none      -1    873.0   19.22   18.02      0    868.9   19.31   18.10    N/A
+    33554432       2097152      int8    none      -1   1883.1   17.82   16.70      0   1970.7   17.03   15.96    N/A
+    67108864       4194304      int8    none      -1   3770.6   17.80   16.69      0   3792.7   17.69   16.59    N/A
+   134217728       8388608      int8    none      -1   8191.8   16.38   15.36      0   7376.3   18.20   17.06    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.03074 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005397, task  0  0 [62039]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [62040]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [62041]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [62042]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [62043]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [62044]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [62045]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [62046]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005398, task  8  0 [12628]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [12629]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [12631]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [12632]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [12633]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [12634]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [12635]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [12636]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  62039 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  62040 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  62041 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  62042 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  62043 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  62044 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  62045 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  62046 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  12628 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  12629 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  12631 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  12632 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  12633 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  12634 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  12635 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  12636 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           1             1      int8     sum      -1    128.6    0.00    0.00      0    94.11    0.00    0.00      0
+           2             2      int8     sum      -1    56.77    0.00    0.00      0    54.70    0.00    0.00      0
+           4             4      int8     sum      -1    53.52    0.00    0.00      0    89.69    0.00    0.00      0
+           8             8      int8     sum      -1    50.08    0.00    0.00      0    50.59    0.00    0.00      0
+          16            16      int8     sum      -1    50.81    0.00    0.00      0    50.13    0.00    0.00      0
+          32            32      int8     sum      -1    91.48    0.00    0.00      0    51.15    0.00    0.00      0
+          64            64      int8     sum      -1    33.32    0.00    0.00      0    35.64    0.00    0.00      0
+         128           128      int8     sum      -1    34.89    0.00    0.01      0    34.56    0.00    0.01      0
+         256           256      int8     sum      -1    35.85    0.01    0.01      0    34.30    0.01    0.01      0
+         512           512      int8     sum      -1    36.92    0.01    0.03      0    36.10    0.01    0.03      0
+        1024          1024      int8     sum      -1    37.19    0.03    0.05      0    37.67    0.03    0.05      0
+        2048          2048      int8     sum      -1    39.64    0.05    0.10      0    40.11    0.05    0.10      0
+        4096          4096      int8     sum      -1    40.72    0.10    0.19      0    39.28    0.10    0.20      0
+        8192          8192      int8     sum      -1    38.63    0.21    0.40      0    38.04    0.22    0.40      0
+       16384         16384      int8     sum      -1    39.86    0.41    0.77      0    39.90    0.41    0.77      0
+       32768         32768      int8     sum      -1    42.47    0.77    1.45      0    40.59    0.81    1.51      0
+       65536         65536      int8     sum      -1    51.88    1.26    2.37      0    48.93    1.34    2.51      0
+      131072        131072      int8     sum      -1    61.66    2.13    3.99      0    61.88    2.12    3.97      0
+      262144        262144      int8     sum      -1    98.67    2.66    4.98      0    97.69    2.68    5.03      0
+      524288        524288      int8     sum      -1    147.7    3.55    6.66      0    148.1    3.54    6.64      0
+     1048576       1048576      int8     sum      -1    168.8    6.21   11.65      0    167.6    6.26   11.73      0
+     2097152       2097152      int8     sum      -1    204.8   10.24   19.20      0    204.8   10.24   19.20      0
+     4194304       4194304      int8     sum      -1    290.4   14.44   27.08      0    289.5   14.49   27.16      0
+     8388608       8388608      int8     sum      -1    384.1   21.84   40.95      0    382.7   21.92   41.10      0
+    16777216      16777216      int8     sum      -1   1265.3   13.26   24.86      0    669.5   25.06   46.99      0
+    33554432      33554432      int8     sum      -1   1038.3   32.32   60.60      0    988.2   33.95   63.66      0
+    67108864      67108864      int8     sum      -1   1652.4   40.61   76.15      0   1630.8   41.15   77.16      0
+   134217728     134217728      int8     sum      -1   4370.6   30.71   57.58      0   2963.0   45.30   84.93      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 13.0756 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -d int8 -b 1 -e 128M -f 2 -g 1
+cpu-bind=MASK - nid005398, task  8  0 [12831]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005398, task  9  1 [12832]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005398, task 10  2 [12833]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005398, task 11  3 [12834]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005398, task 12  4 [12835]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005398, task 13  5 [12836]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005398, task 14  6 [12837]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005398, task 15  7 [12838]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005397, task  0  0 [62251]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005397, task  1  1 [62252]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005397, task  2  2 [62253]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005397, task  3  3 [62254]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005397, task  4  4 [62255]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005397, task  5  5 [62256]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005397, task  6  6 [62257]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005397, task  7  7 [62258]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  62251 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  62252 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  62253 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  62254 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  62255 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  62256 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  62257 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  62258 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid  12831 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid  12832 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid  12833 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid  12834 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid  12835 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid  12836 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid  12837 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid  12838 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+           0             0      int8    none      -1     1.81    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.13    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+           0             0      int8    none      -1     0.14    0.00    0.00      0     0.14    0.00    0.00      0
+         256            16      int8    none      -1    46.27    0.01    0.01      0    46.12    0.01    0.01      0
+         512            32      int8    none      -1    47.03    0.01    0.01      0    46.41    0.01    0.01      0
+        1024            64      int8    none      -1    46.09    0.02    0.02      0    44.32    0.02    0.02      0
+        2048           128      int8    none      -1    43.74    0.05    0.04      0    43.87    0.05    0.04      0
+        4096           256      int8    none      -1    44.19    0.09    0.09      0    43.93    0.09    0.09      0
+        8192           512      int8    none      -1    45.54    0.18    0.17      0    44.60    0.18    0.17      0
+       16384          1024      int8    none      -1    46.66    0.35    0.33      0    47.27    0.35    0.32      0
+       32768          2048      int8    none      -1    51.94    0.63    0.59      0    51.92    0.63    0.59      0
+       65536          4096      int8    none      -1    110.8    0.59    0.55      0    72.65    0.90    0.85      0
+      131072          8192      int8    none      -1    158.2    0.83    0.78      0    71.93    1.82    1.71      0
+      262144         16384      int8    none      -1    129.9    2.02    1.89      0    123.1    2.13    2.00      0
+      524288         32768      int8    none      -1    364.2    1.44    1.35      0    619.3    0.85    0.79      0
+     1048576         65536      int8    none      -1    36908    0.03    0.03      0    43548    0.02    0.02      0
+     2097152        131072      int8    none      -1    41512    0.05    0.05      0    42674    0.05    0.05      0
+     4194304        262144      int8    none      -1    41339    0.10    0.10      0    50995    0.08    0.08      0
+     8388608        524288      int8    none      -1    644.1   13.02   12.21      0    460.0   18.24   17.10      0
+    16777216       1048576      int8    none      -1    596.6   28.12   26.36      0    593.0   28.29   26.52      0
+    33554432       2097152      int8    none      -1    621.6   53.98   50.61      0    618.9   54.21   50.83      0
+    67108864       4194304      int8    none      -1    740.2   90.66   84.99      0    736.8   91.08   85.39      0
+   134217728       8388608      int8    none      -1   1429.3   93.90   88.03      0   1420.3   94.50   88.59      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 9.70319 
+#
+# Collective test concluded: all_gather_perf
+

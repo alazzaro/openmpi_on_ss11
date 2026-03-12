@@ -1,0 +1,21 @@
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 134217728 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  58675 on  nid005397 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  58676 on  nid005397 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  58677 on  nid005397 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  58678 on  nid005397 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  58679 on  nid005397 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  58680 on  nid005397 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  58681 on  nid005397 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  58682 on  nid005397 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   9443 on  nid005398 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   9444 on  nid005398 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   9445 on  nid005398 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   9446 on  nid005398 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   9447 on  nid005398 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   9448 on  nid005398 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   9449 on  nid005398 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   9450 on  nid005398 device  0 [0000:c6:00] AMD Instinct MI250X
