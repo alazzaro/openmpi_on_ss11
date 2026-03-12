@@ -1,0 +1,1375 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) craype-network-ofi                  10) cray-dsmml/0.3.1
+  2) perftools-base/25.03.0              11) cray-libsci/25.03.0
+  3) xpmem/2.11.5-1.3_g73ade43320bc      12) PrgEnv-gnu/8.6.0
+  4) ModuleLabel/label              (S)  13) libfabric/1.22.0
+  5) lumi-tools/24.05               (S)  14) cray-mpich/9.0.1
+  6) init-lumi/0.2                  (S)  15) craype-x86-trento
+  7) cray-python/3.11.7                  16) craype-accel-amd-gfx90a
+  8) gcc-native/14.2                     17) rocm/6.3.4
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+/opt/cray/libfabric/1.22.0
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+============
+#!/bin/bash
+
+#for NNODES in 1 2 4 8 16 32 64; do
+for NNODES in 1 2 16; do
+#for NNODES in 2; do
+#for NNODES in 64; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt1_rccl.out
+#SBATCH --time=0:30:00
+
+export SLURM_CPUS_PER_TASK=7
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable Cray-mpich and RCCL
+USE_CPE=1 source \$ROOT_DIR/sourceme_rccl.sh
+
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+export MPICH_VERSION_DISPLAY=1
+export GTL_VERSION_DISPLAY=1
+
+export HSA_FORCE_FINE_GRAIN_PCIE=1
+export FI_CXI_RDZV_THRESHOLD=0
+export FI_MR_CACHE_MONITOR=kdreg2 # not useful, can avoid deadline on RCCL
+#export FI_MR_CACHE_MONITOR=userfaultfd # not useful, can avoid deadline on RCCL
+export FI_CXI_RDZV_EAGER_SIZE=0
+export FI_CXI_RDZV_PROTO="alt_read"
+export FI_CXI_DEFAULT_CQ_SIZE="131072" # default value
+export FI_CXI_DEFAULT_TX_SIZE=1024
+export FI_CXI_DISABLE_HOST_REGISTER=1
+export FI_CXI_DISABLE_NON_INJECT_MSG_IDC="1"
+export FI_CXI_RDZV_GET_MIN="0"
+
+export NCCL_CROSS_NIC=1
+export NCCL_NET_GDR_LEVEL=PHB
+export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+export NCCL_NET="AWS Libfabric"
+export NCCL_MIN_NCHANNELS="4"
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt1_rccl"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    echo "RCCL-tests"
+    (
+	unset MPICH_GPU_SUPPORT_ENABLED
+	unset MPICH_SMP_SINGLE_COPY_MODE
+#	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+#	FLAGS="-d int8 -b 1 -e 128M -f 2 -g 1"
+	# Values taken from https://www.olcf.ornl.gov/wp-content/uploads/OLCF_AI_Training_0417_2024.pdf
+	# Page 15 and 16
+	FLAGS="-b 64K -e 4G -f 2 -g 1"
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- srun \$cmd
+	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	done
+    )
+done
+
+EOF
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+FI_CXI_RDZV_THRESHOLD=0
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+SLURM_MEM_PER_CPU=0
+CRAYPE_LINK_TYPE=dynamic
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/9.0.1/gtl/lib:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+_ModuleTable017_=ZXMvU29mdHdhcmVTdGFjayIsICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjayIsICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9LApzeXN0ZW1CYXNlTVBBVEggPSAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4Oi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL2xtb2QvbW9kdWxlZmlsZXMvQ29yZTovb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQ6L2FwcGwvbHVtaS9tb2R1bGVzL1NvZnR3YXJlU3RhY2s6L2FwcGwvbHVtaS9t
+LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=83491
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/9.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=ID0gIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycy9Nb2R1bGVMYWJlbC9sYWJlbC5sdWEiLApmdWxsTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCmxvYWRPcmRlciA9IDQsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gIk1vZHVsZUxhYmVsL2xhYmVsIiwKd1YgPSAic2xhYmVsLip6ZmluYWwiLAp9LApbIlByZ0Vudi1nbnUiXSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9QcmdFbnYtZ251LzguNi4wLmx1YSIsCmZ1bGxOYW1lID0gIlByZ0Vudi1nbnUvOC42LjAiLApsb2FkT3JkZXIgPSAxMiwKcHJvcFQgPSB7fSwKc3Rh
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.17 47290 193.167.209.165 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:CRAYPE:PERFTOOLS:CRAYPAT:CRAY_ACCEL:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=9.0.1
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLW5ldHdvcmstb2ZpLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJjcmF5cGUteDg2LXRyZW50byJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVm
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005400
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+FI_CXI_DEFAULT_CQ_SIZE=131072
+CSHEDIT=emacs
+SLURM_CPUS_PER_TASK=7
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/29
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+PE_LD_LIBRARY_PATH=system
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=eS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLWFjY2VsLWFtZC1nZng5MGEubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLWFjY2VsLWFtZC1nZng5MGEiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtYWNjZWwtYW1kLWdmeDkwYSIsCndWID0gIk0uKnpmaW5hbCIsCn0sClsiY3JheXBlLW5ldHdvcmstb2ZpIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+ROCM_PATH=/opt/rocm-6.3.4
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+SLURM_JOB_GID=10013986
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/9.0.1/gtl/lib:1;/opt/cray/libfabric/1.22.0/lib64:1;/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005400
+PE_PKGCONFIG_PRODUCTS=PE_MPICH:PE_LIBSCI:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnMiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1773290264
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/9.0.1/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+_ModuleTable004_=ZS9sbW9kL21vZHVsZWZpbGVzL2NvbXBpbGVyL2dudS8xMi4wL2NyYXktbGlic2NpLzI1LjAzLjAubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1saWJzY2kvMjUuMDMuMCIsCmxvYWRPcmRlciA9IDExLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbGlic2NpIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKWyJjcmF5LW1waWNoIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9k
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8(x16)
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PE_MPICH_PKGCONFIG_LIBS=mpich
+OSTYPE=linux
+XDG_SESSION_ID=1006855
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=9.0.1
+SLURM_NNODES=16
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+HSA_FORCE_FINE_GRAIN_PCIE=1
+_ModuleTable012_=PSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAwMDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJh
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+NCCL_CROSS_NIC=1
+CRAY_CPU_TARGET=x86-trento
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1773288464
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:1;/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:1;/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+FI_CXI_DEFAULT_TX_SIZE=1024
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/craype/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+NCCL_NET=AWS Libfabric
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+CRAY_TCMALLOC_MEMFS_FORCE=1
+SLURM_JOB_NODELIST=nid[005400,005406,006048,006138,006440,006882,006915,006943,007107,007167,007247,007266,007426,007454,007467,007566]
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+FI_CXI_DISABLE_HOST_REGISTER=1
+CRAY_ACCEL_VENDOR=amd
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid[005400,005406,006048,006138,006440,006882,006915,006943,007107,007167,007247,007266,007426,007454,007467,007566]
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=single_node_vni
+HOST=uan03
+SSH_CLIENT=178.197.255.17 47290 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=128
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-trento/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56(x16)
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid005400
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+GTL_VERSION_DISPLAY=1
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_MPICH:1;PE_LIBSCI:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+MPICH_VERSION_DISPLAY=1
+LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=YXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSA4LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImdjYy1uYXRpdmUiLAp3ViA9ICJeMDAwMDAwMTQuMDAwMDAwMDAyLip6ZmluYWwiLAp9LApbImluaXQtbHVtaSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL2FwcGwvbHVtaS9tb2R1bGVzL2Vh
+PE_PKGCONFIG_LIBS=rocm-6.3.4:mpich:libsci_mpi:libsci:dsmml
+CRAY_ACCEL_TARGET=amd_gfx90a
+SLURM_JOBID=16672903
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2FjY2VsID0gImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmNyYXlwZV9uZXR3b3JrID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmdjY19jb21waWxlciA9ICJnY2MtbmF0aXZlIiwKbGlic2NpID0gImNyYXktbGlic2NpIiwKbXBpID0gImNyYXktbXBpY2giLAp9LAptVCA9IHsKTW9kdWxlTGFiZWwgPSB7CmZu
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:libfabric/1.22.0:cray-mpich/9.0.1:craype-x86-trento:craype-accel-amd-gfx90a:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+CRAYPE_NETWORK_TARGET=ofi
+NCCL_MIN_NCHANNELS=4
+_ModuleTable006_=a0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktcHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZSIsCndWID0gIl4wMDAwMDAwMi4wMDAwMDAwMDcuMDAwMDAwMDM0Lip6ZmluYWwiLAp9LApbImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIl0gPSB7CmZuID0gIi9vcHQvY3Jh
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/mpich/9.0.1/ofi/man:1;/opt/cray/pe/mpich/9.0.1/man/mpich:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=Y2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJQcmdFbnYtZ251IiwKd1YgPSAiXjAwMDAwMDA4LjAwMDAwMDAwNi4qemZpbmFsIiwKfSwKWyJjcmF5LWRzbW1sIl0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvY3JheS1kc21tbC8wLjMuMS5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LWRzbW1sLzAuMy4xIiwKbG9hZE9yZGVyID0gMTAsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheS1kc21tbCIsCndWID0gIl4wMDAwMDAwMC4wMDAwMDAwMDMuMDAwMDAwMDAxLip6ZmluYWwiLAp9LApbImNyYXktbGlic2NpIl0gPSB7CmZuID0gIi9vcHQvY3JheS9w
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/29
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/9.0.1
+_ModuleTable013_=c2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxl
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=16
+_ModuleTable016_=L2NvbXBpbGVyL2dudS8xMi4wIgosICIvYXBwbC9sdW1pL21vZHVsZXMvZWFzeWJ1aWxkL3N5c3RlbSIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvcGVyZnRvb2xzLzI1LjAzLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL25ldC9vZmkvMS4wIiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9MaW51eCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmUiLCAiL29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jcmF5cGUtdGFyZ2V0cy9kZWZhdWx0IgosICIvYXBwbC9sdW1pL21vZHVs
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=YXVsdC9jcmF5cGUteDg2LXRyZW50by5sdWEiLApmdWxsTmFtZSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmxvYWRPcmRlciA9IDE1LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZS14ODYtdHJlbnRvIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9w
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=9.0.1
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+FI_CXI_RDZV_GET_MIN=0
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=18
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+FI_MR_CACHE_MONITOR=kdreg2
+SLURM_JOB_PARTITION=standard-g
+LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable018_=b2R1bGVzL1N0eWxlTW9kaWZpZXJzOi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjazovb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9Cg==
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=128
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan03
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+FI_CXI_DISABLE_NON_INJECT_MSG_IDC=1
+NCCL_NET_GDR_LEVEL=PHB
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/mpich/9.0.1/ofi/man:/opt/cray/pe/mpich/9.0.1/man/mpich:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=9.0.1
+XDG_RUNTIME_DIR=/run/user/10013986
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16672903
+_ModuleTable014_=ZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndW
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:1;CRAYPE:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ACCEL:1;CRAY_ROCM:1
+FI_CXI_RDZV_PROTO=alt_read
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/9.0.1.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-trento.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-accel-amd-gfx90a.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/libfabric/1.22.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config
+LMOD_SETTARG_FULL_SUPPORT=no
+FI_CXI_RDZV_EAGER_SIZE=0
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=c3lidWlsZC9zeXN0ZW1cIikiLAp9LApmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvaW5pdC1MVU1JLVNvZnR3YXJlU3RhY2svaW5pdC1sdW1pLzAuMi5sdWEiLApmdWxsTmFtZSA9ICJpbml0LWx1bWkvMC4yIiwKbG9hZE9yZGVyID0gNiwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiaW5pdC1sdW1pIiwKd1YgPSAiMDAwMDAwMDAwLjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKbGliZmFicmljID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMvbGliZmFicmljLzEuMjIuMCIsCmZ1bGxOYW1lID0gImxpYmZhYnJpYy8xLjIyLjAiLApsb2FkT3JkZXIgPSAxMywKcHJvcFQg
+PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0
+NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;mpich:1;libsci_mpi:1;libsci:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=L21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wL2NyYXktbXBpY2gvOS4wLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1tcGljaC85LjAuMSIsCmxvYWRPcmRlciA9IDE0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2gvOS4wLjEiLAp3ViA9ICIwMDAwMDAwMDkuMDAwMDAwMDAwLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA3LApwcm9wVCA9IHt9LApzdGFj
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n128_hybrid_16672903_opt1_rccl
+========
+RCCL-tests
+-- srun alltoall_perf -b 64K -e 4G -f 2 -g 1
+cpu-bind=MASK - nid005400, task  0  0 [83831]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005400, task  1  1 [83832]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005400, task  2  2 [83833]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005400, task  3  3 [83834]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005400, task  4  4 [83835]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005400, task  5  5 [83836]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005400, task  6  6 [83837]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005400, task  7  7 [83838]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006048, task 16  0 [104186]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006048, task 17  1 [104187]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006048, task 18  2 [104188]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006048, task 19  3 [104189]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006048, task 20  4 [104190]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006048, task 21  5 [104191]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007167, task 72  0 [58428]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007247, task 80  0 [13803]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006048, task 22  6 [104192]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007247, task 81  1 [13804]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006048, task 23  7 [104193]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007247, task 82  2 [13805]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007247, task 83  3 [13806]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007247, task 84  4 [13807]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007247, task 85  5 [13808]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007247, task 86  6 [13809]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007167, task 73  1 [58429]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007247, task 87  7 [13810]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007167, task 74  2 [58430]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007167, task 75  3 [58431]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007167, task 76  4 [58432]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007107, task 64  0 [118196]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007167, task 77  5 [58433]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007167, task 78  6 [58434]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007107, task 65  1 [118197]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007107, task 66  2 [118198]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007107, task 67  3 [118199]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007167, task 79  7 [58435]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007107, task 68  4 [118200]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007107, task 69  5 [118201]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007107, task 70  6 [118202]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007107, task 71  7 [118203]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006440, task 32  0 [117436]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007266, task 88  0 [86385]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006882, task 40  0 [71134]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006943, task 56  0 [66057]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006440, task 33  1 [117437]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007266, task 89  1 [86386]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006882, task 41  1 [71135]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 57  1 [66058]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006440, task 34  2 [117438]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007266, task 90  2 [86387]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006882, task 42  2 [71136]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006943, task 58  2 [66059]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006440, task 35  3 [117439]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007266, task 91  3 [86388]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006882, task 43  3 [71137]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006943, task 59  3 [66060]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 36  4 [117440]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007266, task 92  4 [86389]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006882, task 44  4 [71138]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006943, task 60  4 [66061]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006440, task 37  5 [117441]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007266, task 93  5 [86390]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006882, task 45  5 [71139]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006943, task 61  5 [66062]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006440, task 38  6 [117442]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007266, task 94  6 [86391]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006882, task 46  6 [71140]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006943, task 62  6 [66063]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006440, task 39  7 [117443]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007266, task 95  7 [86392]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006943, task 63  7 [66064]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006882, task 47  7 [71141]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007426, task 96  0 [69174]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007426, task 97  1 [69175]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007426, task 98  2 [69176]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007426, task 99  3 [69177]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007426, task 100  4 [69178]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007426, task 101  5 [69179]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007426, task 102  6 [69180]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007426, task 103  7 [69181]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006915, task 48  0 [50583]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006915, task 49  1 [50584]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006915, task 50  2 [50585]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006915, task 51  3 [50586]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007454, task 104  0 [3258]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006915, task 52  4 [50587]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 105  1 [3259]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006915, task 53  5 [50588]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007454, task 106  2 [3260]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006915, task 54  6 [50589]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 107  3 [3261]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007454, task 108  4 [3262]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 109  5 [3263]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006915, task 55  7 [50590]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007454, task 110  6 [3264]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 111  7 [3265]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005406, task  8  0 [2354]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005406, task  9  1 [2355]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005406, task 10  2 [2356]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005406, task 11  3 [2357]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005406, task 12  4 [2358]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005406, task 13  5 [2359]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005406, task 14  6 [2360]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007566, task 120  0 [75798]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007566, task 121  1 [75799]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007566, task 122  2 [75800]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005406, task 15  7 [2361]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007566, task 123  3 [75801]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007566, task 124  4 [75802]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007566, task 125  5 [75803]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007566, task 126  6 [75804]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007566, task 127  7 [75805]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006138, task 24  0 [67095]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006138, task 25  1 [67096]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007467, task 112  0 [116844]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006138, task 26  2 [67097]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007467, task 113  1 [116845]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006138, task 27  3 [67098]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007467, task 114  2 [116846]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006138, task 28  4 [67099]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007467, task 115  3 [116847]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006138, task 29  5 [67100]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007467, task 116  4 [116848]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006138, task 30  6 [67101]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007467, task 117  5 [116849]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007467, task 118  6 [116850]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006138, task 31  7 [67102]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007467, task 119  7 [116851]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: alltoall_perf
+# nThread 1 nGpus 1 minBytes 65536 maxBytes 4294967296 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  83831 on  nid005400 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  83832 on  nid005400 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  83833 on  nid005400 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  83834 on  nid005400 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  83835 on  nid005400 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  83836 on  nid005400 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  83837 on  nid005400 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  83838 on  nid005400 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   2354 on  nid005406 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   2355 on  nid005406 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   2356 on  nid005406 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   2357 on  nid005406 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   2358 on  nid005406 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   2359 on  nid005406 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   2360 on  nid005406 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   2361 on  nid005406 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid 104186 on  nid006048 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid 104187 on  nid006048 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid 104188 on  nid006048 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid 104189 on  nid006048 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid 104190 on  nid006048 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid 104191 on  nid006048 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid 104192 on  nid006048 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid 104193 on  nid006048 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  67095 on  nid006138 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  67096 on  nid006138 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  67097 on  nid006138 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  67098 on  nid006138 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  67099 on  nid006138 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  67100 on  nid006138 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  67101 on  nid006138 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  67102 on  nid006138 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid 117436 on  nid006440 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid 117437 on  nid006440 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid 117438 on  nid006440 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid 117439 on  nid006440 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid 117440 on  nid006440 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid 117441 on  nid006440 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid 117442 on  nid006440 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid 117443 on  nid006440 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid  71134 on  nid006882 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid  71135 on  nid006882 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid  71136 on  nid006882 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid  71137 on  nid006882 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid  71138 on  nid006882 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid  71139 on  nid006882 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid  71140 on  nid006882 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid  71141 on  nid006882 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid  50583 on  nid006915 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid  50584 on  nid006915 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid  50585 on  nid006915 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid  50586 on  nid006915 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid  50587 on  nid006915 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid  50588 on  nid006915 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid  50589 on  nid006915 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid  50590 on  nid006915 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  66057 on  nid006943 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  66058 on  nid006943 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  66059 on  nid006943 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  66060 on  nid006943 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  66061 on  nid006943 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  66062 on  nid006943 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  66063 on  nid006943 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  66064 on  nid006943 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 64 Group  0 Pid 118196 on  nid007107 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 65 Group  0 Pid 118197 on  nid007107 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 66 Group  0 Pid 118198 on  nid007107 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 67 Group  0 Pid 118199 on  nid007107 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 68 Group  0 Pid 118200 on  nid007107 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 69 Group  0 Pid 118201 on  nid007107 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 70 Group  0 Pid 118202 on  nid007107 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 71 Group  0 Pid 118203 on  nid007107 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 72 Group  0 Pid  58428 on  nid007167 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 73 Group  0 Pid  58429 on  nid007167 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 74 Group  0 Pid  58430 on  nid007167 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 75 Group  0 Pid  58431 on  nid007167 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 76 Group  0 Pid  58432 on  nid007167 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 77 Group  0 Pid  58433 on  nid007167 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 78 Group  0 Pid  58434 on  nid007167 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 79 Group  0 Pid  58435 on  nid007167 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 80 Group  0 Pid  13803 on  nid007247 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 81 Group  0 Pid  13804 on  nid007247 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 82 Group  0 Pid  13805 on  nid007247 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 83 Group  0 Pid  13806 on  nid007247 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 84 Group  0 Pid  13807 on  nid007247 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 85 Group  0 Pid  13808 on  nid007247 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 86 Group  0 Pid  13809 on  nid007247 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 87 Group  0 Pid  13810 on  nid007247 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 88 Group  0 Pid  86385 on  nid007266 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 89 Group  0 Pid  86386 on  nid007266 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 90 Group  0 Pid  86387 on  nid007266 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 91 Group  0 Pid  86388 on  nid007266 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 92 Group  0 Pid  86389 on  nid007266 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 93 Group  0 Pid  86390 on  nid007266 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 94 Group  0 Pid  86391 on  nid007266 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 95 Group  0 Pid  86392 on  nid007266 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 96 Group  0 Pid  69174 on  nid007426 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 97 Group  0 Pid  69175 on  nid007426 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 98 Group  0 Pid  69176 on  nid007426 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 99 Group  0 Pid  69177 on  nid007426 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 100 Group  0 Pid  69178 on  nid007426 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 101 Group  0 Pid  69179 on  nid007426 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 102 Group  0 Pid  69180 on  nid007426 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 103 Group  0 Pid  69181 on  nid007426 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 104 Group  0 Pid   3258 on  nid007454 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 105 Group  0 Pid   3259 on  nid007454 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 106 Group  0 Pid   3260 on  nid007454 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 107 Group  0 Pid   3261 on  nid007454 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 108 Group  0 Pid   3262 on  nid007454 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 109 Group  0 Pid   3263 on  nid007454 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 110 Group  0 Pid   3264 on  nid007454 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 111 Group  0 Pid   3265 on  nid007454 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 112 Group  0 Pid 116844 on  nid007467 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 113 Group  0 Pid 116845 on  nid007467 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 114 Group  0 Pid 116846 on  nid007467 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 115 Group  0 Pid 116847 on  nid007467 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 116 Group  0 Pid 116848 on  nid007467 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 117 Group  0 Pid 116849 on  nid007467 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 118 Group  0 Pid 116850 on  nid007467 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 119 Group  0 Pid 116851 on  nid007467 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 120 Group  0 Pid  75798 on  nid007566 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 121 Group  0 Pid  75799 on  nid007566 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 122 Group  0 Pid  75800 on  nid007566 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 123 Group  0 Pid  75801 on  nid007566 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 124 Group  0 Pid  75802 on  nid007566 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 125 Group  0 Pid  75803 on  nid007566 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 126 Group  0 Pid  75804 on  nid007566 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 127 Group  0 Pid  75805 on  nid007566 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+       65536           128     float    none      -1   1036.9    0.06    0.06      0    611.5    0.11    0.11    N/A
+      131072           256     float    none      -1    605.8    0.22    0.21      0    600.5    0.22    0.22    N/A
+      262144           512     float    none      -1    597.3    0.44    0.44      0    597.4    0.44    0.44    N/A
+      524288          1024     float    none      -1    606.2    0.86    0.86      0    603.2    0.87    0.86    N/A
+     1048576          2048     float    none      -1    598.4    1.75    1.74      0    604.0    1.74    1.72    N/A
+     2097152          4096     float    none      -1    620.0    3.38    3.36      0    634.0    3.31    3.28    N/A
+     4194304          8192     float    none      -1    637.2    6.58    6.53      0    675.7    6.21    6.16    N/A
+     8388608         16384     float    none      -1   1128.3    7.43    7.38      0   1331.9    6.30    6.25    N/A
+    16777216         32768     float    none      -1   1590.9   10.55   10.46      0   1714.4    9.79    9.71    N/A
+    33554432         65536     float    none      -1   3430.9    9.78    9.70      0   3497.0    9.60    9.52    N/A
+    67108864        131072     float    none      -1   7860.1    8.54    8.47      0   8024.1    8.36    8.30    N/A
+   134217728        262144     float    none      -1    16920    7.93    7.87      0    16834    7.97    7.91    N/A
+   268435456        524288     float    none      -1    32035    8.38    8.31      0    32287    8.31    8.25    N/A
+   536870912       1048576     float    none      -1    62312    8.62    8.55      0    62372    8.61    8.54    N/A
+  1073741824       2097152     float    none      -1   121080    8.87    8.80      0   121026    8.87    8.80    N/A
+  2147483648       4194304     float    none      -1   233341    9.20    9.13      0   233652    9.19    9.12    N/A
+  4294967296       8388608     float    none      -1   451652    9.51    9.44      0   459009    9.36    9.28    N/A
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.87576 
+#
+# Collective test concluded: alltoall_perf
+
+-- srun all_reduce_perf -b 64K -e 4G -f 2 -g 1
+cpu-bind=MASK - nid005406, task  8  0 [3493]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005406, task  9  1 [3494]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005406, task 10  2 [3495]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005406, task 11  3 [3496]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005406, task 12  4 [3497]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005406, task 13  5 [3498]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005406, task 14  6 [3499]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005400, task  0  0 [84132]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007247, task 80  0 [14934]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005400, task  1  1 [84133]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007247, task 81  1 [14936]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007454, task 104  0 [4407]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005400, task  2  2 [84134]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005406, task 15  7 [3500]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007247, task 82  2 [14937]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007454, task 105  1 [4408]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005400, task  3  3 [84135]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 32  0 [117722]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007247, task 83  3 [14938]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007454, task 106  2 [4409]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005400, task  4  4 [84136]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006440, task 33  1 [117723]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007247, task 84  4 [14939]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 107  3 [4410]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005400, task  5  5 [84137]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007247, task 85  5 [14940]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006440, task 34  2 [117724]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007454, task 108  4 [4411]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005400, task  6  6 [84138]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006440, task 35  3 [117725]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007247, task 86  6 [14941]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 109  5 [4412]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006440, task 36  4 [117726]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 110  6 [4413]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006048, task 16  0 [105327]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006440, task 37  5 [117727]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005400, task  7  7 [84139]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007247, task 87  7 [14942]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006048, task 17  1 [105328]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006440, task 38  6 [117728]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 111  7 [4414]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006048, task 18  2 [105329]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006048, task 19  3 [105330]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 39  7 [117729]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006048, task 20  4 [105331]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006048, task 21  5 [105332]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006048, task 22  6 [105333]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006048, task 23  7 [105334]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007107, task 64  0 [118464]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007266, task 88  0 [87535]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007107, task 65  1 [118465]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007266, task 89  1 [87536]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007107, task 66  2 [118466]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007266, task 90  2 [87537]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006882, task 40  0 [72279]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007167, task 72  0 [58728]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007107, task 67  3 [118467]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007266, task 91  3 [87538]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006138, task 24  0 [67364]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006882, task 41  1 [72280]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007167, task 73  1 [58729]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007107, task 68  4 [118468]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006138, task 25  1 [67365]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007266, task 92  4 [87539]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006882, task 42  2 [72281]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007167, task 74  2 [58730]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007107, task 69  5 [118469]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006138, task 26  2 [67366]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007266, task 93  5 [87540]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006882, task 43  3 [72282]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007167, task 75  3 [58731]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007107, task 70  6 [118470]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007266, task 94  6 [87541]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006138, task 27  3 [67367]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006882, task 44  4 [72283]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007167, task 76  4 [58732]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006138, task 28  4 [67368]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007426, task 96  0 [69442]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006943, task 56  0 [67191]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007167, task 77  5 [58733]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006882, task 45  5 [72284]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006138, task 29  5 [67369]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007426, task 97  1 [69443]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 57  1 [67192]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007107, task 71  7 [118471]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007167, task 78  6 [58734]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006882, task 46  6 [72285]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007266, task 95  7 [87542]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006138, task 30  6 [67370]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007426, task 98  2 [69444]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006943, task 58  2 [67193]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007426, task 99  3 [69445]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006943, task 59  3 [67194]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007426, task 100  4 [69446]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007167, task 79  7 [58735]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006882, task 47  7 [72286]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006138, task 31  7 [67371]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006943, task 60  4 [67195]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007426, task 101  5 [69447]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006915, task 48  0 [51736]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006943, task 61  5 [67196]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007426, task 102  6 [69448]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006915, task 49  1 [51737]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 62  6 [67197]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007566, task 120  0 [76269]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006915, task 50  2 [51738]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007566, task 121  1 [76270]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006915, task 51  3 [51739]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007566, task 122  2 [76271]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007426, task 103  7 [69449]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006943, task 63  7 [67198]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006915, task 52  4 [51740]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007566, task 123  3 [76272]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006915, task 53  5 [51741]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007566, task 124  4 [76273]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006915, task 54  6 [51742]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007566, task 125  5 [76274]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007566, task 126  6 [76275]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006915, task 55  7 [51743]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007566, task 127  7 [76276]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007467, task 112  0 [117987]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007467, task 113  1 [117988]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007467, task 114  2 [117989]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007467, task 115  3 [117990]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007467, task 116  4 [117991]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007467, task 117  5 [117992]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007467, task 118  6 [117993]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007467, task 119  7 [117994]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 65536 maxBytes 4294967296 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  84132 on  nid005400 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  84133 on  nid005400 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  84134 on  nid005400 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  84135 on  nid005400 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  84136 on  nid005400 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  84137 on  nid005400 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  84138 on  nid005400 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  84139 on  nid005400 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   3493 on  nid005406 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   3494 on  nid005406 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   3495 on  nid005406 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   3496 on  nid005406 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   3497 on  nid005406 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   3498 on  nid005406 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   3499 on  nid005406 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   3500 on  nid005406 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid 105327 on  nid006048 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid 105328 on  nid006048 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid 105329 on  nid006048 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid 105330 on  nid006048 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid 105331 on  nid006048 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid 105332 on  nid006048 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid 105333 on  nid006048 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid 105334 on  nid006048 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  67364 on  nid006138 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  67365 on  nid006138 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  67366 on  nid006138 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  67367 on  nid006138 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  67368 on  nid006138 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  67369 on  nid006138 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  67370 on  nid006138 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  67371 on  nid006138 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid 117722 on  nid006440 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid 117723 on  nid006440 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid 117724 on  nid006440 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid 117725 on  nid006440 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid 117726 on  nid006440 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid 117727 on  nid006440 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid 117728 on  nid006440 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid 117729 on  nid006440 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid  72279 on  nid006882 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid  72280 on  nid006882 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid  72281 on  nid006882 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid  72282 on  nid006882 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid  72283 on  nid006882 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid  72284 on  nid006882 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid  72285 on  nid006882 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid  72286 on  nid006882 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid  51736 on  nid006915 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid  51737 on  nid006915 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid  51738 on  nid006915 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid  51739 on  nid006915 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid  51740 on  nid006915 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid  51741 on  nid006915 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid  51742 on  nid006915 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid  51743 on  nid006915 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  67191 on  nid006943 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  67192 on  nid006943 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  67193 on  nid006943 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  67194 on  nid006943 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  67195 on  nid006943 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  67196 on  nid006943 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  67197 on  nid006943 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  67198 on  nid006943 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 64 Group  0 Pid 118464 on  nid007107 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 65 Group  0 Pid 118465 on  nid007107 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 66 Group  0 Pid 118466 on  nid007107 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 67 Group  0 Pid 118467 on  nid007107 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 68 Group  0 Pid 118468 on  nid007107 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 69 Group  0 Pid 118469 on  nid007107 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 70 Group  0 Pid 118470 on  nid007107 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 71 Group  0 Pid 118471 on  nid007107 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 72 Group  0 Pid  58728 on  nid007167 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 73 Group  0 Pid  58729 on  nid007167 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 74 Group  0 Pid  58730 on  nid007167 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 75 Group  0 Pid  58731 on  nid007167 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 76 Group  0 Pid  58732 on  nid007167 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 77 Group  0 Pid  58733 on  nid007167 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 78 Group  0 Pid  58734 on  nid007167 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 79 Group  0 Pid  58735 on  nid007167 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 80 Group  0 Pid  14934 on  nid007247 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 81 Group  0 Pid  14936 on  nid007247 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 82 Group  0 Pid  14937 on  nid007247 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 83 Group  0 Pid  14938 on  nid007247 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 84 Group  0 Pid  14939 on  nid007247 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 85 Group  0 Pid  14940 on  nid007247 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 86 Group  0 Pid  14941 on  nid007247 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 87 Group  0 Pid  14942 on  nid007247 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 88 Group  0 Pid  87535 on  nid007266 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 89 Group  0 Pid  87536 on  nid007266 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 90 Group  0 Pid  87537 on  nid007266 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 91 Group  0 Pid  87538 on  nid007266 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 92 Group  0 Pid  87539 on  nid007266 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 93 Group  0 Pid  87540 on  nid007266 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 94 Group  0 Pid  87541 on  nid007266 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 95 Group  0 Pid  87542 on  nid007266 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 96 Group  0 Pid  69442 on  nid007426 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 97 Group  0 Pid  69443 on  nid007426 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 98 Group  0 Pid  69444 on  nid007426 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 99 Group  0 Pid  69445 on  nid007426 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 100 Group  0 Pid  69446 on  nid007426 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 101 Group  0 Pid  69447 on  nid007426 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 102 Group  0 Pid  69448 on  nid007426 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 103 Group  0 Pid  69449 on  nid007426 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 104 Group  0 Pid   4407 on  nid007454 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 105 Group  0 Pid   4408 on  nid007454 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 106 Group  0 Pid   4409 on  nid007454 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 107 Group  0 Pid   4410 on  nid007454 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 108 Group  0 Pid   4411 on  nid007454 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 109 Group  0 Pid   4412 on  nid007454 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 110 Group  0 Pid   4413 on  nid007454 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 111 Group  0 Pid   4414 on  nid007454 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 112 Group  0 Pid 117987 on  nid007467 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 113 Group  0 Pid 117988 on  nid007467 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 114 Group  0 Pid 117989 on  nid007467 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 115 Group  0 Pid 117990 on  nid007467 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 116 Group  0 Pid 117991 on  nid007467 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 117 Group  0 Pid 117992 on  nid007467 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 118 Group  0 Pid 117993 on  nid007467 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 119 Group  0 Pid 117994 on  nid007467 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 120 Group  0 Pid  76269 on  nid007566 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 121 Group  0 Pid  76270 on  nid007566 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 122 Group  0 Pid  76271 on  nid007566 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 123 Group  0 Pid  76272 on  nid007566 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 124 Group  0 Pid  76273 on  nid007566 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 125 Group  0 Pid  76274 on  nid007566 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 126 Group  0 Pid  76275 on  nid007566 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 127 Group  0 Pid  76276 on  nid007566 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+       65536         16384     float     sum      -1    165.1    0.40    0.79      0    162.9    0.40    0.80      0
+      131072         32768     float     sum      -1    207.0    0.63    1.26      0    208.0    0.63    1.25      0
+      262144         65536     float     sum      -1    299.2    0.88    1.74      0    299.4    0.88    1.74      0
+      524288        131072     float     sum      -1    338.3    1.55    3.08      0    345.5    1.52    3.01      0
+     1048576        262144     float     sum      -1    432.4    2.43    4.81      0    431.5    2.43    4.82      0
+     2097152        524288     float     sum      -1    429.8    4.88    9.68      0    517.0    4.06    8.05      0
+     4194304       1048576     float     sum      -1    629.1    6.67   13.23      0    541.9    7.74   15.36      0
+     8388608       2097152     float     sum      -1    804.3   10.43   20.70      0    899.4    9.33   18.51      0
+    16777216       4194304     float     sum      -1   1032.7   16.25   32.24      0   1288.5   13.02   25.84      0
+    33554432       8388608     float     sum      -1   2008.4   16.71   33.15      0   2345.4   14.31   28.39      0
+    67108864      16777216     float     sum      -1   2806.9   23.91   47.44      0   4030.6   16.65   33.04      0
+   134217728      33554432     float     sum      -1   4746.0   28.28   56.12      0   4984.5   26.93   53.43      0
+   268435456      67108864     float     sum      -1   7801.6   34.41   68.28      0   8154.9   32.92   65.32      0
+   536870912     134217728     float     sum      -1    17746   30.25   60.03      0    16980   31.62   62.74      0
+  1073741824     268435456     float     sum      -1    34325   31.28   62.08      0    34336   31.27   62.05      0
+  2147483648     536870912     float     sum      -1    52550   40.87   81.09      0    52537   40.88   81.11      0
+  4294967296    1073741824     float     sum      -1   105147   40.85   81.06      0   107309   40.02   79.42      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 32.9898 
+#
+# Collective test concluded: all_reduce_perf
+
+-- srun all_gather_perf -b 64K -e 4G -f 2 -g 1
+cpu-bind=MASK - nid006882, task 40  0 [72680]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006882, task 41  1 [72681]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006882, task 42  2 [72682]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006882, task 43  3 [72683]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006882, task 44  4 [72684]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006882, task 45  5 [72685]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006882, task 46  6 [72686]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005400, task  0  0 [84571]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005400, task  1  1 [84572]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006882, task 47  7 [72687]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005400, task  2  2 [84573]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005400, task  3  3 [84574]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005400, task  4  4 [84575]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005400, task  5  5 [84576]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005400, task  6  6 [84577]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005400, task  7  7 [84578]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005406, task  8  0 [3921]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005406, task  9  1 [3922]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006048, task 16  0 [105733]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005406, task 10  2 [3923]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006048, task 17  1 [105734]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005406, task 11  3 [3924]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006048, task 18  2 [105735]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005406, task 12  4 [3925]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006048, task 19  3 [105736]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006138, task 24  0 [67497]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005406, task 13  5 [3926]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006048, task 20  4 [105737]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006138, task 25  1 [67498]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005406, task 14  6 [3927]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006048, task 21  5 [105738]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006138, task 26  2 [67499]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006048, task 22  6 [105739]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006138, task 27  3 [67500]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007167, task 72  0 [58873]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006138, task 28  4 [67501]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005406, task 15  7 [3928]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007167, task 73  1 [58874]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006138, task 29  5 [67502]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006048, task 23  7 [105740]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007167, task 74  2 [58875]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006138, task 30  6 [67503]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007566, task 120  0 [76401]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007167, task 75  3 [58876]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007167, task 76  4 [58877]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007566, task 121  1 [76402]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006138, task 31  7 [67504]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007167, task 77  5 [58878]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007566, task 122  2 [76403]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007167, task 78  6 [58879]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007247, task 80  0 [15388]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007566, task 123  3 [76404]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007247, task 81  1 [15389]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007566, task 124  4 [76405]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007167, task 79  7 [58880]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007247, task 82  2 [15390]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007566, task 125  5 [76406]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007247, task 83  3 [15391]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 32  0 [117869]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007566, task 126  6 [76407]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007247, task 84  4 [15392]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006440, task 33  1 [117870]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007247, task 85  5 [15393]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007566, task 127  7 [76408]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006440, task 34  2 [117871]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007247, task 86  6 [15394]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006440, task 35  3 [117872]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 36  4 [117873]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006440, task 37  5 [117874]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007247, task 87  7 [15395]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006943, task 56  0 [67618]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006440, task 38  6 [117875]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006943, task 57  1 [67619]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 58  2 [67620]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006943, task 59  3 [67621]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006440, task 39  7 [117876]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007107, task 64  0 [118597]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006943, task 60  4 [67622]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007107, task 65  1 [118598]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 61  5 [67623]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006915, task 48  0 [52169]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007107, task 66  2 [118599]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006915, task 49  1 [52170]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006943, task 62  6 [67624]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007107, task 67  3 [118600]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006915, task 50  2 [52171]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007426, task 96  0 [69573]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007107, task 68  4 [118601]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006915, task 51  3 [52172]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007426, task 97  1 [69574]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007107, task 69  5 [118602]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006943, task 63  7 [67625]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006915, task 52  4 [52173]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007426, task 98  2 [69575]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007107, task 70  6 [118603]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006915, task 53  5 [52174]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007426, task 99  3 [69576]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006915, task 54  6 [52175]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007426, task 100  4 [69577]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007107, task 71  7 [118604]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007426, task 101  5 [69578]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007426, task 102  6 [69579]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 104  0 [4836]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006915, task 55  7 [52176]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007266, task 88  0 [87961]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007454, task 105  1 [4837]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007266, task 89  1 [87962]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007454, task 106  2 [4838]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007426, task 103  7 [69580]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007454, task 107  3 [4839]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007266, task 90  2 [87963]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007266, task 91  3 [87964]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007454, task 108  4 [4840]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 109  5 [4841]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007266, task 92  4 [87965]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007454, task 110  6 [4842]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007266, task 93  5 [87966]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007266, task 94  6 [87967]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007454, task 111  7 [4843]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007266, task 95  7 [87968]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid007467, task 112  0 [118410]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid007467, task 113  1 [118411]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid007467, task 114  2 [118412]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid007467, task 115  3 [118413]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid007467, task 116  4 [118414]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid007467, task 117  5 [118415]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid007467, task 118  6 [118416]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid007467, task 119  7 [118417]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+# Collective test starting: all_gather_perf
+# nThread 1 nGpus 1 minBytes 65536 maxBytes 4294967296 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#  Rank  0 Group  0 Pid  84571 on  nid005400 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  1 Group  0 Pid  84572 on  nid005400 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank  2 Group  0 Pid  84573 on  nid005400 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank  3 Group  0 Pid  84574 on  nid005400 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank  4 Group  0 Pid  84575 on  nid005400 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank  5 Group  0 Pid  84576 on  nid005400 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank  6 Group  0 Pid  84577 on  nid005400 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank  7 Group  0 Pid  84578 on  nid005400 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank  8 Group  0 Pid   3921 on  nid005406 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank  9 Group  0 Pid   3922 on  nid005406 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 10 Group  0 Pid   3923 on  nid005406 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 11 Group  0 Pid   3924 on  nid005406 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 12 Group  0 Pid   3925 on  nid005406 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 13 Group  0 Pid   3926 on  nid005406 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 14 Group  0 Pid   3927 on  nid005406 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 15 Group  0 Pid   3928 on  nid005406 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 16 Group  0 Pid 105733 on  nid006048 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 17 Group  0 Pid 105734 on  nid006048 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 18 Group  0 Pid 105735 on  nid006048 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 19 Group  0 Pid 105736 on  nid006048 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 20 Group  0 Pid 105737 on  nid006048 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 21 Group  0 Pid 105738 on  nid006048 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 22 Group  0 Pid 105739 on  nid006048 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 23 Group  0 Pid 105740 on  nid006048 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 24 Group  0 Pid  67497 on  nid006138 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 25 Group  0 Pid  67498 on  nid006138 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 26 Group  0 Pid  67499 on  nid006138 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 27 Group  0 Pid  67500 on  nid006138 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 28 Group  0 Pid  67501 on  nid006138 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 29 Group  0 Pid  67502 on  nid006138 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 30 Group  0 Pid  67503 on  nid006138 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 31 Group  0 Pid  67504 on  nid006138 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 32 Group  0 Pid 117869 on  nid006440 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 33 Group  0 Pid 117870 on  nid006440 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 34 Group  0 Pid 117871 on  nid006440 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 35 Group  0 Pid 117872 on  nid006440 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 36 Group  0 Pid 117873 on  nid006440 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 37 Group  0 Pid 117874 on  nid006440 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 38 Group  0 Pid 117875 on  nid006440 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 39 Group  0 Pid 117876 on  nid006440 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 40 Group  0 Pid  72680 on  nid006882 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 41 Group  0 Pid  72681 on  nid006882 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 42 Group  0 Pid  72682 on  nid006882 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 43 Group  0 Pid  72683 on  nid006882 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 44 Group  0 Pid  72684 on  nid006882 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 45 Group  0 Pid  72685 on  nid006882 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 46 Group  0 Pid  72686 on  nid006882 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 47 Group  0 Pid  72687 on  nid006882 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 48 Group  0 Pid  52169 on  nid006915 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 49 Group  0 Pid  52170 on  nid006915 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 50 Group  0 Pid  52171 on  nid006915 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 51 Group  0 Pid  52172 on  nid006915 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 52 Group  0 Pid  52173 on  nid006915 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 53 Group  0 Pid  52174 on  nid006915 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 54 Group  0 Pid  52175 on  nid006915 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 55 Group  0 Pid  52176 on  nid006915 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 56 Group  0 Pid  67618 on  nid006943 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 57 Group  0 Pid  67619 on  nid006943 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 58 Group  0 Pid  67620 on  nid006943 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 59 Group  0 Pid  67621 on  nid006943 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 60 Group  0 Pid  67622 on  nid006943 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 61 Group  0 Pid  67623 on  nid006943 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 62 Group  0 Pid  67624 on  nid006943 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 63 Group  0 Pid  67625 on  nid006943 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 64 Group  0 Pid 118597 on  nid007107 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 65 Group  0 Pid 118598 on  nid007107 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 66 Group  0 Pid 118599 on  nid007107 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 67 Group  0 Pid 118600 on  nid007107 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 68 Group  0 Pid 118601 on  nid007107 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 69 Group  0 Pid 118602 on  nid007107 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 70 Group  0 Pid 118603 on  nid007107 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 71 Group  0 Pid 118604 on  nid007107 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 72 Group  0 Pid  58873 on  nid007167 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 73 Group  0 Pid  58874 on  nid007167 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 74 Group  0 Pid  58875 on  nid007167 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 75 Group  0 Pid  58876 on  nid007167 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 76 Group  0 Pid  58877 on  nid007167 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 77 Group  0 Pid  58878 on  nid007167 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 78 Group  0 Pid  58879 on  nid007167 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 79 Group  0 Pid  58880 on  nid007167 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 80 Group  0 Pid  15388 on  nid007247 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 81 Group  0 Pid  15389 on  nid007247 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 82 Group  0 Pid  15390 on  nid007247 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 83 Group  0 Pid  15391 on  nid007247 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 84 Group  0 Pid  15392 on  nid007247 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 85 Group  0 Pid  15393 on  nid007247 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 86 Group  0 Pid  15394 on  nid007247 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 87 Group  0 Pid  15395 on  nid007247 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 88 Group  0 Pid  87961 on  nid007266 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 89 Group  0 Pid  87962 on  nid007266 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 90 Group  0 Pid  87963 on  nid007266 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 91 Group  0 Pid  87964 on  nid007266 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 92 Group  0 Pid  87965 on  nid007266 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 93 Group  0 Pid  87966 on  nid007266 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 94 Group  0 Pid  87967 on  nid007266 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 95 Group  0 Pid  87968 on  nid007266 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 96 Group  0 Pid  69573 on  nid007426 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 97 Group  0 Pid  69574 on  nid007426 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 98 Group  0 Pid  69575 on  nid007426 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 99 Group  0 Pid  69576 on  nid007426 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 100 Group  0 Pid  69577 on  nid007426 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 101 Group  0 Pid  69578 on  nid007426 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 102 Group  0 Pid  69579 on  nid007426 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 103 Group  0 Pid  69580 on  nid007426 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 104 Group  0 Pid   4836 on  nid007454 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 105 Group  0 Pid   4837 on  nid007454 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 106 Group  0 Pid   4838 on  nid007454 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 107 Group  0 Pid   4839 on  nid007454 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 108 Group  0 Pid   4840 on  nid007454 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 109 Group  0 Pid   4841 on  nid007454 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 110 Group  0 Pid   4842 on  nid007454 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 111 Group  0 Pid   4843 on  nid007454 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 112 Group  0 Pid 118410 on  nid007467 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 113 Group  0 Pid 118411 on  nid007467 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 114 Group  0 Pid 118412 on  nid007467 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 115 Group  0 Pid 118413 on  nid007467 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 116 Group  0 Pid 118414 on  nid007467 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 117 Group  0 Pid 118415 on  nid007467 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 118 Group  0 Pid 118416 on  nid007467 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 119 Group  0 Pid 118417 on  nid007467 device  0 [0000:c6:00] AMD Instinct MI250X
+#  Rank 120 Group  0 Pid  76401 on  nid007566 device  0 [0000:d1:00] AMD Instinct MI250X
+#  Rank 121 Group  0 Pid  76402 on  nid007566 device  0 [0000:d6:00] AMD Instinct MI250X
+#  Rank 122 Group  0 Pid  76403 on  nid007566 device  0 [0000:c9:00] AMD Instinct MI250X
+#  Rank 123 Group  0 Pid  76404 on  nid007566 device  0 [0000:ce:00] AMD Instinct MI250X
+#  Rank 124 Group  0 Pid  76405 on  nid007566 device  0 [0000:d9:00] AMD Instinct MI250X
+#  Rank 125 Group  0 Pid  76406 on  nid007566 device  0 [0000:de:00] AMD Instinct MI250X
+#  Rank 126 Group  0 Pid  76407 on  nid007566 device  0 [0000:c1:00] AMD Instinct MI250X
+#  Rank 127 Group  0 Pid  76408 on  nid007566 device  0 [0000:c6:00] AMD Instinct MI250X
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+       65536           128     float    none      -1    360.6    0.18    0.18      0    364.5    0.18    0.18      0
+      131072           256     float    none      -1    374.7    0.35    0.35      0    375.0    0.35    0.35      0
+      262144           512     float    none      -1    414.6    0.63    0.63      0    418.0    0.63    0.62      0
+      524288          1024     float    none      -1    552.6    0.95    0.94      0    552.4    0.95    0.94      0
+     1048576          2048     float    none      -1    552.4    1.90    1.88      0    550.4    1.91    1.89      0
+     2097152          4096     float    none      -1    999.6    2.10    2.08      0    998.0    2.10    2.08      0
+     4194304          8192     float    none      -1   1923.0    2.18    2.16      0   1931.9    2.17    2.15      0
+     8388608         16384     float    none      -1   2394.7    3.50    3.48      0   2373.0    3.54    3.51      0
+    16777216         32768     float    none      -1   3571.1    4.70    4.66      0   3571.2    4.70    4.66      0
+    33554432         65536     float    none      -1   3584.8    9.36    9.29      0   3592.7    9.34    9.27      0
+    67108864        131072     float    none      -1   3648.4   18.39   18.25      0   3653.8   18.37   18.22      0
+   134217728        262144     float    none      -1   4291.7   31.27   31.03      0   4294.7   31.25   31.01      0
+   268435456        524288     float    none      -1   4597.2   58.39   57.94      0   4608.9   58.24   57.79      0
+   536870912       1048576     float    none      -1   5869.3   91.47   90.76      0   5866.6   91.51   90.80      0
+  1073741824       2097152     float    none      -1    12771   84.08   83.42      0    12862   83.48   82.83      0
+  2147483648       4194304     float    none      -1    27430   78.29   77.68      0    26008   82.57   81.92      0
+  4294967296       8388608     float    none      -1    53203   80.73   80.10      0    54037   79.48   78.86      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 27.4089 
+#
+# Collective test concluded: all_gather_perf
+

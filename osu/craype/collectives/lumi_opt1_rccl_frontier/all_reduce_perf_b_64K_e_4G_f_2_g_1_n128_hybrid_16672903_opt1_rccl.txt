@@ -1,0 +1,32 @@
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 1 minBytes 65536 maxBytes 4294967296 step: 2(factor) warmup iters: 5 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+rccl-tests: Version develop_deprecated:40b1b17
+# Using devices
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong                               
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)                                      
+       65536         16384     float     sum      -1    165.1    0.40    0.79      0    162.9    0.40    0.80      0
+      131072         32768     float     sum      -1    207.0    0.63    1.26      0    208.0    0.63    1.25      0
+      262144         65536     float     sum      -1    299.2    0.88    1.74      0    299.4    0.88    1.74      0
+      524288        131072     float     sum      -1    338.3    1.55    3.08      0    345.5    1.52    3.01      0
+     1048576        262144     float     sum      -1    432.4    2.43    4.81      0    431.5    2.43    4.82      0
+     2097152        524288     float     sum      -1    429.8    4.88    9.68      0    517.0    4.06    8.05      0
+     4194304       1048576     float     sum      -1    629.1    6.67   13.23      0    541.9    7.74   15.36      0
+     8388608       2097152     float     sum      -1    804.3   10.43   20.70      0    899.4    9.33   18.51      0
+    16777216       4194304     float     sum      -1   1032.7   16.25   32.24      0   1288.5   13.02   25.84      0
+    33554432       8388608     float     sum      -1   2008.4   16.71   33.15      0   2345.4   14.31   28.39      0
+    67108864      16777216     float     sum      -1   2806.9   23.91   47.44      0   4030.6   16.65   33.04      0
+   134217728      33554432     float     sum      -1   4746.0   28.28   56.12      0   4984.5   26.93   53.43      0
+   268435456      67108864     float     sum      -1   7801.6   34.41   68.28      0   8154.9   32.92   65.32      0
+   536870912     134217728     float     sum      -1    17746   30.25   60.03      0    16980   31.62   62.74      0
+  1073741824     268435456     float     sum      -1    34325   31.28   62.08      0    34336   31.27   62.05      0
+  2147483648     536870912     float     sum      -1    52550   40.87   81.09      0    52537   40.88   81.11      0
+  4294967296    1073741824     float     sum      -1   105147   40.85   81.06      0   107309   40.02   79.42      0
+# Errors with asterisks indicate errors that have exceeded the maximum threshold.
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 32.9898 
+#
+# Collective test concluded: all_reduce_perf
+

@@ -4,6 +4,8 @@ MYUSER="marcink"
 #MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
+for MYUSER in alazzaro marcink; do
+
 echo "User: $MYUSER"
 
 case "$MYUSER" in
@@ -184,3 +186,5 @@ esac
 
 #./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw DD" --outfile ${SYSTEM}/osu-internode-bibw-all-DD.png
 ./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile ${SYSTEM}/osu-internode-bibw-all-DD.png
+
+done # MYUSER

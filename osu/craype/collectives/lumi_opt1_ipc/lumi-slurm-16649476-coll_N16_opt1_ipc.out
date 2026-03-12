@@ -1,0 +1,975 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+The following have been reloaded with a version change:
+  1) cray-mpich/8.1.32 => cray-mpich/9.0.1
+
+
+Currently Loaded Modules:
+  1) craype-network-ofi                  10) cray-dsmml/0.3.1
+  2) perftools-base/25.03.0              11) cray-libsci/25.03.0
+  3) xpmem/2.11.5-1.3_g73ade43320bc      12) PrgEnv-gnu/8.6.0
+  4) ModuleLabel/label              (S)  13) libfabric/1.22.0
+  5) lumi-tools/24.05               (S)  14) cray-mpich/9.0.1
+  6) init-lumi/0.2                  (S)  15) craype-x86-trento
+  7) cray-python/3.11.7                  16) craype-accel-amd-gfx90a
+  8) gcc-native/14.2                     17) rocm/6.3.4
+  9) craype/2.7.34
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+/opt/cray/libfabric/1.22.0
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+~/flash_coe/openmpi_on_ss11/osu/craype/collectives
+============
+#!/bin/bash
+
+#for NNODES in 1 2 4 8 16 32 64; do
+for NNODES in 1 16; do
+#for NNODES in 64; do
+sbatch -N $NNODES <<EOF
+#!/bin/bash
+#SBATCH --ntasks-per-node=8
+#SBATCH -A project_462000031
+#SBATCH -p standard-g
+#SBATCH --gres=gpu:8
+#SBATCH --exclusive
+#SBATCH --network=single_node_vni
+#SBATCH -o lumi-slurm-%j-coll_N${NNODES}_opt1_ipc.out
+#SBATCH --time=0:30:00
+
+export SLURM_CPUS_PER_TASK=7
+
+# load runtime environment
+ORIGINAL_SCRIPT=\$(scontrol show job "\$SLURM_JOB_ID" | awk -F= '/Command=/{print \$2}')
+export OUTPUT_DIR=\$SLURM_SUBMIT_DIR
+export ROOT_DIR=\$( cd -- "\$( dirname -- "\${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "\$ROOT_DIR
+
+# Enable Cray-mpich and RCCL
+USE_CPE=1 source \$ROOT_DIR/sourceme_rccl.sh
+
+export MPICH_GPU_SUPPORT_ENABLED=1
+export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
+#export NCCL_DEBUG=INFO
+#export FI_LOG_LEVEL=debug
+
+export MPICH_VERSION_DISPLAY=1
+export GTL_VERSION_DISPLAY=1
+
+export FI_CXI_RDZV_EAGER_SIZE=1024
+export FI_CXI_RDZV_THRESHOLD=65536 # has to be 64k for nccl allgather to perform well
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hybrid; do
+    export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt1_ipc"
+
+    echo "========"
+    echo \$SUFFIX
+    echo "========"
+
+    # Consider validation
+#    OSU_ARGS=" -c "
+    OSU_ARGS=" "
+
+#    if false; then
+    (
+    	export MPICH_GPU_IPC_THRESHOLD=32768
+	export MPICH_GPU_IPC_CACHE_MAX_SIZE=1000
+
+#	CMDS=("osu_alltoall -i 100 -d rocm D D" "osu_allreduce -i 100 -d rocm D D" "osu_allgather -i 100 -d rocm D D" "osu_allreduce -i 100 H H" "osu_alltoall -i 100 H H" "osu_allgather -i 100 H H")
+	CMDS=("osu_alltoall -i 100 -d rocm D D" "osu_allreduce -i 100 -d rocm D D" "osu_allgather -i 100 -d rocm D D")
+#  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+        for cmd in "\${CMDS[@]}"; do
+    	    run_osu_cmd "\$cmd" "mpi/collective" "\${SUFFIX}"
+        done
+    )
+
+    if false; then
+    # No validation available for RCCL
+    OSU_ARGS=" "
+
+    (
+	CMDS=("osu_xccl_alltoall -i 100 -d rocm D D" "osu_xccl_allreduce -i 100 -d rocm D D" "osu_xccl_allgather -i 100 -d rocm D D")
+    	for cmd in "\${CMDS[@]}"; do
+            run_osu_cmd "\$cmd" "xccl/collective" "\${SUFFIX}"
+     	done
+    )
+#    fi
+
+    echo "RCCL-tests"
+    (
+	unset MPICH_GPU_SUPPORT_ENABLED
+	unset MPICH_SMP_SINGLE_COPY_MODE
+	FLAGS="-d uint8 -b 1 -e 128M -f 2 -g 1"
+	CMDS=("alltoall_perf \${FLAGS}" "all_reduce_perf \${FLAGS}" "all_gather_perf \${FLAGS}")
+    	for cmd in "\${CMDS[@]}"; do
+	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
+	    echo -- srun \$cmd
+	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	done
+    )
+    fi
+done
+
+EOF
+
+
+done
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+FI_CXI_RDZV_THRESHOLD=65536
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+MPICH_GPU_SUPPORT_ENABLED=1
+SLURM_MEM_PER_CPU=0
+CRAYPE_LINK_TYPE=dynamic
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/9.0.1/gtl/lib:/opt/cray/libfabric/1.22.0/lib64:/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+_ModuleTable017_=ZXMvU29mdHdhcmVTdGFjayIsICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjayIsICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9LApzeXN0ZW1CYXNlTVBBVEggPSAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4Oi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL2xtb2QvbW9kdWxlZmlsZXMvQ29yZTovb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQ6L2FwcGwvbHVtaS9tb2R1bGVzL1NvZnR3YXJlU3RhY2s6L2FwcGwvbHVtaS9t
+LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+SLURM_NODEID=0
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_TASK_PID=8765
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/9.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=ID0gIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycy9Nb2R1bGVMYWJlbC9sYWJlbC5sdWEiLApmdWxsTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCmxvYWRPcmRlciA9IDQsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gIk1vZHVsZUxhYmVsL2xhYmVsIiwKd1YgPSAic2xhYmVsLip6ZmluYWwiLAp9LApbIlByZ0Vudi1nbnUiXSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9QcmdFbnYtZ251LzguNi4wLmx1YSIsCmZ1bGxOYW1lID0gIlByZ0Vudi1nbnUvOC42LjAiLApsb2FkT3JkZXIgPSAxMiwKcHJvcFQgPSB7fSwKc3Rh
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.255.17 38464 193.167.209.165 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:/opt/cray/pe/perftools/25.03.0/lib64
+SLURM_PRIO_PROCESS=0
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:CRAYPE:PERFTOOLS:CRAYPAT:CRAY_ACCEL:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=9.0.1
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+LANG=en_US.UTF-8
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLW5ldHdvcmstb2ZpLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJjcmF5cGUteDg2LXRyZW50byJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVm
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+OMPI_MCA_plm_slurm_args=--external-launcher
+LESS=-M -I -R
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005316
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+SLURM_CPUS_PER_TASK=7
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/16
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+PE_LD_LIBRARY_PATH=system
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=eS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLWFjY2VsLWFtZC1nZng5MGEubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLWFjY2VsLWFtZC1nZng5MGEiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtYWNjZWwtYW1kLWdmeDkwYSIsCndWID0gIk0uKnpmaW5hbCIsCn0sClsiY3JheXBlLW5ldHdvcmstb2ZpIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+ROCM_PATH=/opt/rocm-6.3.4
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+SLURM_PROCID=0
+APP2_STATE=25.03.0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+SLURM_JOB_GID=10013986
+LUMI_LMOD_FAMILY_CRAYPE_ACCEL=craype-accel-amd-gfx90a
+MACHTYPE=x86_64-suse-linux
+I_MPI_HYDRA_BOOTSTRAP=slurm
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/9.0.1/gtl/lib:1;/opt/cray/libfabric/1.22.0/lib64:1;/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005316
+PE_PKGCONFIG_PRODUCTS=PE_MPICH:PE_LIBSCI:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni10cmVudG8vMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnMiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1773207945
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/9.0.1/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+_ModuleTable004_=ZS9sbW9kL21vZHVsZWZpbGVzL2NvbXBpbGVyL2dudS8xMi4wL2NyYXktbGlic2NpLzI1LjAzLjAubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1saWJzY2kvMjUuMDMuMCIsCmxvYWRPcmRlciA9IDExLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbGlic2NpIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKWyJjcmF5LW1waWNoIl0gPSB7CmFjdGlvbkEgPSB7CiJwcmVwZW5kX3BhdGgoXCJNT0RVTEVQQVRIXCIsXCIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9tcGkvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1waWNoLzguMFwiKSIsCn0sCmZuID0gIi9vcHQvY3JheS9wZS9sbW9k
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=8(x16)
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PE_MPICH_PKGCONFIG_LIBS=mpich
+OSTYPE=linux
+XDG_SESSION_ID=964597
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=9.0.1
+SLURM_NNODES=16
+USER=lazzaroa
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+_ModuleTable012_=PSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAwMDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJh
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+CRAY_CPU_TARGET=x86-trento
+PE_GCC_LEVEL=14
+SLURM_JOB_START_TIME=1773206145
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_NTASKS_PER_NODE=8
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:1;/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/CRAYCLANG/17.0/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/crayclang/17.0/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/cce/19.0.0/cce-clang/x86_64/lib:1;/opt/cray/pe/cce/19.0.0/cce/x86_64/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/craype/collectives
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-trento
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+CRAY_TCMALLOC_MEMFS_FORCE=1
+SLURM_JOB_NODELIST=nid[005316-005321,005722-005725,006401-006406]
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+CRAY_ACCEL_VENDOR=amd
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+SLURM_NODELIST=nid[005316-005321,005722-005725,006401-006406]
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+SLURM_GPUS_ON_NODE=8
+SLURM_NETWORK=single_node_vni
+HOST=uan03
+SSH_CLIENT=178.197.255.17 38464 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=128
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-trento/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56(x16)
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_TOPOLOGY_ADDR=nid005316
+SLURM_THREADS_PER_CORE=1
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+GTL_VERSION_DISPLAY=1
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_MPICH:1;PE_LIBSCI:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+MPICH_VERSION_DISPLAY=1
+LMOD_FAMILY_CRAYPE_ACCEL_VERSION=false
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/craype/collectives
+SLURM_JOB_NAME=sbatch
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=YXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSA4LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImdjYy1uYXRpdmUiLAp3ViA9ICJeMDAwMDAwMTQuMDAwMDAwMDAyLip6ZmluYWwiLAp9LApbImluaXQtbHVtaSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL2FwcGwvbHVtaS9tb2R1bGVzL2Vh
+PE_PKGCONFIG_LIBS=rocm-6.3.4:mpich:libsci_mpi:libsci:dsmml
+CRAY_ACCEL_TARGET=amd_gfx90a
+SLURM_JOBID=16649476
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2FjY2VsID0gImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmNyYXlwZV9uZXR3b3JrID0gImNyYXlwZS1uZXR3b3JrLW9maSIsCmdjY19jb21waWxlciA9ICJnY2MtbmF0aXZlIiwKbGlic2NpID0gImNyYXktbGlic2NpIiwKbXBpID0gImNyYXktbXBpY2giLAp9LAptVCA9IHsKTW9kdWxlTGFiZWwgPSB7CmZu
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:libfabric/1.22.0:cray-mpich/9.0.1:craype-x86-trento:craype-accel-amd-gfx90a:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=a0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktcHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZSIsCndWID0gIl4wMDAwMDAwMi4wMDAwMDAwMDcuMDAwMDAwMDM0Lip6ZmluYWwiLAp9LApbImNyYXlwZS1hY2NlbC1hbWQtZ2Z4OTBhIl0gPSB7CmZuID0gIi9vcHQvY3Jh
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/mpich/9.0.1/ofi/man:1;/opt/cray/pe/mpich/9.0.1/man/mpich:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=Y2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJQcmdFbnYtZ251IiwKd1YgPSAiXjAwMDAwMDA4LjAwMDAwMDAwNi4qemZpbmFsIiwKfSwKWyJjcmF5LWRzbW1sIl0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvY3JheS1kc21tbC8wLjMuMS5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LWRzbW1sLzAuMy4xIiwKbG9hZE9yZGVyID0gMTAsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheS1kc21tbCIsCndWID0gIl4wMDAwMDAwMC4wMDAwMDAwMDMuMDAwMDAwMDAxLip6ZmluYWwiLAp9LApbImNyYXktbGlic2NpIl0gPSB7CmZuID0gIi9vcHQvY3JheS9w
+SLURM_JOB_QOS=normal
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/16
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/9.0.1
+_ModuleTable013_=c2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFsIiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxl
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+SLURM_JOB_NUM_NODES=16
+_ModuleTable016_=L2NvbXBpbGVyL2dudS8xMi4wIgosICIvYXBwbC9sdW1pL21vZHVsZXMvZWFzeWJ1aWxkL3N5c3RlbSIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvcGVyZnRvb2xzLzI1LjAzLjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL25ldC9vZmkvMS4wIiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9MaW51eCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmUiLCAiL29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jcmF5cGUtdGFyZ2V0cy9kZWZhdWx0IgosICIvYXBwbC9sdW1pL21vZHVs
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=YXVsdC9jcmF5cGUteDg2LXRyZW50by5sdWEiLApmdWxsTmFtZSA9ICJjcmF5cGUteDg2LXRyZW50byIsCmxvYWRPcmRlciA9IDE1LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXlwZS14ODYtdHJlbnRvIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9w
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=9.0.1
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+SLURM_JOB_UID=10013986
+_ModuleTable_Sz_=18
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+SLURM_JOB_PARTITION=standard-g
+MPICH_SMP_SINGLE_COPY_MODE=XPMEM
+LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable018_=b2R1bGVzL1N0eWxlTW9kaWZpZXJzOi9hcHBsL2x1bWkvbW9kdWxlcy9pbml0LUxVTUktU29mdHdhcmVTdGFjazovb3B0L2NyYXkvbW9kdWxlZmlsZXMiLAp9Cg==
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=128
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan03
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/mpich/9.0.1/ofi/man:/opt/cray/pe/mpich/9.0.1/man/mpich:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/cpu/x86-trento/1.0:/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=9.0.1
+XDG_RUNTIME_DIR=/run/user/10013986
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+SLURM_JOB_ID=16649476
+_ModuleTable014_=ZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndW
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/9.0.1/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE_X86_TRENTO:1;CRAYPE:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ACCEL:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/9.0.1.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-trento.lua:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-accel-amd-gfx90a.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl_cpe/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/libfabric/1.22.0/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config
+LMOD_SETTARG_FULL_SUPPORT=no
+FI_CXI_RDZV_EAGER_SIZE=1024
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=c3lidWlsZC9zeXN0ZW1cIikiLAp9LApmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvaW5pdC1MVU1JLVNvZnR3YXJlU3RhY2svaW5pdC1sdW1pLzAuMi5sdWEiLApmdWxsTmFtZSA9ICJpbml0LWx1bWkvMC4yIiwKbG9hZE9yZGVyID0gNiwKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiaW5pdC1sdW1pIiwKd1YgPSAiMDAwMDAwMDAwLjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKbGliZmFicmljID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMvbGliZmFicmljLzEuMjIuMCIsCmZ1bGxOYW1lID0gImxpYmZhYnJpYy8xLjIyLjAiLApsb2FkT3JkZXIgPSAxMywKcHJvcFQg
+PREFIX_LIBFABRIC=/opt/cray/libfabric/1.22.0
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;mpich:1;libsci_mpi:1;libsci:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=L21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wL2NyYXktbXBpY2gvOS4wLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1tcGljaC85LjAuMSIsCmxvYWRPcmRlciA9IDE0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2gvOS4wLjEiLAp3ViA9ICIwMDAwMDAwMDkuMDAwMDAwMDAwLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA3LApwcm9wVCA9IHt9LApzdGFj
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+_n128_hybrid_16649476_opt1_ipc
+========
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -i 100 -d rocm D D
+cpu-bind=MASK - nid005316, task  0  0 [9102]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005316, task  1  1 [9103]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005316, task  2  2 [9104]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005316, task  3  3 [9105]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005316, task  4  4 [9106]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005316, task  5  5 [9107]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005316, task  6  6 [9108]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005316, task  7  7 [9109]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005319, task 24  0 [115576]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005319, task 25  1 [115577]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005319, task 26  2 [115578]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005319, task 27  3 [115579]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005319, task 28  4 [115580]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005319, task 29  5 [115581]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005319, task 30  6 [115582]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005317, task  8  0 [34927]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005319, task 31  7 [115583]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005317, task  9  1 [34928]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task 10  2 [34929]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005317, task 11  3 [34930]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005317, task 12  4 [34931]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005722, task 48  0 [16594]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005317, task 13  5 [34932]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005722, task 49  1 [16595]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task 14  6 [34933]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005722, task 50  2 [16596]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005722, task 51  3 [16597]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005317, task 15  7 [34934]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006404, task 104  0 [1227]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006403, task 96  0 [24668]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006405, task 112  0 [22670]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005723, task 56  0 [38641]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005722, task 52  4 [16598]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005318, task 16  0 [17080]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006404, task 105  1 [1228]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006403, task 97  1 [24669]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006405, task 113  1 [22671]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005723, task 57  1 [38642]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005722, task 53  5 [16599]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005318, task 17  1 [17081]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006404, task 106  2 [1229]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006403, task 98  2 [24670]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006405, task 114  2 [22672]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005723, task 58  2 [38643]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005722, task 54  6 [16600]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005318, task 18  2 [17082]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006404, task 107  3 [1231]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006403, task 99  3 [24671]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006405, task 115  3 [22673]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005723, task 59  3 [38644]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005722, task 55  7 [16601]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 19  3 [17083]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006404, task 108  4 [1232]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006403, task 100  4 [24672]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006405, task 116  4 [22674]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005723, task 60  4 [38645]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005318, task 20  4 [17084]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006404, task 109  5 [1233]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006403, task 101  5 [24673]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006405, task 117  5 [22675]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005723, task 61  5 [38646]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005318, task 21  5 [17085]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006404, task 110  6 [1234]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006403, task 102  6 [24674]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006405, task 118  6 [22676]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005723, task 62  6 [38647]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005318, task 22  6 [17086]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006404, task 111  7 [1235]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006403, task 103  7 [24675]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006405, task 119  7 [22677]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005723, task 63  7 [38648]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 23  7 [17087]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006402, task 88  0 [90765]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005320, task 32  0 [35609]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006402, task 89  1 [90766]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005320, task 33  1 [35610]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006402, task 90  2 [90767]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005320, task 34  2 [35611]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006402, task 91  3 [90768]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005320, task 35  3 [35612]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006402, task 92  4 [90769]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005320, task 36  4 [35613]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006402, task 93  5 [90770]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005320, task 37  5 [35614]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006402, task 94  6 [90771]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005320, task 38  6 [35615]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005320, task 39  7 [35616]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006402, task 95  7 [90772]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005725, task 72  0 [49005]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005725, task 73  1 [49006]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006401, task 80  0 [84295]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005725, task 74  2 [49007]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006401, task 81  1 [84296]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005725, task 75  3 [49008]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006401, task 82  2 [84297]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006406, task 120  0 [11960]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005725, task 76  4 [49009]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006401, task 83  3 [84298]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006406, task 121  1 [11961]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005725, task 77  5 [49010]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006401, task 84  4 [84299]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006406, task 122  2 [11962]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005725, task 78  6 [49011]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006401, task 85  5 [84300]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006406, task 123  3 [11963]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006401, task 86  6 [84301]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006406, task 124  4 [11964]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006406, task 125  5 [11965]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005725, task 79  7 [49012]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006406, task 126  6 [11966]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006401, task 87  7 [84302]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006406, task 127  7 [11967]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005321, task 40  0 [58701]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005321, task 41  1 [58702]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005321, task 42  2 [58703]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005321, task 43  3 [58704]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005321, task 44  4 [58705]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005321, task 45  5 [58706]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005321, task 46  6 [58707]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005321, task 47  7 [58708]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005724, task 64  0 [40243]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005724, task 65  1 [40244]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005724, task 66  2 [40245]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005724, task 67  3 [40246]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005724, task 68  4 [40247]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005724, task 69  5 [40248]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005724, task 70  6 [40249]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005724, task 71  7 [40250]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      42.87
+2                      44.75
+4                      53.55
+8                      53.79
+16                     58.72
+32                     59.94
+64                     74.04
+128                    82.79
+256                   205.53
+512                   663.98
+1024                  500.88
+2048                  214.49
+4096                  236.99
+8192                  301.43
+16384                 378.70
+32768                 499.07
+65536                 923.05
+131072               1977.65
+262144               3924.39
+524288               8025.43
+1048576             16610.83
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -i 100 -d rocm D D
+cpu-bind=MASK - nid005316, task  0  0 [9214]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005319, task 24  0 [115773]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005723, task 56  0 [38897]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005316, task  1  1 [9215]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005319, task 25  1 [115774]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005723, task 57  1 [38898]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005316, task  2  2 [9216]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005319, task 26  2 [115775]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005723, task 58  2 [38899]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005316, task  3  3 [9217]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005319, task 27  3 [115776]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005723, task 59  3 [38900]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005316, task  4  4 [9218]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005319, task 28  4 [115777]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005723, task 60  4 [38901]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005316, task  5  5 [9219]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005319, task 29  5 [115778]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005723, task 61  5 [38902]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005316, task  6  6 [9220]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005319, task 30  6 [115779]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005723, task 62  6 [38903]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005316, task  7  7 [9221]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005319, task 31  7 [115780]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005723, task 63  7 [38904]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005320, task 32  0 [35687]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005320, task 33  1 [35688]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005320, task 34  2 [35689]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005320, task 35  3 [35690]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005320, task 36  4 [35691]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005320, task 37  5 [35692]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005320, task 38  6 [35693]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005320, task 39  7 [35694]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006402, task 88  0 [91036]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005317, task  8  0 [35017]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006402, task 89  1 [91037]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task  9  1 [35018]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task 10  2 [35019]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006402, task 90  2 [91038]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005317, task 11  3 [35020]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006402, task 91  3 [91039]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006406, task 120  0 [12217]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005317, task 12  4 [35021]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006402, task 92  4 [91040]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006406, task 121  1 [12218]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task 13  5 [35022]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006402, task 93  5 [91041]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005317, task 14  6 [35023]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006406, task 122  2 [12219]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006402, task 94  6 [91042]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006406, task 123  3 [12220]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006406, task 124  4 [12221]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005317, task 15  7 [35024]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006402, task 95  7 [91043]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005724, task 64  0 [40489]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006406, task 125  5 [12222]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005724, task 65  1 [40490]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006406, task 126  6 [12223]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005724, task 66  2 [40491]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005722, task 48  0 [16840]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005724, task 67  3 [40492]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005722, task 49  1 [16841]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006406, task 127  7 [12224]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005722, task 50  2 [16842]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005724, task 68  4 [40493]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005725, task 72  0 [49231]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005724, task 69  5 [40494]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005722, task 51  3 [16843]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005725, task 73  1 [49232]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005722, task 52  4 [16844]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005724, task 70  6 [40495]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005725, task 74  2 [49233]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005722, task 53  5 [16845]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005725, task 75  3 [49234]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005722, task 54  6 [16846]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005725, task 76  4 [49235]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005724, task 71  7 [40496]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005725, task 77  5 [49236]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005725, task 78  6 [49237]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005722, task 55  7 [16847]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 16  0 [17339]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005318, task 17  1 [17340]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005318, task 18  2 [17341]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005725, task 79  7 [49238]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 19  3 [17342]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005318, task 20  4 [17343]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005318, task 21  5 [17344]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006404, task 104  0 [1307]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005318, task 22  6 [17345]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006404, task 105  1 [1308]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006404, task 106  2 [1309]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006404, task 107  3 [1310]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005318, task 23  7 [17346]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006404, task 108  4 [1311]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006404, task 109  5 [1312]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006404, task 110  6 [1313]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006403, task 96  0 [24745]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006403, task 97  1 [24746]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006403, task 98  2 [24747]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006404, task 111  7 [1314]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006403, task 99  3 [24748]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005321, task 40  0 [58779]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006403, task 100  4 [24749]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005321, task 41  1 [58780]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006403, task 101  5 [24750]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006405, task 112  0 [22750]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005321, task 42  2 [58781]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006403, task 102  6 [24751]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006405, task 113  1 [22751]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005321, task 43  3 [58782]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006401, task 80  0 [84572]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006405, task 114  2 [22752]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005321, task 44  4 [58783]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006401, task 81  1 [84573]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006405, task 115  3 [22753]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006403, task 103  7 [24752]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005321, task 45  5 [58784]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006401, task 82  2 [84574]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006405, task 116  4 [22754]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005321, task 46  6 [58785]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006401, task 83  3 [84575]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006405, task 117  5 [22755]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006401, task 84  4 [84576]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006405, task 118  6 [22756]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006401, task 85  5 [84577]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005321, task 47  7 [58786]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006401, task 86  6 [84578]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006405, task 119  7 [22757]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006401, task 87  7 [84579]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      19.24
+8                      19.43
+16                     19.27
+32                     19.27
+64                     19.51
+128                    21.59
+256                    33.05
+512                    33.81
+1024                   37.13
+2048                   40.17
+4096                   44.55
+8192                   83.21
+16384                 199.27
+32768                 214.39
+65536                 239.97
+131072                277.13
+262144                277.90
+524288               1886.55
+1048576              2160.05
+-- srun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-craype//libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -i 100 -d rocm D D
+cpu-bind=MASK - nid005320, task 32  0 [35764]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005320, task 33  1 [35765]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005320, task 34  2 [35766]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005320, task 35  3 [35767]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005320, task 36  4 [35768]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005320, task 37  5 [35769]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005320, task 38  6 [35770]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005320, task 39  7 [35771]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005317, task  8  0 [35110]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005317, task  9  1 [35111]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005316, task  0  0 [9327]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005317, task 10  2 [35112]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005316, task  1  1 [9328]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005317, task 11  3 [35113]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005316, task  2  2 [9329]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005317, task 12  4 [35114]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005316, task  3  3 [9330]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005317, task 13  5 [35115]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005317, task 14  6 [35116]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005316, task  4  4 [9331]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005316, task  5  5 [9332]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005316, task  6  6 [9333]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005317, task 15  7 [35117]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 16  0 [17447]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005725, task 72  0 [49388]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005318, task 17  1 [17448]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005725, task 73  1 [49389]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005316, task  7  7 [9334]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005318, task 18  2 [17449]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005725, task 74  2 [49390]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005318, task 19  3 [17450]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005725, task 75  3 [49391]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005318, task 20  4 [17451]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005725, task 76  4 [49392]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005318, task 21  5 [17452]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005725, task 77  5 [49393]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005318, task 22  6 [17453]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005725, task 78  6 [49394]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005318, task 23  7 [17454]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005725, task 79  7 [49395]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005319, task 24  0 [115910]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005319, task 25  1 [115911]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005319, task 26  2 [115912]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005319, task 27  3 [115913]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005319, task 28  4 [115914]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005319, task 29  5 [115915]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005723, task 56  0 [38989]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005319, task 30  6 [115916]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005723, task 57  1 [38990]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005723, task 58  2 [38991]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005319, task 31  7 [115917]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005723, task 59  3 [38992]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005723, task 60  4 [38993]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005723, task 61  5 [38994]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005723, task 62  6 [38995]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005723, task 63  7 [38996]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005724, task 64  0 [40582]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005321, task 40  0 [58855]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006403, task 96  0 [24826]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005724, task 65  1 [40583]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005321, task 41  1 [58856]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006403, task 97  1 [24827]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006404, task 104  0 [1393]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005724, task 66  2 [40584]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005321, task 42  2 [58857]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006403, task 98  2 [24828]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006404, task 105  1 [1394]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid005724, task 67  3 [40585]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006403, task 99  3 [24829]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006404, task 106  2 [1395]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid005321, task 43  3 [58858]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005724, task 68  4 [40586]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006403, task 100  4 [24830]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006404, task 107  3 [1396]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005321, task 44  4 [58859]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005724, task 69  5 [40587]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006403, task 101  5 [24831]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006404, task 108  4 [1397]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005321, task 45  5 [58860]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005724, task 70  6 [40588]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006403, task 102  6 [24832]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006404, task 109  5 [1398]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005321, task 46  6 [58861]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006404, task 110  6 [1399]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005724, task 71  7 [40589]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006403, task 103  7 [24833]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005722, task 48  0 [16987]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006405, task 112  0 [22825]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005321, task 47  7 [58862]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid005722, task 49  1 [16988]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006405, task 113  1 [22826]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006404, task 111  7 [1400]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006401, task 80  0 [84686]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005722, task 50  2 [16989]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006405, task 114  2 [22827]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006401, task 81  1 [84687]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006405, task 115  3 [22828]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid005722, task 51  3 [16990]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006401, task 82  2 [84688]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006405, task 116  4 [22829]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid005722, task 52  4 [16991]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006401, task 83  3 [84689]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006405, task 117  5 [22830]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid005722, task 53  5 [16992]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006401, task 84  4 [84690]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006405, task 118  6 [22831]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid005722, task 54  6 [16993]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006401, task 85  5 [84691]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006406, task 120  0 [12326]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid006401, task 86  6 [84692]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006405, task 119  7 [22832]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006406, task 121  1 [12327]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006402, task 88  0 [91139]: mask 0xfe00000000000000fe set
+cpu-bind=MASK - nid005722, task 55  7 [16994]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006406, task 122  2 [12328]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006402, task 89  1 [91140]: mask 0xfe00000000000000fe00 set
+cpu-bind=MASK - nid006401, task 87  7 [84693]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006406, task 123  3 [12329]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006402, task 90  2 [91141]: mask 0xfe00000000000000fe0000 set
+cpu-bind=MASK - nid006406, task 124  4 [12330]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006402, task 91  3 [91142]: mask 0xfe00000000000000fe000000 set
+cpu-bind=MASK - nid006406, task 125  5 [12331]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006402, task 92  4 [91143]: mask 0xfe00000000000000fe00000000 set
+cpu-bind=MASK - nid006406, task 126  6 [12332]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006402, task 93  5 [91144]: mask 0xfe00000000000000fe0000000000 set
+cpu-bind=MASK - nid006402, task 94  6 [91145]: mask 0xfe00000000000000fe000000000000 set
+cpu-bind=MASK - nid006406, task 127  7 [12333]: mask 0xfe00000000000000fe00000000000000 set
+cpu-bind=MASK - nid006402, task 95  7 [91146]: mask 0xfe00000000000000fe00000000000000 set
+MPI VERSION    : CRAY MPICH version 9.0.1.498 (ANL base 4.1.2)
+MPI BUILD INFO : Wed Jul 16  9:39 2025 (git hash 0848216) (CH4)
+CRAY GTL 0.1.0
+BUILD INFO: Sat Jun 28 16:50:55 UTC 2025  by root (git hash 21cb022)
+
+# OSU MPI-ROCM Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      19.29
+2                      19.16
+4                      21.65
+8                      23.96
+16                     27.39
+32                     28.60
+64                     29.81
+128                    31.53
+256                    36.31
+512                    42.02
+1024                   53.44
+2048                   90.48
+4096                  162.37
+8192                  226.52
+16384                2584.20
+32768                2476.25
+65536                2910.19
+131072               2925.96
+262144               3680.61
+524288               4951.53
+1048576              7764.04
