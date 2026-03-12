@@ -40,12 +40,10 @@ for n in ${NGPUS}; do
 	LABELS=("Cray MPI"
 		"ompi5 ${cmp}"
 		"ompi5 lnx"
-		"ompi6 ${cmp}"
 	       )
 	STYLES=("b-o"
 		"g-^"
 		"g-o"
-		"k-o"
 	       )
 
 
@@ -57,17 +55,12 @@ for n in ${NGPUS}; do
 		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_H_H_lnx_n${n}_software_*.txt)"
 		      )
 
-		# Remove OpenMPI 6
-		unset LABELS[3]
-		unset STYLES[3]
-
 	    ;;
 	    olivia)
 
 		FILES=("../osu/craype/collectives/olivia/osu_${test}_n${n}.txt"
 		       "../osu/ompi/collectives/olivia/osu_${test}_n${n}_${cmp}_srun.txt"
 		       "../osu/ompi/collectives/olivia/osu_${test}_n${n}_lnx_srun.txt"
-		       "../osu/ompi/collectives/olivia/ompi6/osu_${test}_n${n}_${cmp}_srun.txt"
 		      )
 		;;
 	esac
