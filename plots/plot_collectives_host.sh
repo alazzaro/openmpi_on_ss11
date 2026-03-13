@@ -11,7 +11,7 @@ echo "User: $MYUSER"
 case "$MYUSER" in
     lazzaroa|alazzaro)
 	SYSTEM="lumi"
-	NGPUS="8 128"
+	NGPUS="8 128 512"
 	NGPUS_PER_NODE=8
 	;;
     marcink)
