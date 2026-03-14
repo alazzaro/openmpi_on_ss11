@@ -4,7 +4,7 @@
 MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
-for MYUSER in alazzaro marcink; do
+for MYUSER in marcink; do
 #for MYUSER in alazzaro; do
 
 echo "User: $MYUSER"
@@ -75,36 +75,55 @@ for n in ${NGPUS}; do
 	    ;;
 	    olivia)
 
-		FILES=("../osu/craype/collectives/olivia/osu_${test}_d_cuda_n${n}.txt"
-		       "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
-		       "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
-		       #       "../osu/ompi/collectives/olivia/ompi6/osu_xccl_${test}_n${n}_srun.txt"
-#		       "../osu/ompi/collectives/olivia/osu_xccl_${test}_n${n}_srun.txt"
-		       #       "../osu/craype/collectives/olivia/osu_xccl_${test}_n${n}.txt"
-		       "../osu/ompi/nccl/olivia/${nccltest}_perf_n${n}.txt"
-		       #       "../osu/craype/collectives/olivia/all_reduce_perf_n${n}.txt"
-		       "../osu/ompi/collectives/olivia/ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
-		       #       "../osu/ompi/collectives/olivia/ompi6_coll_accelerator_off/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
-		      )
+		if [[ ${n} == 4 ]]; then
+		    FILES=("../osu/craype/collectives/olivia/osu_${test}_d_cuda_n${n}.txt"
+			   "../osu/ompi/collectives/olivia/cxi_hmem_on/osu_${test}_d_cuda_n${n}_cxi_srun.txt"
+			   "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
+			   "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_ob1_srun.txt"
+			   "../osu/ompi/nccl/olivia/${nccltest}_perf_n${n}.txt"
+#			   "../osu/ompi/collectives/olivia/ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+#			   "../osu/ompi/collectives/olivia/cxi_hmem_on/ompi6/osu_${test}_d_cuda_n${n}_ob1_srun.txt"
+#			   "../osu/ompi/collectives/olivia/cxi_hmem_on/ompi6/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
+			   "../osu/ompi/collectives/olivia/cxi_hmem_on/ompi6/osu_${test}_d_cuda_n${n}_cxi_srun.txt"
+			  )
+		    LABELS=("Cray MPI"
+			    "ompi5 cxi"
+			    "ompi5 lnx"
+			    "ompi5 ob1"
+			    "${XCCL} (${XCCL_TESTS})"
+			    "ompi6 ${cmp}"
+			   )
+		    STYLES=("b-o"
+			    "g-^"
+			    "g-o"
+			    "g--s"
+			    "r^:"
+			    "k-o"
+			   )
+		else
+		    FILES=("../osu/craype/collectives/olivia/osu_${test}_d_cuda_n${n}.txt"
+			   "../osu/ompi/collectives/olivia/cxi_hmem_on/osu_${test}_d_cuda_n${n}_cxi_srun.txt"
+			   "../osu/ompi/collectives/olivia/osu_${test}_d_cuda_n${n}_lnx_srun.txt"
+			   "../osu/ompi/nccl/olivia/${nccltest}_perf_n${n}.txt"
+#			   "../osu/ompi/collectives/olivia/ompi6/osu_${test}_d_cuda_n${n}_${cmp}_srun.txt"
+			   "../osu/ompi/collectives/olivia/cxi_hmem_on/ompi6/osu_${test}_d_cuda_n${n}_cxi_srun.txt"
+			  )
+		    LABELS=("Cray MPI"
+			    "ompi5 cxi"
+			    "ompi5 lnx"
+			    "${XCCL} (${XCCL_TESTS})"
+			    "ompi6 ${cmp}"
+			   )
+		    STYLES=("b-o"
+			    "g-^"
+			    "g-o"
+			    "r^:"
+			    "k-o"
+			   )
+		fi		
 		;;
 	esac
 
-	LABELS=("Cray MPI"
-		"ompi5 ${cmp}"
-		"ompi5 lnx"
-#		"${XCCL} (OSU)"
-		"${XCCL} (${XCCL_TESTS})"
-#		"${XCCL} (${XCCL_TESTS}) opt"
-		"ompi6 ${cmp}"
-	       )
-	STYLES=("b-o"
-		"g-^"
-		"g-o"
-#		"ro:"
-		"r^:"
-#		"r-o"
-		"k-o"
-	       )
 	./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "${test} Device, $((n / NGPUS_PER_NODE)) nodes" --outfile ${SYSTEM}/osu-${test}_n${n}_${suffix}.png
     done
 done
