@@ -1,0 +1,414 @@
+Starting job 245086 on gpu-1-[23-24] on Olivia at Sat Mar 14 15:19:03 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-24, task  4  0 [1835576]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1835577]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1835578]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1835579]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  0  0 [1366435]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1366436]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1366437]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  3  3 [1366438]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+[gpu-1-23:1366461] *** Process received signal ***
+[gpu-1-23:1366461] Signal: Segmentation fault (11)
+[gpu-1-23:1366461] Signal code: Invalid permissions (2)
+[gpu-1-23:1366461] Failing at address: 0x4005da000003
+[gpu-1-24:1835601] *** Process received signal ***
+[gpu-1-24:1835601] Signal: Segmentation fault (11)
+[gpu-1-24:1835601] Signal code: Invalid permissions (2)
+[gpu-1-24:1835601] Failing at address: 0x40049a000007
+[gpu-1-23:1366461] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40036cd507c0]
+[gpu-1-23:1366461] [ 1] /lib64/libc.so.6(+0xa2be0)[0x400373fe2be0]
+[gpu-1-23:1366461] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003742f839c]
+[gpu-1-23:1366461] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003742f8234]
+[gpu-1-23:1366461] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x400374396384]
+[gpu-1-23:1366461] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400374392cdc]
+[gpu-1-23:1366461] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400374392f98]
+[gpu-1-23:1366461] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003743a50bc]
+[gpu-1-23:1366461] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400373a61ad0]
+[gpu-1-23:1366461] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x400373ad08d8]
+[gpu-1-23:1366461] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_linear_sync+0x338)[0x40037399e51c]
+[gpu-1-23:1366461] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003739c7038]
+[gpu-1-23:1366461] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400373940c3c]
+[gpu-1-23:1366461] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-23:1366461] [14] /lib64/libc.so.6(+0x2b404)[0x400373f6b404]
+[gpu-1-23:1366461] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x400373f6b4d8]
+[gpu-1-23:1366461] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-23:1366461] *** End of error message ***
+[gpu-1-24:1835601] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x400237c007c0]
+[gpu-1-24:1835601] [ 1] /lib64/libc.so.6(+0xa2be0)[0x40023ee92be0]
+[gpu-1-24:1835601] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40023f1a839c]
+[gpu-1-24:1835601] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40023f1a8234]
+[gpu-1-24:1835601] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x40023f246384]
+[gpu-1-24:1835601] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40023f242cdc]
+[gpu-1-24:1835601] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40023f242f98]
+[gpu-1-24:1835601] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40023f2550bc]
+[gpu-1-24:1835601] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40023e911ad0]
+[gpu-1-24:1835601] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x40023e9808d8]
+[gpu-1-24:1835601] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_linear_sync+0x338)[0x40023e84e51c]
+[gpu-1-24:1835601] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x40023e877038]
+[gpu-1-24:1835601] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x40023e7f0c3c]
+[gpu-1-24:1835601] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-24:1835601] [14] /lib64/libc.so.6(+0x2b404)[0x40023ee1b404]
+[gpu-1-24:1835601] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40023ee1b4d8]
+[gpu-1-24:1835601] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-24:1835601] *** End of error message ***
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1366461 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1835601 Segmentation fault      "$@"
+srun: error: gpu-1-23: task 0: Exited with exit code 139
+srun: Terminating StepId=245086.0
+[2026-03-14T15:19:15.441] error: *** STEP 245086.0 ON gpu-1-23 CANCELLED AT 2026-03-14T15:19:15 DUE TO TASK FAILURE ***
+srun: error: gpu-1-24: task 4: Exited with exit code 139
+srun: error: gpu-1-24: tasks 5-7: Terminated
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gpu-1-23: tasks 1-3: Terminated
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-23, task  0  0 [1367116]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1367117]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1367118]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  3  3 [1367119]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  4  0 [1836238]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1836239]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1836240]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1836241]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      41.35
+8                      41.14
+16                     41.07
+32                     40.85
+64                     41.13
+128                    43.60
+256                    47.05
+512                    47.61
+1024                   51.72
+2048                   54.37
+4096                   67.22
+8192                   75.69
+16384                  86.67
+32768                 116.41
+65536                 160.27
+131072                232.80
+262144                396.32
+524288                735.25
+1048576              1412.55
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-24, task  4  0 [1836894]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1836895]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1836896]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1836897]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  0  0 [1367789]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1367790]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1367791]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-23, task  3  3 [1367792]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+[gpu-1-24:1836919] *** Process received signal ***
+[gpu-1-24:1836919] Signal: Segmentation fault (11)
+[gpu-1-24:1836919] Signal code: Invalid permissions (2)
+[gpu-1-24:1836919] Failing at address: 0x40035a200000
+[gpu-1-24:1836919] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000fc4c07c0]
+[gpu-1-24:1836919] [ 1] /lib64/libc.so.6(+0xa2be0)[0x400103752be0]
+[gpu-1-24:1836919] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x400103a6839c]
+[gpu-1-24:1836919] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400103a68234]
+[gpu-1-24:1836919] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x400103b06384]
+[gpu-1-24:1836919] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400103b02cdc]
+[gpu-1-24:1836919] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400103b02f98]
+[gpu-1-24:1836919] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x400103b150bc]
+[gpu-1-24:1836919] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4001031d1ad0]
+[gpu-1-24:1836919] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4001032408d8]
+[gpu-1-24:1836919] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x400103102fc4]
+[gpu-1-24:1836919] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x400103137440]
+[gpu-1-24:1836919] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40010315e7c4]
+[gpu-1-24:1836919] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40010315eab0]
+[gpu-1-24:1836919] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40010315ec70]
+[gpu-1-24:1836919] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40010315f144]
+[gpu-1-24:1836919] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4001030af448]
+[gpu-1-24:1836919] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-24:1836919] [18] /lib64/libc.so.6(+0x2b404)[0x4001036db404]
+[gpu-1-24:1836919] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4001036db4d8]
+[gpu-1-24:1836919] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-24:1836919] *** End of error message ***
+[gpu-1-23:1367814] *** Process received signal ***
+[gpu-1-23:1367814] Signal: Segmentation fault (11)
+[gpu-1-23:1367814] Signal code: Invalid permissions (2)
+[gpu-1-23:1367814] Failing at address: 0x4002fa200000
+[gpu-1-23:1367814] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000952107c0]
+[gpu-1-23:1367814] [ 1] /lib64/libc.so.6(+0xa2be0)[0x40009c4a2be0]
+[gpu-1-23:1367814] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40009c7b839c]
+[gpu-1-23:1367814] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40009c7b8234]
+[gpu-1-23:1367814] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x40009c856384]
+[gpu-1-23:1367814] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40009c852cdc]
+[gpu-1-23:1367814] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40009c852f98]
+[gpu-1-23:1367814] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40009c8650bc]
+[gpu-1-23:1367814] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40009bf21ad0]
+[gpu-1-23:1367814] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x40009bf908d8]
+[gpu-1-23:1367814] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x40009be52fc4]
+[gpu-1-23:1367814] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x40009be87440]
+[gpu-1-23:1367814] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40009beae7c4]
+[gpu-1-23:1367814] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40009beaeab0]
+[gpu-1-23:1367814] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40009beaec70]
+[gpu-1-23:1367814] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40009beaf144]
+[gpu-1-23:1367814] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40009bdff448]
+[gpu-1-23:1367814] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-23:1367814] [18] /lib64/libc.so.6(+0x2b404)[0x40009c42b404]
+[gpu-1-23:1367814] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x40009c42b4d8]
+[gpu-1-23:1367814] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-23:1367814] *** End of error message ***
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1836919 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1367814 Segmentation fault      "$@"
+srun: error: gpu-1-24: task 4: Exited with exit code 139
+srun: Terminating StepId=245086.2
+srun: error: gpu-1-23: task 0: Exited with exit code 139
+[2026-03-14T15:19:30.958] error: *** STEP 245086.2 ON gpu-1-23 CANCELLED AT 2026-03-14T15:19:30 DUE TO TASK FAILURE ***
+srun: error: gpu-1-23: tasks 1-3: Terminated
+srun: error: gpu-1-24: tasks 5-7: Terminated
+srun: Force Terminated StepId=245086.2
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-24, task  4  0 [1837555]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1837556]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1837557]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1837558]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-23, task  0  0 [1368476]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1368477]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1368478]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  3  3 [1368479]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      22.82
+2                      21.60
+4                      21.71
+8                      21.83
+16                     21.85
+32                     21.89
+64                     21.65
+128                    21.41
+256                    22.32
+512                    21.90
+1024                   21.89
+2048                   22.16
+4096                   22.39
+8192                   23.26
+16384                  24.73
+32768                  30.70
+65536                  41.45
+131072                 65.79
+262144                119.15
+524288                248.45
+1048576               496.15
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-23, task  0  0 [1369153]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1369154]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1369155]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  3  3 [1369156]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-24, task  4  0 [1838221]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1838222]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1838223]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1838224]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      38.04
+8                      37.34
+16                     37.19
+32                     37.10
+64                     37.42
+128                    40.69
+256                    43.13
+512                    43.66
+1024                   44.66
+2048                   47.11
+4096                   54.43
+8192                   56.06
+16384                  61.55
+32768                  87.54
+65536                 126.42
+131072                177.13
+262144                280.51
+524288                506.23
+1048576               885.90
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-24, task  4  0 [1838881]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-24, task  5  1 [1838882]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  6  2 [1838883]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-24, task  7  3 [1838884]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  0  0 [1369834]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-23, task  1  1 [1369835]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  2  2 [1369836]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-23, task  3  3 [1369837]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      30.59
+2                      30.17
+4                      29.92
+8                      30.01
+16                     30.82
+32                     31.41
+64                     32.96
+128                    32.60
+256                    33.27
+512                    34.55
+1024                   32.79
+2048                   34.05
+4096                   38.79
+8192                   48.96
+16384                  66.00
+32768                  90.20
+65536                 130.17
+131072                218.24
+262144                388.73
+524288                683.59
+1048576              1406.29
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+
+Job 245086 consumed 0.0 billing hours and 0.1 GPU hours from project nn9997k.
+
+Submitted 2026-03-14T15:18:52; waited 11.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   51.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+245086              576            0.0 %  2026-03-14T15:19:03   51.0 s  0
+245086.batch        288      1     0.0 %  2026-03-14T15:19:03   51.0 s  0
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:07    9.0 s  Signal 15
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:16    8.0 s  0
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:24    8.0 s  Signal 15
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:32    7.0 s  0
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:39    7.0 s  0
+245086.gpubind.sh   576      8     0.0 %  2026-03-14T15:19:46    8.0 s  0
+
+Used CPU time:   0.7 CPU seconds
+Unused CPU time: 8.2 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+245086             1400.0        
+245086.batch        700.0     0.2
+245086.gpubind.sh  1400.0     2.3
+245086.gpubind.sh  1400.0     2.0
+245086.gpubind.sh  1400.0     2.0
+245086.gpubind.sh  1400.0     2.1
+245086.gpubind.sh  1400.0     2.2
+245086.gpubind.sh  1400.0     2.2
+
+Job 245086 completed at Sat Mar 14 15:19:55 CET 2026

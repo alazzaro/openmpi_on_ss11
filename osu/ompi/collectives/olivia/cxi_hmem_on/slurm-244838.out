@@ -1,0 +1,2188 @@
+Starting job 244838 on gpu-1-[3,25,27-28,34,36,49-50,65,69,73-74,85,89,100,111] on Olivia at Sat Mar 14 14:43:23 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-49, task 24  0 [1146786]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1146787]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 26  2 [1146788]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 27  3 [1146789]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  0  0 [1902348]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [1902349]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 60  0 [3667853]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1902350]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 61  1 [3667854]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 36  0 [526391]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-34, task 16  0 [3107270]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 62  2 [3667855]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 17  1 [3107271]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 37  1 [526392]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1902351]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 38  2 [526393]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 18  2 [3107272]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3667856]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 39  3 [526394]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 19  3 [3107273]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 20  0 [3293441]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 21  1 [3293442]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 12  0 [630081]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 28  0 [1152691]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 22  2 [3293443]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 13  1 [630082]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 29  1 [1152692]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 52  0 [982970]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 30  2 [1152693]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 14  2 [630083]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 23  3 [3293444]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 53  1 [982971]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 44  0 [2581110]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-73, task 40  0 [2132844]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 31  3 [1152694]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 54  2 [982972]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  8  0 [535271]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-74, task 45  1 [2581111]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 32  0 [3138103]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-73, task 41  1 [2132845]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 33  1 [3138104]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 15  3 [630084]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  9  1 [535272]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 42  2 [2132846]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2581112]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 55  3 [982973]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 34  2 [3138105]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-27, task 10  2 [535273]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-73, task 43  3 [2132847]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 35  3 [3138106]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-74, task 47  3 [2581113]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-27, task 11  3 [535274]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 56  0 [1532486]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  4  0 [2660341]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 57  1 [1532487]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  5  1 [2660342]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 58  2 [1532488]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  6  2 [2660343]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 59  3 [1532489]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  7  3 [2660344]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 37 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+using SLURM envars
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+rank 36 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-85, task 48  0 [2333662]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-85, task 49  1 [2333663]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-85, task 50  2 [2333664]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-85, task 51  3 [2333665]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 15 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 32 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 44 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 34 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    8734.31
+2                    8818.15
+4                    8927.02
+8                    8762.10
+16                   8905.09
+32                   8963.13
+64                   8794.44
+128                  8929.68
+256                  9008.27
+512                  8822.35
+[gpu-1-89:982994] *** Process received signal ***
+[gpu-1-89:982994] Signal: Segmentation fault (11)
+[gpu-1-89:982994] Signal code: Invalid permissions (2)
+[gpu-1-89:982994] Failing at address: 0x40055a00dc00
+[gpu-1-49:1146814] *** Process received signal ***
+[gpu-1-49:1146814] Signal: Segmentation fault (11)
+[gpu-1-49:1146814] Signal code: Invalid permissions (2)
+[gpu-1-49:1146814] Failing at address: 0x4005ba006c00
+[gpu-1-25:2660368] *** Process received signal ***
+[gpu-1-25:2660368] Signal: Segmentation fault (11)
+[gpu-1-25:2660368] Signal code: Invalid permissions (2)
+[gpu-1-25:2660368] Failing at address: 0x4002da001c00
+[gpu-1-100:1532511] *** Process received signal ***
+[gpu-1-100:1532511] Signal: Segmentation fault (11)
+[gpu-1-100:1532511] Signal code: Invalid permissions (2)
+[gpu-1-100:1532511] Failing at address: 0x40061a00ec00
+[gpu-1-3:1902373] *** Process received signal ***
+[gpu-1-3:1902373] Signal: Segmentation fault (11)
+[gpu-1-3:1902373] Signal code: Invalid permissions (2)
+[gpu-1-3:1902373] Failing at address: 0x40061a000c00
+[gpu-1-3:1902373] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003c26207c0]
+[gpu-1-3:1902373] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003c98b2c48]
+[gpu-1-3:1902373] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003c9bc839c]
+[gpu-1-3:1902373] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003c9bc8234]
+[gpu-1-3:1902373] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003c9c66488]
+[gpu-1-3:1902373] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003c9c62cdc]
+[gpu-1-3:1902373] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003c9c62f98]
+[gpu-1-3:1902373] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003c9c750bc]
+[gpu-1-3:1902373] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003c9331ad0]
+[gpu-1-3:1902373] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003c93a2cb0]
+[gpu-1-3:1902373] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003c926ebdc]
+[gpu-1-3:1902373] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003c9297038]
+[gpu-1-3:1902373] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4003c9210c3c]
+[gpu-1-3:1902373] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-69:526418] *** Process received signal ***
+[gpu-1-69:526418] Signal: Segmentation fault (11)
+[gpu-1-69:526418] Signal code: Invalid permissions (2)
+[gpu-1-69:526418] Failing at address: 0x40053a009c00
+[gpu-1-3:1902373] [14] /lib64/libc.so.6(+0x2b404)[0x4003c983b404]
+[gpu-1-3:1902373] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003c983b4d8]
+[gpu-1-3:1902373] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-3:1902373] *** End of error message ***
+[gpu-1-50:1152717] *** Process received signal ***
+[gpu-1-50:1152717] Signal: Segmentation fault (11)
+[gpu-1-50:1152717] Signal code: Invalid permissions (2)
+[gpu-1-50:1152717] Failing at address: 0x40029a007c00
+[gpu-1-111:3667878] *** Process received signal ***
+[gpu-1-111:3667878] Signal: Segmentation fault (11)
+[gpu-1-111:3667878] Signal code: Invalid permissions (2)
+[gpu-1-111:3667878] Failing at address: 0x40063a00fc00
+[gpu-1-65:3138127] *** Process received signal ***
+[gpu-1-65:3138127] Signal: Segmentation fault (11)
+[gpu-1-65:3138127] Signal code: Invalid permissions (2)
+[gpu-1-65:3138127] Failing at address: 0x40061a008c00
+[gpu-1-28:630106] *** Process received signal ***
+[gpu-1-28:630106] Signal: Segmentation fault (11)
+[gpu-1-28:630106] Signal code: Invalid permissions (2)
+[gpu-1-28:630106] Failing at address: 0x40029a003c00
+[gpu-1-28:630106] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40002e7807c0]
+[gpu-1-73:2132870] *** Process received signal ***
+[gpu-1-73:2132870] Signal: Segmentation fault (11)
+[gpu-1-73:2132870] Signal code: Invalid permissions (2)
+[gpu-1-73:2132870] Failing at address: 0x40063a00ac00
+[gpu-1-28:630106] [ 1] /lib64/libc.so.6(+0xa2c48)[0x400035a12c48]
+[gpu-1-28:630106] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x400035d2839c]
+[gpu-1-28:630106] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400035d28234]
+[gpu-1-85:2333688] *** Process received signal ***
+[gpu-1-85:2333688] Signal: Segmentation fault (11)
+[gpu-1-85:2333688] Signal code: Invalid permissions (2)
+[gpu-1-85:2333688] Failing at address: 0x4003fa00cc00
+[gpu-1-36:3293468] *** Process received signal ***
+[gpu-1-36:3293468] Signal: Segmentation fault (11)
+[gpu-1-36:3293468] Signal code: Invalid permissions (2)
+[gpu-1-36:3293468] Failing at address: 0x40053a005c00
+[gpu-1-28:630106] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x400035dc6488]
+[gpu-1-28:630106] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400035dc2cdc]
+[gpu-1-28:630106] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400035dc2f98]
+[gpu-1-28:630106] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x400035dd50bc]
+[gpu-1-28:630106] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400035491ad0]
+[gpu-1-28:630106] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x400035502cb0]
+[gpu-1-28:630106] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4000353cebdc]
+[gpu-1-28:630106] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4000353f7038]
+[gpu-1-28:630106] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400035370c3c]
+[gpu-1-28:630106] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-28:630106] [14] /lib64/libc.so.6(+0x2b404)[0x40003599b404]
+[gpu-1-28:630106] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40003599b4d8]
+[gpu-1-28:630106] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-28:630106] *** End of error message ***
+[gpu-1-27:535298] *** Process received signal ***
+[gpu-1-27:535298] Signal: Segmentation fault (11)
+[gpu-1-27:535298] Signal code: Invalid permissions (2)
+[gpu-1-27:535298] Failing at address: 0x4002ba002c00
+[gpu-1-34:3107297] *** Process received signal ***
+[gpu-1-34:3107297] Signal: Segmentation fault (11)
+[gpu-1-34:3107297] Signal code: Invalid permissions (2)
+[gpu-1-34:3107297] Failing at address: 0x4002ba004c00
+[gpu-1-74:2581135] *** Process received signal ***
+[gpu-1-74:2581135] Signal: Segmentation fault (11)
+[gpu-1-74:2581135] Signal code: Invalid permissions (2)
+[gpu-1-74:2581135] Failing at address: 0x40059a00bc00
+[gpu-1-89:982994] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003014607c0]
+[gpu-1-89:982994] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003086f2c48]
+[gpu-1-89:982994] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x400308a0839c]
+[gpu-1-89:982994] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400308a08234]
+[gpu-1-89:982994] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x400308aa6488]
+[gpu-1-89:982994] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400308aa2cdc]
+[gpu-1-89:982994] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400308aa2f98]
+[gpu-1-89:982994] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x400308ab50bc]
+[gpu-1-89:982994] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400308171ad0]
+[gpu-1-89:982994] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003081e2cb0]
+[gpu-1-89:982994] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003080aebdc]
+[gpu-1-89:982994] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003080d7038]
+[gpu-1-89:982994] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400308050c3c]
+[gpu-1-89:982994] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-89:982994] [14] /lib64/libc.so.6(+0x2b404)[0x40030867b404]
+[gpu-1-89:982994] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40030867b4d8]
+[gpu-1-89:982994] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-89:982994] *** End of error message ***
+[gpu-1-50:1152717] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000289007c0]
+[gpu-1-50:1152717] [ 1] /lib64/libc.so.6(+0xa2c48)[0x40002fb92c48]
+[gpu-1-50:1152717] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40002fea839c]
+[gpu-1-50:1152717] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40002fea8234]
+[gpu-1-50:1152717] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x40002ff46488]
+[gpu-1-50:1152717] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40002ff42cdc]
+[gpu-1-50:1152717] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40002ff42f98]
+[gpu-1-50:1152717] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40002ff550bc]
+[gpu-1-50:1152717] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40002f611ad0]
+[gpu-1-50:1152717] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x40002f682cb0]
+[gpu-1-50:1152717] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x40002f54ebdc]
+[gpu-1-50:1152717] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x40002f577038]
+[gpu-1-50:1152717] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x40002f4f0c3c]
+[gpu-1-50:1152717] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-50:1152717] [14] /lib64/libc.so.6(+0x2b404)[0x40002fb1b404]
+[gpu-1-50:1152717] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40002fb1b4d8]
+[gpu-1-50:1152717] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-50:1152717] *** End of error message ***
+[gpu-1-74:2581135] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40032a8807c0]
+[gpu-1-74:2581135] [ 1] /lib64/libc.so.6(+0xa2c48)[0x400331b12c48]
+[gpu-1-74:2581135] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x400331e2839c]
+[gpu-1-74:2581135] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400331e28234]
+[gpu-1-74:2581135] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x400331ec6488]
+[gpu-1-74:2581135] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400331ec2cdc]
+[gpu-1-74:2581135] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400331ec2f98]
+[gpu-1-74:2581135] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x400331ed50bc]
+[gpu-1-74:2581135] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400331591ad0]
+[gpu-1-74:2581135] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x400331602cb0]
+[gpu-1-74:2581135] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003314cebdc]
+[gpu-1-74:2581135] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003314f7038]
+[gpu-1-74:2581135] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400331470c3c]
+[gpu-1-74:2581135] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-74:2581135] [14] /lib64/libc.so.6(+0x2b404)[0x400331a9b404]
+[gpu-1-74:2581135] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x400331a9b4d8]
+[gpu-1-74:2581135] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-74:2581135] *** End of error message ***
+[gpu-1-49:1146814] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40034ca607c0]
+[gpu-1-49:1146814] [ 1] /lib64/libc.so.6(+0xa2c48)[0x400353cf2c48]
+[gpu-1-49:1146814] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40035400839c]
+[gpu-1-49:1146814] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400354008234]
+[gpu-1-49:1146814] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003540a6488]
+[gpu-1-49:1146814] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003540a2cdc]
+[gpu-1-49:1146814] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003540a2f98]
+[gpu-1-49:1146814] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003540b50bc]
+[gpu-1-49:1146814] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400353771ad0]
+[gpu-1-49:1146814] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003537e2cb0]
+[gpu-1-49:1146814] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003536aebdc]
+[gpu-1-49:1146814] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003536d7038]
+[gpu-1-49:1146814] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400353650c3c]
+[gpu-1-49:1146814] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-49:1146814] [14] /lib64/libc.so.6(+0x2b404)[0x400353c7b404]
+[gpu-1-49:1146814] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x400353c7b4d8]
+[gpu-1-49:1146814] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-49:1146814] *** End of error message ***
+[gpu-1-69:526418] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002de2507c0]
+[gpu-1-69:526418] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4002e54e2c48]
+[gpu-1-69:526418] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002e57f839c]
+[gpu-1-69:526418] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002e57f8234]
+[gpu-1-69:526418] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4002e5896488]
+[gpu-1-69:526418] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002e5892cdc]
+[gpu-1-69:526418] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002e5892f98]
+[gpu-1-69:526418] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002e58a50bc]
+[gpu-1-69:526418] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002e4f61ad0]
+[gpu-1-69:526418] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4002e4fd2cb0]
+[gpu-1-69:526418] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4002e4e9ebdc]
+[gpu-1-65:3138127] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003a49107c0]
+[gpu-1-69:526418] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4002e4ec7038]
+[gpu-1-65:3138127] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003abba2c48]
+[gpu-1-65:3138127] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003abeb839c]
+[gpu-1-69:526418] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4002e4e40c3c]
+[gpu-1-69:526418] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-69:526418] [14] /lib64/libc.so.6(+0x2b404)[0x4002e546b404]
+[gpu-1-69:526418] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002e546b4d8]
+[gpu-1-69:526418] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-69:526418] *** End of error message ***
+[gpu-1-65:3138127] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003abeb8234]
+[gpu-1-65:3138127] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003abf56488]
+[gpu-1-65:3138127] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003abf52cdc]
+[gpu-1-65:3138127] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003abf52f98]
+[gpu-1-65:3138127] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003abf650bc]
+[gpu-1-65:3138127] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003ab621ad0]
+[gpu-1-65:3138127] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003ab692cb0]
+[gpu-1-65:3138127] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003ab55ebdc]
+[gpu-1-65:3138127] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003ab587038]
+[gpu-1-65:3138127] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4003ab500c3c]
+[gpu-1-65:3138127] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-65:3138127] [14] /lib64/libc.so.6(+0x2b404)[0x4003abb2b404]
+[gpu-1-65:3138127] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003abb2b4d8]
+[gpu-1-65:3138127] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-65:3138127] *** End of error message ***
+[gpu-1-73:2132870] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003c3f907c0]
+[gpu-1-73:2132870] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003cb222c48]
+[gpu-1-73:2132870] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003cb53839c]
+[gpu-1-73:2132870] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003cb538234]
+[gpu-1-73:2132870] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003cb5d6488]
+[gpu-1-73:2132870] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003cb5d2cdc]
+[gpu-1-73:2132870] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003cb5d2f98]
+[gpu-1-73:2132870] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003cb5e50bc]
+[gpu-1-73:2132870] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003caca1ad0]
+[gpu-1-36:3293468] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002cd6b07c0]
+[gpu-1-73:2132870] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003cad12cb0]
+[gpu-1-73:2132870] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003cabdebdc]
+[gpu-1-73:2132870] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003cac07038]
+[gpu-1-36:3293468] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4002d4942c48]
+[gpu-1-36:3293468] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002d4c5839c]
+[gpu-1-36:3293468] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002d4c58234]
+[gpu-1-36:3293468] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4002d4cf6488]
+[gpu-1-36:3293468] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002d4cf2cdc]
+[gpu-1-73:2132870] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4003cab80c3c]
+[gpu-1-73:2132870] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-73:2132870] [14] /lib64/libc.so.6(+0x2b404)[0x4003cb1ab404]
+[gpu-1-73:2132870] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003cb1ab4d8]
+[gpu-1-73:2132870] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-73:2132870] *** End of error message ***
+[gpu-1-36:3293468] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002d4cf2f98]
+[gpu-1-36:3293468] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002d4d050bc]
+[gpu-1-36:3293468] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002d43c1ad0]
+[gpu-1-36:3293468] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4002d4432cb0]
+[gpu-1-36:3293468] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4002d42febdc]
+[gpu-1-36:3293468] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4002d4327038]
+[gpu-1-36:3293468] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4002d42a0c3c]
+[gpu-1-36:3293468] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-36:3293468] [14] /lib64/libc.so.6(+0x2b404)[0x4002d48cb404]
+[gpu-1-85:2333688] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40019d7e07c0]
+[gpu-1-36:3293468] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002d48cb4d8]
+[gpu-1-36:3293468] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-36:3293468] *** End of error message ***
+[gpu-1-85:2333688] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4001a4a72c48]
+[gpu-1-85:2333688] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4001a4d8839c]
+[gpu-1-85:2333688] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4001a4d88234]
+[gpu-1-85:2333688] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4001a4e26488]
+[gpu-1-85:2333688] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4001a4e22cdc]
+[gpu-1-85:2333688] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4001a4e22f98]
+[gpu-1-85:2333688] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4001a4e350bc]
+[gpu-1-85:2333688] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4001a44f1ad0]
+[gpu-1-85:2333688] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4001a4562cb0]
+[gpu-1-85:2333688] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4001a442ebdc]
+[gpu-1-85:2333688] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4001a4457038]
+[gpu-1-85:2333688] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4001a43d0c3c]
+[gpu-1-85:2333688] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-25:2660368] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000786c07c0]
+[gpu-1-85:2333688] [14] /lib64/libc.so.6(+0x2b404)[0x4001a49fb404]
+[gpu-1-85:2333688] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4001a49fb4d8]
+[gpu-1-85:2333688] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-85:2333688] *** End of error message ***
+[gpu-1-25:2660368] [ 1] /lib64/libc.so.6(+0xa2c48)[0x40007f952c48]
+[gpu-1-25:2660368] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40007fc6839c]
+[gpu-1-25:2660368] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40007fc68234]
+[gpu-1-25:2660368] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x40007fd06488]
+[gpu-1-25:2660368] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40007fd02cdc]
+[gpu-1-25:2660368] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40007fd02f98]
+[gpu-1-25:2660368] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40007fd150bc]
+[gpu-1-25:2660368] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40007f3d1ad0]
+[gpu-1-25:2660368] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x40007f442cb0]
+[gpu-1-25:2660368] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x40007f30ebdc]
+[gpu-1-25:2660368] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x40007f337038]
+[gpu-1-25:2660368] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x40007f2b0c3c]
+[gpu-1-25:2660368] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-25:2660368] [14] /lib64/libc.so.6(+0x2b404)[0x40007f8db404]
+[gpu-1-25:2660368] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40007f8db4d8]
+[gpu-1-25:2660368] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-25:2660368] *** End of error message ***
+[gpu-1-27:535298] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000511b07c0]
+[gpu-1-27:535298] [ 1] /lib64/libc.so.6(+0xa2c48)[0x400058442c48]
+[gpu-1-27:535298] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40005875839c]
+[gpu-1-27:535298] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400058758234]
+[gpu-1-111:3667878] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003cfb907c0]
+[gpu-1-27:535298] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4000587f6488]
+[gpu-1-27:535298] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4000587f2cdc]
+[gpu-1-27:535298] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4000587f2f98]
+[gpu-1-27:535298] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4000588050bc]
+[gpu-1-111:3667878] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003d6e22c48]
+[gpu-1-111:3667878] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003d713839c]
+[gpu-1-111:3667878] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003d7138234]
+[gpu-1-111:3667878] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003d71d6488]
+[gpu-1-111:3667878] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003d71d2cdc]
+[gpu-1-111:3667878] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003d71d2f98]
+[gpu-1-27:535298] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400057ec1ad0]
+[gpu-1-111:3667878] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003d71e50bc]
+[gpu-1-27:535298] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x400057f32cb0]
+[gpu-1-27:535298] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x400057dfebdc]
+[gpu-1-27:535298] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x400057e27038]
+[gpu-1-111:3667878] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003d68a1ad0]
+[gpu-1-111:3667878] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003d6912cb0]
+[gpu-1-111:3667878] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003d67debdc]
+[gpu-1-27:535298] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x400057da0c3c]
+[gpu-1-27:535298] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-27:535298] [14] /lib64/libc.so.6(+0x2b404)[0x4000583cb404]
+[gpu-1-27:535298] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4000583cb4d8]
+[gpu-1-27:535298] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-27:535298] *** End of error message ***
+[gpu-1-111:3667878] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003d6807038]
+[gpu-1-111:3667878] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4003d6780c3c]
+[gpu-1-111:3667878] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-111:3667878] [14] /lib64/libc.so.6(+0x2b404)[0x4003d6dab404]
+[gpu-1-111:3667878] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003d6dab4d8]
+[gpu-1-111:3667878] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-111:3667878] *** End of error message ***
+[gpu-1-100:1532511] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003b41307c0]
+[gpu-1-100:1532511] [ 1] /lib64/libc.so.6(+0xa2c48)[0x4003bb3c2c48]
+[gpu-1-100:1532511] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003bb6d839c]
+[gpu-1-100:1532511] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003bb6d8234]
+[gpu-1-100:1532511] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x4003bb776488]
+[gpu-1-100:1532511] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003bb772cdc]
+[gpu-1-100:1532511] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003bb772f98]
+[gpu-1-100:1532511] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003bb7850bc]
+[gpu-1-100:1532511] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003bae41ad0]
+[gpu-1-100:1532511] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x4003baeb2cb0]
+[gpu-1-100:1532511] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x4003bad7ebdc]
+[gpu-1-100:1532511] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x4003bada7038]
+[gpu-1-34:3107297] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000472207c0]
+[gpu-1-100:1532511] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x4003bad20c3c]
+[gpu-1-100:1532511] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-100:1532511] [14] /lib64/libc.so.6(+0x2b404)[0x4003bb34b404]
+[gpu-1-100:1532511] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003bb34b4d8]
+[gpu-1-100:1532511] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-100:1532511] *** End of error message ***
+[gpu-1-34:3107297] [ 1] /lib64/libc.so.6(+0xa2c48)[0x40004e4b2c48]
+[gpu-1-34:3107297] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40004e7c839c]
+[gpu-1-34:3107297] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40004e7c8234]
+[gpu-1-34:3107297] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6488)[0x40004e866488]
+[gpu-1-34:3107297] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40004e862cdc]
+[gpu-1-34:3107297] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40004e862f98]
+[gpu-1-34:3107297] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40004e8750bc]
+[gpu-1-34:3107297] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40004df31ad0]
+[gpu-1-34:3107297] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_pml_cm_start+0x110)[0x40004dfa2cb0]
+[gpu-1-34:3107297] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_alltoall_intra_basic_linear+0x314)[0x40004de6ebdc]
+[gpu-1-34:3107297] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_alltoall_intra_dec_fixed+0x88)[0x40004de97038]
+[gpu-1-34:3107297] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Alltoall+0x19c)[0x40004de10c3c]
+[gpu-1-34:3107297] [13] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x403a2c]
+[gpu-1-34:3107297] [14] /lib64/libc.so.6(+0x2b404)[0x40004e43b404]
+[gpu-1-34:3107297] [15] /lib64/libc.so.6(__libc_start_main+0x98)[0x40004e43b4d8]
+[gpu-1-34:3107297] [16] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall[0x4043f0]
+[gpu-1-34:3107297] *** End of error message ***
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1902373 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1146814 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1532511 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 982994 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2660368 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3293468 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1152717 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 535298 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3138127 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 630106 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2581135 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2333688 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3667878 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2132870 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3107297 Segmentation fault      "$@"
+srun: error: gpu-1-3: task 0: Exited with exit code 139
+srun: Terminating StepId=244838.0
+[2026-03-14T14:45:20.017] error: *** STEP 244838.0 ON gpu-1-3 CANCELLED AT 2026-03-14T14:45:20 DUE TO TASK FAILURE ***
+[2026-03-14T14:45:20.728] error:  mpi/pmix_v5: _errhandler: gpu-1-69 [9]: pmixp_client_v2.c:220: Error handler invoked: status = -61, source = [slurm.pmix.244838.0:36]
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gpu-1-49: task 24: Exited with exit code 139
+srun: error: gpu-1-49: tasks 25-27: Terminated
+srun: error: gpu-1-100: task 56: Exited with exit code 139
+srun: error: gpu-1-100: tasks 57-59: Terminated
+srun: error: gpu-1-25: task 4: Exited with exit code 139
+srun: error: gpu-1-89: task 52: Exited with exit code 139
+srun: error: gpu-1-25: tasks 5-7: Terminated
+srun: error: gpu-1-89: tasks 53-55: Terminated
+srun: error: gpu-1-36: task 20: Exited with exit code 139
+srun: error: gpu-1-36: tasks 21-23: Terminated
+srun: error: gpu-1-50: task 28: Exited with exit code 139
+srun: error: gpu-1-50: tasks 29-31: Terminated
+srun: error: gpu-1-27: task 8: Exited with exit code 139
+srun: error: gpu-1-27: tasks 9-11: Terminated
+srun: error: gpu-1-65: task 32: Exited with exit code 139
+srun: error: gpu-1-65: tasks 33-35: Terminated
+srun: error: gpu-1-28: task 12: Exited with exit code 139
+srun: error: gpu-1-28: tasks 13-15: Terminated
+srun: error: gpu-1-74: task 44: Exited with exit code 139
+srun: error: gpu-1-74: tasks 45-47: Terminated
+srun: error: gpu-1-85: task 48: Exited with exit code 139
+srun: error: gpu-1-85: tasks 49-51: Terminated
+srun: error: gpu-1-111: task 60: Exited with exit code 139
+srun: error: gpu-1-111: tasks 61-63: Terminated
+srun: error: gpu-1-73: task 40: Exited with exit code 139
+srun: error: gpu-1-73: tasks 41-43: Terminated
+srun: error: gpu-1-34: task 16: Exited with exit code 139
+srun: error: gpu-1-34: tasks 17-19: Terminated
+srun: error: gpu-1-3: tasks 1-3: Terminated
+[2026-03-14T14:45:23.128] error:  mpi/pmix_v5: _errhandler: gpu-1-69 [9]: pmixp_client_v2.c:220: Error handler invoked: status = -61, source = [slurm.pmix.244838.0:37]
+srun: error: gpu-1-69: tasks 36-39: Terminated
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-50, task 28  0 [1157996]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  4  0 [2661076]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 29  1 [1157997]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  5  1 [2661077]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 30  2 [1157998]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 24  0 [1152094]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  6  2 [2661078]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1152095]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 44  0 [2586418]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 31  3 [1157999]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 26  2 [1152096]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  7  3 [2661079]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 45  1 [2586419]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2586420]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 27  3 [1152097]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  8  0 [540576]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-74, task 47  3 [2586421]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  9  1 [540577]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task 10  2 [540578]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  0  0 [1903141]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [1903142]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 12  0 [635389]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1903143]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 60  0 [3673164]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 61  1 [3673165]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task 11  3 [540579]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 13  1 [635390]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 62  2 [3673166]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 48  0 [2338977]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1903144]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-28, task 14  2 [635391]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 49  1 [2338978]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-28, task 15  3 [635392]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 36  0 [531718]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-89, task 52  0 [988277]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3673167]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 50  2 [2338979]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 37  1 [531719]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-89, task 53  1 [988278]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 38  2 [531720]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-89, task 54  2 [988279]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-85, task 51  3 [2338980]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-69, task 39  3 [531721]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 44 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-89, task 55  3 [988280]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 20  0 [3294157]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-36, task 21  1 [3294158]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 22  2 [3294159]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-65, task 32  0 [3143408]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 23  3 [3294160]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-65, task 33  1 [3143409]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-100, task 56  0 [1537791]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-34, task 16  0 [3112582]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-65, task 34  2 [3143410]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-100, task 57  1 [1537792]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+rank 15 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-100, task 58  2 [1537793]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 17  1 [3112583]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-65, task 35  3 [3143411]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 18  2 [3112584]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 37 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-100, task 59  3 [1537794]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 36 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-34, task 19  3 [3112585]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-73, task 40  0 [2138180]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-73, task 41  1 [2138181]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 42  2 [2138182]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-73, task 43  3 [2138183]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 32 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 34 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      59.16
+8                      57.87
+16                     58.00
+32                     57.49
+64                     74.78
+128                    76.62
+256                    84.00
+512                    85.90
+1024                   92.49
+2048                  101.24
+4096                  111.15
+8192                  119.66
+16384                 134.58
+32768                 175.48
+65536                 215.77
+131072                321.64
+262144                546.44
+524288               1015.79
+1048576              1950.72
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-49, task 24  0 [1152950]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1152951]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 26  2 [1152952]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 27  3 [1152953]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 36  0 [532577]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 56  0 [1538636]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-69, task 37  1 [532578]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 57  1 [1538637]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 32  0 [3144303]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-69, task 38  2 [532579]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 60  0 [3674002]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-65, task 33  1 [3144304]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 58  2 [1538638]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 61  1 [3674003]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 34  2 [3144305]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 39  3 [532580]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 62  2 [3674004]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-100, task 59  3 [1538639]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 35  3 [3144306]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3674005]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  4  0 [2661748]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-25, task  5  1 [2661749]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-25, task  6  2 [2661750]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 48  0 [2339824]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  7  3 [2661751]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 49  1 [2339825]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  8  0 [541464]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-27, task  9  1 [541465]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+cpu-bind=MASK - gpu-1-85, task 50  2 [2339826]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+rank 37 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-27, task 10  2 [541466]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-89, task 52  0 [989127]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 20  0 [3294817]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-85, task 51  3 [2339827]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-3, task  0  0 [1903864]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 21  1 [3294818]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 36 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 32 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-89, task 53  1 [989128]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+cpu-bind=MASK - gpu-1-3, task  1  1 [1903865]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+rank 34 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-36, task 22  2 [3294819]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task 11  3 [541467]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-89, task 54  2 [989129]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1903866]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-36, task 23  3 [3294820]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1903867]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 16  0 [3113428]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-89, task 55  3 [989130]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+cpu-bind=MASK - gpu-1-34, task 17  1 [3113429]: mask 0xffffffffffffffffff000000000000000000 set
+rank 6 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-73, task 40  0 [2139064]: mask 0xffffffffffffffffff set
+using SLURM envars
+cpu-bind=MASK - gpu-1-34, task 18  2 [3113430]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-73, task 41  1 [2139065]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-73, task 42  2 [2139066]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-34, task 19  3 [3113431]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-73, task 43  3 [2139067]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-50, task 28  0 [1158838]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-50, task 29  1 [1158839]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-28, task 12  0 [636277]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 30  2 [1158840]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-28, task 13  1 [636278]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 44  0 [2587260]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-28, task 14  2 [636279]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 31  3 [1158841]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 45  1 [2587261]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2587262]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-28, task 15  3 [636280]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-74, task 47  3 [2587263]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 15 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 44 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+[gpu-1-3:1903889] *** Process received signal ***
+[gpu-1-3:1903889] Signal: Segmentation fault (11)
+[gpu-1-3:1903889] Signal code: Invalid permissions (2)
+[gpu-1-3:1903889] Failing at address: 0x40053a200000
+[gpu-1-49:1152968] *** Process received signal ***
+[gpu-1-49:1152968] Signal: Segmentation fault (11)
+[gpu-1-49:1152968] Signal code: Invalid permissions (2)
+[gpu-1-49:1152968] Failing at address: 0x4004fa200000
+[gpu-1-36:3294842] *** Process received signal ***
+[gpu-1-36:3294842] Signal: Segmentation fault (11)
+[gpu-1-36:3294842] Signal code: Invalid permissions (2)
+[gpu-1-36:3294842] Failing at address: 0x40061a200000
+[gpu-1-65:3144325] *** Process received signal ***
+[gpu-1-65:3144325] Signal: Segmentation fault (11)
+[gpu-1-65:3144325] Signal code: Invalid permissions (2)
+[gpu-1-65:3144325] Failing at address: 0x40061a200000
+[gpu-1-27:541489] *** Process received signal ***
+[gpu-1-27:541489] Signal: Segmentation fault (11)
+[gpu-1-27:541489] Signal code: Invalid permissions (2)
+[gpu-1-27:541489] Failing at address: 0x40055a200000
+[gpu-1-100:1538661] *** Process received signal ***
+[gpu-1-100:1538661] Signal: Segmentation fault (11)
+[gpu-1-100:1538661] Signal code: Invalid permissions (2)
+[gpu-1-100:1538661] Failing at address: 0x40065a200000
+[gpu-1-73:2139093] *** Process received signal ***
+[gpu-1-73:2139093] Signal: Segmentation fault (11)
+[gpu-1-73:2139093] Signal code: Invalid permissions (2)
+[gpu-1-73:2139093] Failing at address: 0x4002da200000
+[gpu-1-25:2661773] *** Process received signal ***
+[gpu-1-25:2661773] Signal: Segmentation fault (11)
+[gpu-1-25:2661773] Signal code: Invalid permissions (2)
+[gpu-1-25:2661773] Failing at address: 0x40027a200000
+[gpu-1-111:3674028] *** Process received signal ***
+[gpu-1-111:3674028] Signal: Segmentation fault (11)
+[gpu-1-111:3674028] Signal code: Invalid permissions (2)
+[gpu-1-111:3674028] Failing at address: 0x40065a200000
+[gpu-1-69:532604] *** Process received signal ***
+[gpu-1-69:532604] Signal: Segmentation fault (11)
+[gpu-1-69:532604] Signal code: Invalid permissions (2)
+[gpu-1-69:532604] Failing at address: 0x40063a200000
+[gpu-1-27:541489] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002f3bd07c0]
+[gpu-1-50:1158911] *** Process received signal ***
+[gpu-1-50:1158911] Signal: Segmentation fault (11)
+[gpu-1-50:1158911] Signal code: Invalid permissions (2)
+[gpu-1-50:1158911] Failing at address: 0x40051a200000
+[gpu-1-85:2339843] *** Process received signal ***
+[gpu-1-85:2339843] Signal: Segmentation fault (11)
+[gpu-1-85:2339843] Signal code: Invalid permissions (2)
+[gpu-1-85:2339843] Failing at address: 0x40059a200000
+[gpu-1-28:636356] *** Process received signal ***
+[gpu-1-28:636356] Signal: Segmentation fault (11)
+[gpu-1-28:636356] Signal code: Invalid permissions (2)
+[gpu-1-28:636356] Failing at address: 0x40045a200000
+[gpu-1-49:1152968] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40028daa07c0]
+[gpu-1-111:3674028] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003e9c607c0]
+[gpu-1-100:1538661] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003f44907c0]
+[gpu-1-34:3113456] *** Process received signal ***
+[gpu-1-34:3113456] Signal: Segmentation fault (11)
+[gpu-1-34:3113456] Signal code: Invalid permissions (2)
+[gpu-1-34:3113456] Failing at address: 0x40049a200000
+[gpu-1-65:3144325] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003ac5607c0]
+[gpu-1-3:1903889] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002d6fd07c0]
+[gpu-1-27:541489] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4002fae62bfc]
+[gpu-1-27:541489] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002fb17839c]
+[gpu-1-27:541489] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002fb178234]
+[gpu-1-50:1158911] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002a5bb07c0]
+[gpu-1-73:2139093] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000712207c0]
+[gpu-1-28:636356] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4001ed0e07c0]
+[gpu-1-49:1152968] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x400294d32bfc]
+[gpu-1-49:1152968] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40029504839c]
+[gpu-1-25:2661773] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4000148b07c0]
+[gpu-1-111:3674028] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4003f0ef2bfc]
+[gpu-1-111:3674028] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003f120839c]
+[gpu-1-111:3674028] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003f1208234]
+[gpu-1-69:532604] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003c81a07c0]
+[gpu-1-100:1538661] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4003fb722bfc]
+[gpu-1-100:1538661] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003fba3839c]
+[gpu-1-100:1538661] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003fba38234]
+[gpu-1-36:3294842] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003bf1607c0]
+[gpu-1-34:3113456] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x400227e707c0]
+[gpu-1-34:3113456] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x40022f102bfc]
+[gpu-1-34:3113456] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40022f41839c]
+[gpu-1-34:3113456] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40022f418234]
+[gpu-1-34:3113456] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x40022f4b6384]
+[gpu-1-34:3113456] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40022f4b2cdc]
+[gpu-1-3:1903889] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4002de262bfc]
+[gpu-1-3:1903889] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002de57839c]
+[gpu-1-3:1903889] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002de578234]
+[gpu-1-27:541489] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4002fb216384]
+[gpu-1-27:541489] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002fb212cdc]
+[gpu-1-89:989147] *** Process received signal ***
+[gpu-1-89:989147] Signal: Segmentation fault (11)
+[gpu-1-89:989147] Signal code: Invalid permissions (2)
+[gpu-1-89:989147] Failing at address: 0x4005da200000
+[gpu-1-50:1158911] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4002ace42bfc]
+[gpu-1-50:1158911] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002ad15839c]
+[gpu-1-50:1158911] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002ad158234]
+[gpu-1-73:2139093] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4000784b2bfc]
+[gpu-1-73:2139093] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4000787c839c]
+[gpu-1-73:2139093] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4000787c8234]
+[gpu-1-73:2139093] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x400078866384]
+[gpu-1-74:2587348] *** Process received signal ***
+[gpu-1-74:2587348] Signal: Segmentation fault (11)
+[gpu-1-74:2587348] Signal code: Invalid permissions (2)
+[gpu-1-74:2587348] Failing at address: 0x40051a200000
+[gpu-1-85:2339843] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4003387107c0]
+[gpu-1-49:1152968] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400295048234]
+[gpu-1-49:1152968] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4002950e6384]
+[gpu-1-49:1152968] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002950e2cdc]
+[gpu-1-25:2661773] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x40001bb42bfc]
+[gpu-1-25:2661773] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40001be5839c]
+[gpu-1-25:2661773] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40001be58234]
+[gpu-1-111:3674028] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003f12a6384]
+[gpu-1-111:3674028] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003f12a2cdc]
+[gpu-1-69:532604] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4003cf432bfc]
+[gpu-1-69:532604] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003cf74839c]
+[gpu-1-69:532604] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003cf748234]
+[gpu-1-100:1538661] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003fbad6384]
+[gpu-1-100:1538661] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003fbad2cdc]
+[gpu-1-36:3294842] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4003c63f2bfc]
+[gpu-1-65:3144325] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4003b37f2bfc]
+[gpu-1-65:3144325] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003b3b0839c]
+[gpu-1-3:1903889] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4002de616384]
+[gpu-1-3:1903889] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002de612cdc]
+[gpu-1-3:1903889] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002de612f98]
+[gpu-1-27:541489] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002fb212f98]
+[gpu-1-27:541489] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002fb2250bc]
+[gpu-1-89:989147] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x40037ed707c0]
+[gpu-1-50:1158911] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4002ad1f6384]
+[gpu-1-50:1158911] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002ad1f2cdc]
+[gpu-1-74:2587348] [ 0] linux-vdso.so.1(__kernel_rt_sigreturn+0x0)[0x4002bdd007c0]
+[gpu-1-85:2339843] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x40033f9a2bfc]
+[gpu-1-85:2339843] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40033fcb839c]
+[gpu-1-85:2339843] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x40033fcb8234]
+[gpu-1-85:2339843] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x40033fd56384]
+[gpu-1-28:636356] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4001f4372bfc]
+[gpu-1-28:636356] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4001f468839c]
+[gpu-1-28:636356] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4001f4688234]
+[gpu-1-28:636356] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4001f4726384]
+[gpu-1-49:1152968] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002950e2f98]
+[gpu-1-49:1152968] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002950f50bc]
+[gpu-1-25:2661773] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x40001bef6384]
+[gpu-1-111:3674028] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003f12a2f98]
+[gpu-1-111:3674028] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003f12b50bc]
+[gpu-1-69:532604] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003cf7e6384]
+[gpu-1-69:532604] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003cf7e2cdc]
+[gpu-1-69:532604] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003cf7e2f98]
+[gpu-1-100:1538661] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003fbad2f98]
+[gpu-1-100:1538661] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003fbae50bc]
+[gpu-1-36:3294842] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4003c670839c]
+[gpu-1-36:3294842] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003c6708234]
+[gpu-1-34:3113456] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40022f4b2f98]
+[gpu-1-34:3113456] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40022f4c50bc]
+[gpu-1-65:3144325] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4003b3b08234]
+[gpu-1-65:3144325] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003b3ba6384]
+[gpu-1-65:3144325] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003b3ba2cdc]
+[gpu-1-3:1903889] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002de6250bc]
+[gpu-1-27:541489] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002fa8e1ad0]
+[gpu-1-89:989147] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x400386002bfc]
+[gpu-1-89:989147] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x40038631839c]
+[gpu-1-50:1158911] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002ad1f2f98]
+[gpu-1-50:1158911] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002ad2050bc]
+[gpu-1-73:2139093] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x400078862cdc]
+[gpu-1-73:2139093] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x400078862f98]
+[gpu-1-74:2587348] [ 1] /lib64/libc.so.6(+0xa2bfc)[0x4002c4f92bfc]
+[gpu-1-74:2587348] [ 2] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x2839c)[0x4002c52a839c]
+[gpu-1-74:2587348] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x4002c52a8234]
+[gpu-1-74:2587348] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4002c5346384]
+[gpu-1-74:2587348] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4002c5342cdc]
+[gpu-1-74:2587348] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4002c5342f98]
+[gpu-1-74:2587348] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4002c53550bc]
+[gpu-1-85:2339843] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40033fd52cdc]
+[gpu-1-85:2339843] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40033fd52f98]
+[gpu-1-28:636356] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4001f4722cdc]
+[gpu-1-28:636356] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4001f4722f98]
+[gpu-1-49:1152968] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002947b1ad0]
+[gpu-1-25:2661773] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x40001bef2cdc]
+[gpu-1-25:2661773] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x40001bef2f98]
+[gpu-1-25:2661773] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40001bf050bc]
+[gpu-1-111:3674028] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003f0971ad0]
+[gpu-1-69:532604] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003cf7f50bc]
+[gpu-1-100:1538661] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003fb1a1ad0]
+[gpu-1-36:3294842] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003c67a6384]
+[gpu-1-36:3294842] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003c67a2cdc]
+[gpu-1-36:3294842] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003c67a2f98]
+[gpu-1-34:3113456] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40022eb81ad0]
+[gpu-1-65:3144325] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003b3ba2f98]
+[gpu-1-65:3144325] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003b3bb50bc]
+[gpu-1-3:1903889] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002ddce1ad0]
+[gpu-1-27:541489] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4002fa9508d8]
+[gpu-1-89:989147] [ 3] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0x28234)[0x400386318234]
+[gpu-1-50:1158911] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002ac8c1ad0]
+[gpu-1-73:2139093] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4000788750bc]
+[gpu-1-74:2587348] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4002c4a11ad0]
+[gpu-1-85:2339843] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x40033fd650bc]
+[gpu-1-28:636356] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4001f47350bc]
+[gpu-1-49:1152968] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4002948208d8]
+[gpu-1-25:2661773] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40001b5c1ad0]
+[gpu-1-111:3674028] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4003f09e08d8]
+[gpu-1-69:532604] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003ceeb1ad0]
+[gpu-1-100:1538661] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4003fb2108d8]
+[gpu-1-36:3294842] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003c67b50bc]
+[gpu-1-34:3113456] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x40022ebf08d8]
+[gpu-1-65:3144325] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003b3271ad0]
+[gpu-1-3:1903889] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4002ddd508d8]
+[gpu-1-27:541489] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4002fa812fc4]
+[gpu-1-89:989147] [ 4] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc6384)[0x4003863b6384]
+[gpu-1-89:989147] [ 5] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2cdc)[0x4003863b2cdc]
+[gpu-1-89:989147] [ 6] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xc2f98)[0x4003863b2f98]
+[gpu-1-89:989147] [ 7] /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1(+0xd50bc)[0x4003863c50bc]
+[gpu-1-50:1158911] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4002ac9308d8]
+[gpu-1-73:2139093] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400077f31ad0]
+[gpu-1-74:2587348] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4002c4a808d8]
+[gpu-1-85:2339843] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x40033f421ad0]
+[gpu-1-28:636356] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4001f3df1ad0]
+[gpu-1-49:1152968] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4002946e2fc4]
+[gpu-1-25:2661773] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x40001b6308d8]
+[gpu-1-111:3674028] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003f08a2fc4]
+[gpu-1-69:532604] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4003cef208d8]
+[gpu-1-100:1538661] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003fb0d2fc4]
+[gpu-1-36:3294842] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x4003c5e71ad0]
+[gpu-1-34:3113456] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x40022eab2fc4]
+[gpu-1-65:3144325] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4003b32e08d8]
+[gpu-1-3:1903889] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4002ddc12fc4]
+[gpu-1-27:541489] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4002fa847440]
+[gpu-1-89:989147] [ 8] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x1c1ad0)[0x400385a81ad0]
+[gpu-1-50:1158911] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4002ac7f2fc4]
+[gpu-1-73:2139093] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x400077fa08d8]
+[gpu-1-74:2587348] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4002c4942fc4]
+[gpu-1-85:2339843] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x40033f4908d8]
+[gpu-1-28:636356] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4001f3e608d8]
+[gpu-1-49:1152968] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x400294717440]
+[gpu-1-25:2661773] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x40001b4f2fc4]
+[gpu-1-111:3674028] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003f08d7440]
+[gpu-1-69:532604] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003cede2fc4]
+[gpu-1-100:1538661] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003fb107440]
+[gpu-1-36:3294842] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x4003c5ee08d8]
+[gpu-1-34:3113456] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x40022eae7440]
+[gpu-1-65:3144325] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003b31a2fc4]
+[gpu-1-3:1903889] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4002ddc47440]
+[gpu-1-27:541489] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4002fa86e7c4]
+[gpu-1-89:989147] [ 9] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x2308d8)[0x400385af08d8]
+[gpu-1-50:1158911] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4002ac827440]
+[gpu-1-73:2139093] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x400077e62fc4]
+[gpu-1-74:2587348] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4002c4977440]
+[gpu-1-85:2339843] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x40033f352fc4]
+[gpu-1-28:636356] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4001f3d22fc4]
+[gpu-1-49:1152968] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40029473e7c4]
+[gpu-1-25:2661773] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x40001b527440]
+[gpu-1-111:3674028] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4003f08fe7c4]
+[gpu-1-69:532604] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003cee17440]
+[gpu-1-69:532604] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4003cee3e7c4]
+[gpu-1-69:532604] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4003cee3eab0]
+[gpu-1-69:532604] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4003cee3ec70]
+[gpu-1-100:1538661] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4003fb12e7c4]
+[gpu-1-36:3294842] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003c5da2fc4]
+[gpu-1-34:3113456] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40022eb0e7c4]
+[gpu-1-65:3144325] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003b31d7440]
+[gpu-1-3:1903889] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4002ddc6e7c4]
+[gpu-1-27:541489] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4002fa86eab0]
+[gpu-1-89:989147] [10] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_base_bcast_intra_generic+0x124)[0x4003859b2fc4]
+[gpu-1-50:1158911] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4002ac84e7c4]
+[gpu-1-73:2139093] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x400077e97440]
+[gpu-1-74:2587348] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4002c499e7c4]
+[gpu-1-85:2339843] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x40033f387440]
+[gpu-1-28:636356] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4001f3d57440]
+[gpu-1-49:1152968] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40029473eab0]
+[gpu-1-25:2661773] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40001b54e7c4]
+[gpu-1-111:3674028] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4003f08feab0]
+[gpu-1-69:532604] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4003cee3f144]
+[gpu-1-100:1538661] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4003fb12eab0]
+[gpu-1-36:3294842] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003c5dd7440]
+[gpu-1-34:3113456] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40022eb0eab0]
+[gpu-1-65:3144325] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4003b31fe7c4]
+[gpu-1-3:1903889] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4002ddc6eab0]
+[gpu-1-27:541489] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4002fa86ec70]
+[gpu-1-89:989147] [11] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(ompi_coll_tuned_bcast_intra_dec_fixed+0x40)[0x4003859e7440]
+[gpu-1-50:1158911] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4002ac84eab0]
+[gpu-1-73:2139093] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x400077ebe7c4]
+[gpu-1-74:2587348] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4002c499eab0]
+[gpu-1-85:2339843] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x40033f3ae7c4]
+[gpu-1-28:636356] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4001f3d7e7c4]
+[gpu-1-49:1152968] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40029473ec70]
+[gpu-1-25:2661773] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40001b54eab0]
+[gpu-1-111:3674028] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4003f08fec70]
+[gpu-1-69:532604] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4003ced8f448]
+[gpu-1-69:532604] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-100:1538661] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4003fb12ec70]
+[gpu-1-36:3294842] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x4003c5dfe7c4]
+[gpu-1-34:3113456] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40022eb0ec70]
+[gpu-1-65:3144325] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4003b31feab0]
+[gpu-1-3:1903889] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4002ddc6ec70]
+[gpu-1-27:541489] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4002fa86f144]
+[gpu-1-89:989147] [12] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14e7c4)[0x400385a0e7c4]
+[gpu-1-50:1158911] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4002ac84ec70]
+[gpu-1-50:1158911] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4002ac84f144]
+[gpu-1-73:2139093] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x400077ebeab0]
+[gpu-1-74:2587348] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4002c499ec70]
+[gpu-1-85:2339843] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x40033f3aeab0]
+[gpu-1-28:636356] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4001f3d7eab0]
+[gpu-1-49:1152968] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40029473f144]
+[gpu-1-25:2661773] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40001b54ec70]
+[gpu-1-111:3674028] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4003f08ff144]
+[gpu-1-69:532604] [18] /lib64/libc.so.6(+0x2b404)[0x4003cf3bb404]
+[gpu-1-100:1538661] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4003fb12f144]
+[gpu-1-36:3294842] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x4003c5dfeab0]
+[gpu-1-34:3113456] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40022eb0f144]
+[gpu-1-65:3144325] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4003b31fec70]
+[gpu-1-3:1903889] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4002ddc6f144]
+[gpu-1-27:541489] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4002fa7bf448]
+[gpu-1-27:541489] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-89:989147] [13] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14eab0)[0x400385a0eab0]
+[gpu-1-50:1158911] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4002ac79f448]
+[gpu-1-50:1158911] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-73:2139093] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x400077ebec70]
+[gpu-1-74:2587348] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4002c499f144]
+[gpu-1-85:2339843] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x40033f3aec70]
+[gpu-1-28:636356] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4001f3d7ec70]
+[gpu-1-49:1152968] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40029468f448]
+[gpu-1-49:1152968] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-25:2661773] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40001b54f144]
+[gpu-1-111:3674028] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4003f084f448]
+[gpu-1-111:3674028] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-69:532604] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003cf3bb4d8]
+[gpu-1-69:532604] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-69:532604] *** End of error message ***
+[gpu-1-100:1538661] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4003fb07f448]
+[gpu-1-100:1538661] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-36:3294842] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x4003c5dfec70]
+[gpu-1-34:3113456] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40022ea5f448]
+[gpu-1-34:3113456] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-65:3144325] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4003b31ff144]
+[gpu-1-3:1903889] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4002ddbbf448]
+[gpu-1-3:1903889] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-27:541489] [18] /lib64/libc.so.6(+0x2b404)[0x4002fadeb404]
+[gpu-1-89:989147] [14] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(+0x14ec70)[0x400385a0ec70]
+[gpu-1-50:1158911] [18] /lib64/libc.so.6(+0x2b404)[0x4002acdcb404]
+[gpu-1-73:2139093] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x400077ebf144]
+[gpu-1-74:2587348] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4002c48ef448]
+[gpu-1-74:2587348] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-85:2339843] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x40033f3af144]
+[gpu-1-28:636356] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4001f3d7f144]
+[gpu-1-49:1152968] [18] /lib64/libc.so.6(+0x2b404)[0x400294cbb404]
+[gpu-1-25:2661773] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40001b49f448]
+[gpu-1-25:2661773] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-111:3674028] [18] /lib64/libc.so.6(+0x2b404)[0x4003f0e7b404]
+[gpu-1-100:1538661] [18] /lib64/libc.so.6(+0x2b404)[0x4003fb6ab404]
+[gpu-1-36:3294842] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x4003c5dff144]
+[gpu-1-34:3113456] [18] /lib64/libc.so.6(+0x2b404)[0x40022f08b404]
+[gpu-1-34:3113456] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x40022f08b4d8]
+[gpu-1-34:3113456] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-65:3144325] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4003b314f448]
+[gpu-1-65:3144325] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-3:1903889] [18] /lib64/libc.so.6(+0x2b404)[0x4002de1eb404]
+[gpu-1-27:541489] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002fadeb4d8]
+[gpu-1-27:541489] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-89:989147] [15] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(mca_coll_han_allgather_intra+0x2e4)[0x400385a0f144]
+[gpu-1-50:1158911] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002acdcb4d8]
+[gpu-1-50:1158911] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-73:2139093] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x400077e0f448]
+[gpu-1-73:2139093] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-74:2587348] [18] /lib64/libc.so.6(+0x2b404)[0x4002c4f1b404]
+[gpu-1-85:2339843] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40033f2ff448]
+[gpu-1-85:2339843] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-28:636356] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4001f3ccf448]
+[gpu-1-28:636356] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-49:1152968] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x400294cbb4d8]
+[gpu-1-49:1152968] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-25:2661773] [18] /lib64/libc.so.6(+0x2b404)[0x40001bacb404]
+[gpu-1-111:3674028] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003f0e7b4d8]
+[gpu-1-100:1538661] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003fb6ab4d8]
+[gpu-1-36:3294842] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x4003c5d4f448]
+[gpu-1-36:3294842] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-34:3113456] *** End of error message ***
+[gpu-1-65:3144325] [18] /lib64/libc.so.6(+0x2b404)[0x4003b377b404]
+[gpu-1-3:1903889] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002de1eb4d8]
+[gpu-1-27:541489] *** End of error message ***
+[gpu-1-89:989147] [16] /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40(PMPI_Allgather+0x108)[0x40038595f448]
+[gpu-1-89:989147] [17] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x403960]
+[gpu-1-50:1158911] *** End of error message ***
+[gpu-1-73:2139093] [18] /lib64/libc.so.6(+0x2b404)[0x40007843b404]
+[gpu-1-74:2587348] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4002c4f1b4d8]
+[gpu-1-74:2587348] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-85:2339843] [18] /lib64/libc.so.6(+0x2b404)[0x40033f92b404]
+[gpu-1-28:636356] [18] /lib64/libc.so.6(+0x2b404)[0x4001f42fb404]
+[gpu-1-49:1152968] *** End of error message ***
+[gpu-1-25:2661773] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x40001bacb4d8]
+[gpu-1-25:2661773] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-25:2661773] *** End of error message ***
+[gpu-1-111:3674028] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-111:3674028] *** End of error message ***
+[gpu-1-100:1538661] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-100:1538661] *** End of error message ***
+[gpu-1-36:3294842] [18] /lib64/libc.so.6(+0x2b404)[0x4003c637b404]
+[gpu-1-65:3144325] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003b377b4d8]
+[gpu-1-3:1903889] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-3:1903889] *** End of error message ***
+[gpu-1-89:989147] [18] /lib64/libc.so.6(+0x2b404)[0x400385f8b404]
+[gpu-1-73:2139093] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x40007843b4d8]
+[gpu-1-73:2139093] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-74:2587348] *** End of error message ***
+[gpu-1-85:2339843] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x40033f92b4d8]
+[gpu-1-85:2339843] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-28:636356] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4001f42fb4d8]
+[gpu-1-28:636356] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-36:3294842] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x4003c637b4d8]
+[gpu-1-36:3294842] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-65:3144325] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-65:3144325] *** End of error message ***
+[gpu-1-89:989147] [19] /lib64/libc.so.6(__libc_start_main+0x98)[0x400385f8b4d8]
+[gpu-1-89:989147] [20] /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather[0x4043b0]
+[gpu-1-89:989147] *** End of error message ***
+[gpu-1-73:2139093] *** End of error message ***
+[gpu-1-85:2339843] *** End of error message ***
+[gpu-1-28:636356] *** End of error message ***
+[gpu-1-36:3294842] *** End of error message ***
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 532604 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1158911 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2587348 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3294842 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 541489 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1903889 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1538661 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2139093 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 636356 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2339843 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3144325 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 1152968 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 989147 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3674028 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 3113456 Segmentation fault      "$@"
+/cluster/home/marcink/hpe_cug_paper/gpubind.sh: line 19: 2661773 Segmentation fault      "$@"
+srun: error: gpu-1-36: task 20: Exited with exit code 139
+srun: Terminating StepId=244838.2
+srun: error: gpu-1-50: task 28: Exited with exit code 139
+srun: error: gpu-1-69: task 36: Exited with exit code 139
+srun: error: gpu-1-74: task 44: Exited with exit code 139
+srun: error: gpu-1-3: task 0: Exited with exit code 139
+srun: error: gpu-1-100: task 56: Exited with exit code 139
+srun: error: gpu-1-65: task 32: Exited with exit code 139
+[2026-03-14T14:45:41.167] error: *** STEP 244838.2 ON gpu-1-3 CANCELLED AT 2026-03-14T14:45:41 DUE TO TASK FAILURE ***
+srun: error: gpu-1-85: task 48: Exited with exit code 139
+srun: error: gpu-1-27: task 8: Exited with exit code 139
+srun: error: gpu-1-49: task 24: Exited with exit code 139
+srun: error: gpu-1-73: task 40: Exited with exit code 139
+srun: error: gpu-1-28: task 12: Exited with exit code 139
+srun: error: gpu-1-111: task 60: Exited with exit code 139
+srun: error: gpu-1-89: task 52: Exited with exit code 139
+srun: error: gpu-1-34: task 16: Exited with exit code 139
+srun: error: gpu-1-25: task 4: Exited with exit code 139
+srun: error: gpu-1-25: tasks 5-7: Terminated
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gpu-1-100: tasks 57-59: Terminated
+srun: error: gpu-1-50: tasks 29-31: Terminated
+srun: error: gpu-1-3: tasks 1-3: Terminated
+srun: error: gpu-1-69: tasks 37-39: Terminated
+srun: error: gpu-1-65: tasks 33-35: Terminated
+srun: error: gpu-1-36: tasks 21-23: Terminated
+srun: error: gpu-1-49: tasks 25-27: Terminated
+srun: error: gpu-1-27: tasks 9-11: Terminated
+srun: error: gpu-1-85: tasks 49-51: Terminated
+srun: error: gpu-1-74: tasks 45-47: Terminated
+srun: error: gpu-1-73: tasks 41-43: Terminated
+srun: error: gpu-1-28: tasks 13-15: Terminated
+srun: error: gpu-1-111: tasks 61-63: Terminated
+srun: error: gpu-1-89: tasks 53-55: Terminated
+srun: error: gpu-1-34: tasks 17-19: Terminated
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-69, task 36  0 [533664]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-69, task 37  1 [533665]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 38  2 [533666]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 39  3 [533667]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  0  0 [1904636]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  1  1 [1904637]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1904638]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1904639]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 24  0 [1154020]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1154021]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 26  2 [1154022]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 27  3 [1154023]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  8  0 [542527]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 37 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-27, task  9  1 [542528]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-50, task 28  0 [1159904]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 36 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-27, task 10  2 [542529]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 20  0 [3295514]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 29  1 [1159905]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 40  0 [2140133]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 21  1 [3295515]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+cpu-bind=MASK - gpu-1-50, task 30  2 [1159906]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+rank 3 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-73, task 41  1 [2140134]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 22  2 [3295516]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 42  2 [2140135]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task 11  3 [542530]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-74, task 44  0 [2588330]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-50, task 31  3 [1159907]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 32  0 [3145373]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-36, task 23  3 [3295517]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-74, task 45  1 [2588331]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-65, task 33  1 [3145374]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 43  3 [2140136]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2588332]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-65, task 34  2 [3145375]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-111, task 60  0 [3675072]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-65, task 35  3 [3145376]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 47  3 [2588333]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-111, task 61  1 [3675073]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-111, task 62  2 [3675074]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 16  0 [3114506]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 56  0 [1539743]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3675075]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 48  0 [2340885]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-34, task 17  1 [3114507]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 57  1 [1539744]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 52  0 [990191]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-85, task 49  1 [2340886]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-100, task 58  2 [1539745]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 18  2 [3114508]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 50  2 [2340887]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-89, task 53  1 [990192]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-89, task 54  2 [990193]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-100, task 59  3 [1539746]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 19  3 [3114509]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-25, task  4  0 [2662483]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-25, task  5  1 [2662484]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-85, task 51  3 [2340888]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-28, task 12  0 [637344]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+using SLURM envars
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+rank 32 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-89, task 55  3 [990194]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  6  2 [2662485]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 44 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-28, task 13  1 [637345]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 34 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-25, task  7  3 [2662486]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 14  2 [637346]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-28, task 15  3 [637347]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 15 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                   10267.25
+2                   10181.90
+4                   10127.93
+8                   10432.46
+16                  10130.75
+32                  10214.98
+64                  10369.09
+128                 10174.64
+256                 10431.09
+512                 10346.68
+1024                   86.50
+2048                   90.64
+4096                   86.51
+8192                   87.72
+16384                 110.29
+32768                 161.42
+65536                 264.71
+131072                522.37
+262144               1402.71
+524288               2128.17
+1048576              3572.74
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-111, task 60  0 [3680815]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-65, task 32  0 [3151122]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  0  0 [1905665]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 61  1 [3680816]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 36  0 [539419]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 62  2 [3680817]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 33  1 [3151123]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  1  1 [1905666]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 37  1 [539420]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 34  2 [3151124]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1905667]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 48  0 [2346633]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-69, task 38  2 [539421]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 56  0 [1545502]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3680818]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 57  1 [1545503]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 49  1 [2346634]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1905668]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 50  2 [2346635]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 35  3 [3151125]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 39  3 [539422]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 58  2 [1545504]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 51  3 [2346636]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 40  0 [2145882]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 59  3 [1545505]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 12  0 [643094]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-73, task 41  1 [2145883]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 16  0 [3120276]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-28, task 13  1 [643095]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 42  2 [2145884]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 17  1 [3120277]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 14  2 [643096]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 44  0 [2594089]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-34, task 18  2 [3120278]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 45  1 [2594090]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 43  3 [2145885]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 15  3 [643097]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 19  3 [3120279]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2594091]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 32 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 37 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-74, task 47  3 [2594092]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 34 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-27, task  8  0 [548273]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+using SLURM envars
+using SLURM envars
+rank 36 local 0 gpu 0 nic cxi0
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-27, task  9  1 [548274]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-27, task 10  2 [548275]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-36, task 20  0 [3296486]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-36, task 21  1 [3296487]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-27, task 11  3 [548276]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-36, task 22  2 [3296488]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 24  0 [1159767]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-89, task 52  0 [995944]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1159768]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-36, task 23  3 [3296489]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-49, task 26  2 [1159769]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-89, task 53  1 [995945]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 28  0 [1165662]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-50, task 29  1 [1165663]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 54  2 [995946]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 15 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-49, task 27  3 [1159770]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 30  2 [1165664]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-89, task 55  3 [995947]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-50, task 31  3 [1165665]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-25, task  4  0 [2663486]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 44 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-25, task  5  1 [2663487]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  6  2 [2663488]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-25, task  7  3 [2663489]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+rank 5 local 1 gpu 1 nic cxi1
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      54.18
+8                      52.92
+16                     52.92
+32                     52.78
+64                     67.89
+128                    71.99
+256                    75.41
+512                    76.99
+1024                   79.89
+2048                   84.43
+4096                   91.57
+8192                   94.17
+16384                 111.96
+32768                 140.09
+65536                 187.49
+131072                264.14
+262144                398.48
+524288                742.55
+1048576              1263.19
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-25, task  4  0 [2664166]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  5  1 [2664167]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 36  0 [540503]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-69, task 37  1 [540504]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-25, task  6  2 [2664168]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 38  2 [540505]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 52  0 [997016]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-25, task  7  3 [2664169]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-69, task 39  3 [540506]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 12  0 [644128]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-111, task 60  0 [3681891]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 56  0 [1546531]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-89, task 53  1 [997017]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 61  1 [3681892]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 13  1 [644129]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 57  1 [1546532]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 32  0 [3152156]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-89, task 54  2 [997018]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 62  2 [3681893]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 24  0 [1160843]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-3, task  0  0 [1906386]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-100, task 58  2 [1546533]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 14  2 [644130]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  8  0 [549312]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-49, task 25  1 [1160844]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  1  1 [1906387]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 44  0 [2595161]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-65, task 33  1 [3152157]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task  9  1 [549313]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-111, task 63  3 [3681894]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 26  2 [1160845]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  2  2 [1906388]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 28  0 [1166734]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-27, task 10  2 [549314]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-89, task 55  3 [997019]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-100, task 59  3 [1546534]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-28, task 15  3 [644131]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 45  1 [2595162]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 29  1 [1166735]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 34  2 [3152158]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 30  2 [1166736]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-49, task 27  3 [1160846]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 46  2 [2595163]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-3, task  3  3 [1906389]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-27, task 11  3 [549315]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-65, task 35  3 [3152159]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-50, task 31  3 [1166737]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-74, task 47  3 [2595164]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 37 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 6 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-36, task 20  0 [3297152]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 5 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 38 local 2 gpu 2 nic cxi2
+cpu-bind=MASK - gpu-1-36, task 21  1 [3297153]: mask 0xffffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 4 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 36 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 7 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 39 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-36, task 22  2 [3297154]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+using SLURM envars
+rank 61 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 52 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 13 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-36, task 23  3 [3297155]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 56 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 60 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 26 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 12 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 55 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 62 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 63 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 32 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 57 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 53 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 54 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 14 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 31 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 59 local 3 gpu 3 nic cxi3
+using SLURM envars
+using SLURM envars
+rank 15 local 3 gpu 3 nic cxi3
+rank 58 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 27 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 11 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 8 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 46 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 24 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 9 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 25 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 33 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 10 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 35 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+using SLURM envars
+rank 34 local 2 gpu 2 nic cxi2
+rank 44 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 29 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 28 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 30 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 45 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-85, task 48  0 [2347709]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 47 local 3 gpu 3 nic cxi3
+cpu-bind=MASK - gpu-1-85, task 49  1 [2347710]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 50  2 [2347711]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-85, task 51  3 [2347712]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 40  0 [2146916]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 22 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 20 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 23 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 21 local 1 gpu 1 nic cxi1
+cpu-bind=MASK - gpu-1-34, task 16  0 [3121350]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-73, task 41  1 [2146917]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 42  2 [2146918]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 17  1 [3121351]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 18  2 [3121352]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-73, task 43  3 [2146919]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-34, task 19  3 [3121353]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 48 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 49 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 51 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 50 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 41 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 17 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 40 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 16 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 42 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 18 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 43 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 19 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      46.83
+2                      46.66
+4                      47.12
+8                      47.69
+16                     49.16
+32                     49.61
+64                     51.06
+128                    49.18
+256                    51.82
+512                    57.74
+1024                   72.21
+2048                   83.90
+4096                  108.49
+8192                  157.36
+16384                 230.04
+32768                 374.59
+65536                 665.60
+131072               1247.37
+262144               2417.22
+524288               4725.34
+1048576              9450.07
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+
+Job 244838 consumed 0.0 billing hours and 5.1 GPU hours from project nn9997k.
+
+Submitted 2026-03-14T14:42:53; waited 30.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   4.8 minutes
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+244838             4608            0.0 %  2026-03-14T14:43:23  285.0 s  0
+244838.batch        288      1     0.0 %  2026-03-14T14:43:23  285.0 s  0
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:43:27  118.0 s  Signal 15
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:45:25    9.0 s  0
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:45:34    8.0 s  Signal 15
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:45:42  126.0 s  0
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:47:48    9.0 s  0
+244838.gpubind.sh  4608     64     0.0 %  2026-03-14T14:47:57   11.0 s  0
+
+Used CPU time:   0.7 CPU seconds
+Unused CPU time: 15.2 CPU days
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+244838             11200.0        
+244838.batch        700.0     0.2
+244838.gpubind.sh  11200.0    18.3
+244838.gpubind.sh  11200.0    16.0
+244838.gpubind.sh  11200.0    16.0
+244838.gpubind.sh  11200.0    17.5
+244838.gpubind.sh  11200.0    17.2
+244838.gpubind.sh  11200.0    17.1
+
+Job 244838 completed at Sat Mar 14 14:48:08 CET 2026

@@ -1,0 +1,13 @@
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                    8734.31
+2                    8818.15
+4                    8927.02
+8                    8762.10
+16                   8905.09
+32                   8963.13
+64                   8794.44
+128                  8929.68
+256                  9008.27
+512                  8822.35
