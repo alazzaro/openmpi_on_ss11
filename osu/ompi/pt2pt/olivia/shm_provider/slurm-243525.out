@@ -1,0 +1,119 @@
+Starting job 243525 on gpu-1-1 on Olivia at Sat Mar 14 09:01:57 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+/cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/bin/mpirun
+	linux-vdso.so.1 (0x000040025e6e0000)
+	libcudart.so.12 => /cluster/software/NRIS/neoverse_v2/software/CUDA/12.9.1/targets/sbsa-linux/lib/libcudart.so.12 (0x000040025e6f0000)
+	libcuda.so.1 => /usr/lib64/libcuda.so.1 (0x000040025e7e0000)
+	libnccl.so.2 => /cluster/software/NRIS/neoverse_v2/software/NCCL/2.29.2-GCCcore-14.3.0-CUDA-12.9.1/lib/libnccl.so.2 (0x0000400261780000)
+	libmpi.so.40 => /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libmpi.so.40 (0x0000400265230000)
+	libstdc++.so.6 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib64/libstdc++.so.6 (0x0000400265570000)
+	libm.so.6 => /lib64/libm.so.6 (0x00004002657e0000)
+	libgcc_s.so.1 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib64/libgcc_s.so.1 (0x0000400265890000)
+	libc.so.6 => /lib64/libc.so.6 (0x00004002658d0000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x0000400265a90000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x0000400265ac0000)
+	librt.so.1 => /lib64/librt.so.1 (0x0000400265af0000)
+	/lib/ld-linux-aarch64.so.1 (0x000040025e670000)
+	libopen-pal.so.80 => /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libopen-pal.so.80 (0x0000400265b20000)
+	libfabric.so.1 => /cluster/projects/nn9999k/marcink/software/libfabric/2.3.1-xpmemfix/lib/libfabric.so.1 (0x0000400265c60000)
+	libcxi.so.1 => /usr/lib64/libcxi.so.1 (0x0000400265db0000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x0000400265df0000)
+	libjson-c.so.5 => /usr/lib64/libjson-c.so.5 (0x0000400265ed0000)
+	libatomic.so.1 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib/../lib64/libatomic.so.1 (0x0000400265f10000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x0000400265f40000)
+	libpmix.so.2 => /cluster/projects/nn9999k/marcink/software/openmpi/5.0.90-shmpatch/lib/libpmix.so.2 (0x0000400265f70000)
+	libmunge.so.2 => /usr/lib64/libmunge.so.2 (0x00004002661a0000)
+	libevent_core-2.1.so.7 => /usr/lib64/libevent_core-2.1.so.7 (0x00004002661d0000)
+	libevent_pthreads-2.1.so.7 => /usr/lib64/libevent_pthreads-2.1.so.7 (0x0000400266230000)
+	libhwloc.so.15 => /usr/lib64/libhwloc.so.15 (0x0000400266260000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x00004002662e0000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x0000400266330000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x0000400266380000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x00004002663c0000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x0000400266450000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x0000400266490000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x0000400266550000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x00004002669a0000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x0000400266a10000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x0000400266a90000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x0000400266ac0000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x0000400266b90000)
+	libz.so.1 => /cluster/software/NRIS/neoverse_v2/software/zlib/1.3.1-GCCcore-14.3.0/lib/libz.so.1 (0x0000400266bc0000)
+	libpciaccess.so.0 => /usr/lib64/libpciaccess.so.0 (0x0000400266c00000)
+	libxml2.so.2 => /usr/lib64/libxml2.so.2 (0x0000400266c50000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x0000400266de0000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x0000400266f80000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x0000400266fb0000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x00004002670b0000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00004002670f0000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x0000400267120000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x0000400267150000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x0000400267190000)
+	liblzma.so.5 => /usr/lib64/liblzma.so.5 (0x00004002671d0000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x0000400267230000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x0000400267260000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x0000400267290000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x00004002672e0000)
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+cpu-bind=MASK - gpu-1-1, task  0  0 [393044]: mask 0xffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [393045]: mask 0xffffffffffffffff000000000000000000 set
+using SLURM envars
+rank 1 local 1 gpu 1 nic
+using SLURM envars
+rank 0 local 0 gpu 0 nic
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.21              Pass
+2                       0.41              Pass
+4                       0.83              Pass
+8                       1.59              Pass
+16                      3.19              Pass
+32                      6.37              Pass
+64                     12.74              Pass
+128                    25.33              Pass
+256                    50.87              Pass
+512                   101.54              Pass
+1024                  202.47              Pass
+2048                  403.85              Pass
+4096                  801.00              Pass
+8192                 1581.93              Pass
+16384                3139.24              Pass
+32768                6216.07              Pass
+65536               12170.84              Pass
+131072              22891.54              Pass
+262144              41841.01              Pass
+524288              71104.10              Pass
+1048576            109416.73              Pass
+2097152            149884.16              Pass
+4194304            187460.07              Pass
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple D D
+
+Job 243525 consumed 0.0 billing hours and 0.1 GPU hours from project nn9997k.
+
+Submitted 2026-03-14T09:01:56; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   57.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+243525              288            0.0 %  2026-03-14T09:01:56   57.0 s  0
+243525.batch        288      1     0.0 %  2026-03-14T09:01:56   57.0 s  0
+243525.gpubind.sh   128      2     0.0 %  2026-03-14T09:02:00   53.0 s  0
+
+Used CPU time:   0.5 CPU seconds
+Unused CPU time: 4.6 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+243525              700.0        
+243525.batch        700.0     0.1
+243525.gpubind.sh   700.0     0.4
+
+Job 243525 completed at Sat Mar 14 09:02:54 CET 2026
