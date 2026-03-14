@@ -1,0 +1,32 @@
+
+Job 245558 consumed 0.0 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-14T17:41:28; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   26.0 seconds
+
+Job was cancelled.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+245558              288            0.0 %  2026-03-14T17:41:28   26.0 s  0
+245558.batch        288      1     0.0 %  2026-03-14T17:41:28   27.0 s  Signal 15
+245558.gpubind.sh   288      4     0.0 %  2026-03-14T17:41:33    7.0 s  0
+245558.gpubind.sh   288      4     0.0 %  2026-03-14T17:41:40    6.0 s  0
+245558.gpubind.sh   288      4     0.0 %  2026-03-14T17:41:46    6.0 s  0
+245558.gpubind.sh   288      4     0.0 %  2026-03-14T17:41:52    6.0 s  Signal 15
+
+Used CPU time:   0.5 CPU seconds
+Unused CPU time: 2.1 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+245558              700.0        
+245558.batch        700.0     0.1
+245558.gpubind.sh   700.0     1.1
+245558.gpubind.sh   700.0     1.0
+245558.gpubind.sh   700.0     1.0
+245558.gpubind.sh   700.0     0.1
+
+Job 245558 completed at Sat Mar 14 17:41:59 CET 2026

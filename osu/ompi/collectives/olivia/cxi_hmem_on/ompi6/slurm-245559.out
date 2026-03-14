@@ -1,0 +1,445 @@
+Starting job 245559 on gpu-1-1 on Olivia at Sat Mar 14 17:42:04 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+	linux-vdso.so.1 (0x000040009a090000)
+	libcudart.so.12 => /cluster/software/NRIS/neoverse_v2/software/CUDA/12.9.1/targets/sbsa-linux/lib/libcudart.so.12 (0x000040009a0a0000)
+	libcuda.so.1 => /usr/lib64/libcuda.so.1 (0x000040009a190000)
+	libnccl.so.2 => /cluster/software/NRIS/neoverse_v2/software/NCCL/2.29.2-GCCcore-14.3.0-CUDA-12.9.1/lib/libnccl.so.2 (0x000040009d130000)
+	libmpi.so.0 => /cluster/projects/nn9999k/marcink/software/openmpi/6.x/lib/libmpi.so.0 (0x00004000a0be0000)
+	libstdc++.so.6 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib64/libstdc++.so.6 (0x00004000a0f50000)
+	libm.so.6 => /lib64/libm.so.6 (0x00004000a11c0000)
+	libgcc_s.so.1 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib64/libgcc_s.so.1 (0x00004000a1270000)
+	libc.so.6 => /lib64/libc.so.6 (0x00004000a12b0000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00004000a1470000)
+	libpthread.so.0 => /lib64/libpthread.so.0 (0x00004000a14a0000)
+	librt.so.1 => /lib64/librt.so.1 (0x00004000a14d0000)
+	/lib/ld-linux-aarch64.so.1 (0x000040009a020000)
+	libopen-pal.so.0 => /cluster/projects/nn9999k/marcink/software/openmpi/6.x/lib/libopen-pal.so.0 (0x00004000a1500000)
+	libfabric.so.1 => /cluster/software/NRIS/neoverse_v2/software/libfabric/2.3.1-GCCcore-14.3.0/lib/libfabric.so.1 (0x00004000a1670000)
+	libcxi.so.1 => /usr/lib64/libcxi.so.1 (0x00004000a17c0000)
+	libcurl.so.4 => /usr/lib64/libcurl.so.4 (0x00004000a1800000)
+	libjson-c.so.5 => /usr/lib64/libjson-c.so.5 (0x00004000a18e0000)
+	libatomic.so.1 => /cluster/software/NRIS/neoverse_v2/software/GCCcore/14.3.0/lib64/libatomic.so.1 (0x00004000a1920000)
+	libnl-route-3.so.200 => /usr/lib64/libnl-route-3.so.200 (0x00004000a1950000)
+	libnl-3.so.200 => /usr/lib64/libnl-3.so.200 (0x00004000a1a00000)
+	libxpmem.so.0 => /usr/lib64/libxpmem.so.0 (0x00004000a1a50000)
+	libpmix.so.2 => /cluster/projects/nn9999k/marcink/software/openmpi/6.x/lib/libpmix.so.2 (0x00004000a1a80000)
+	libmunge.so.2 => /usr/lib64/libmunge.so.2 (0x00004000a1cf0000)
+	libevent_core-2.1.so.7 => /usr/lib64/libevent_core-2.1.so.7 (0x00004000a1d20000)
+	libevent_pthreads-2.1.so.7 => /usr/lib64/libevent_pthreads-2.1.so.7 (0x00004000a1d80000)
+	libhwloc.so.15 => /usr/lib64/libhwloc.so.15 (0x00004000a1db0000)
+	libnghttp2.so.14 => /usr/lib64/libnghttp2.so.14 (0x00004000a1e30000)
+	libidn2.so.0 => /usr/lib64/libidn2.so.0 (0x00004000a1e80000)
+	libssh.so.4 => /usr/lib64/libssh.so.4 (0x00004000a1ec0000)
+	libpsl.so.5 => /usr/lib64/libpsl.so.5 (0x00004000a1f50000)
+	libssl.so.3 => /usr/lib64/libssl.so.3 (0x00004000a1f90000)
+	libcrypto.so.3 => /usr/lib64/libcrypto.so.3 (0x00004000a2050000)
+	libgssapi_krb5.so.2 => /usr/lib64/libgssapi_krb5.so.2 (0x00004000a24a0000)
+	libldap_r-2.4.so.2 => /usr/lib64/libldap_r-2.4.so.2 (0x00004000a2510000)
+	liblber-2.4.so.2 => /usr/lib64/liblber-2.4.so.2 (0x00004000a2590000)
+	libzstd.so.1 => /usr/lib64/libzstd.so.1 (0x00004000a25c0000)
+	libbrotlidec.so.1 => /usr/lib64/libbrotlidec.so.1 (0x00004000a2690000)
+	libz.so.1 => /usr/lib64/libz.so.1 (0x00004000a26c0000)
+	libpciaccess.so.0 => /usr/lib64/libpciaccess.so.0 (0x00004000a2720000)
+	libxml2.so.2 => /usr/lib64/libxml2.so.2 (0x00004000a2750000)
+	libunistring.so.2 => /usr/lib64/libunistring.so.2 (0x00004000a28e0000)
+	libjitterentropy.so.3 => /usr/lib64/libjitterentropy.so.3 (0x00004000a2a80000)
+	libkrb5.so.3 => /usr/lib64/libkrb5.so.3 (0x00004000a2ab0000)
+	libk5crypto.so.3 => /usr/lib64/libk5crypto.so.3 (0x00004000a2bb0000)
+	libcom_err.so.2 => /lib64/libcom_err.so.2 (0x00004000a2bf0000)
+	libkrb5support.so.0 => /usr/lib64/libkrb5support.so.0 (0x00004000a2c20000)
+	libsasl2.so.3 => /usr/lib64/libsasl2.so.3 (0x00004000a2c50000)
+	libbrotlicommon.so.1 => /usr/lib64/libbrotlicommon.so.1 (0x00004000a2c90000)
+	liblzma.so.5 => /usr/lib64/liblzma.so.5 (0x00004000a2cd0000)
+	libkeyutils.so.1 => /usr/lib64/libkeyutils.so.1 (0x00004000a2d30000)
+	libresolv.so.2 => /lib64/libresolv.so.2 (0x00004000a2d60000)
+	libselinux.so.1 => /usr/lib64/libselinux.so.1 (0x00004000a2d90000)
+	libpcre2-8.so.0 => /usr/lib64/libpcre2-8.so.0 (0x00004000a2de0000)
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [685150]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [685151]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [685152]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [685153]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      32.86
+2                      32.08
+4                      32.22
+8                      32.08
+16                     32.15
+32                     32.20
+64                     32.22
+128                    32.26
+256                    38.42
+512                    39.49
+1024                   40.97
+2048                   43.45
+4096                   44.54
+8192                   54.33
+16384                  63.95
+32768                  74.00
+65536                 102.74
+131072                 51.40
+262144                 55.12
+524288                 64.97
+1048576                73.11
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [685826]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [685827]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [685828]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [685829]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      30.50
+8                      30.22
+16                     30.08
+32                     30.05
+64                     30.26
+128                    30.60
+256                    34.73
+512                    34.78
+1024                   36.57
+2048                   38.67
+4096                   41.21
+8192                   54.99
+16384                  58.30
+32768                  68.98
+65536                  85.33
+131072                108.62
+262144                158.99
+524288                268.30
+1048576               492.98
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [686504]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [686505]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [686506]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [686507]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      30.08
+2                      29.62
+4                      29.63
+8                      29.96
+16                     29.87
+32                     30.03
+64                     30.21
+128                    31.74
+256                    34.89
+512                    36.45
+1024                   38.31
+2048                   39.52
+4096                   41.30
+8192                   49.77
+16384                  58.38
+32768                  66.62
+65536                  91.89
+131072                 42.67
+262144                 46.32
+524288                 55.51
+1048576                74.02
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [687182]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [687183]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [687184]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [687185]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      26.31
+2                      25.95
+4                      25.79
+8                      25.92
+16                     26.92
+32                     26.90
+64                     27.05
+128                    27.29
+256                    27.70
+512                    35.48
+1024                   36.25
+2048                   37.73
+4096                   38.64
+8192                   41.85
+16384                  47.27
+32768                  55.75
+65536                  70.64
+131072                103.42
+262144                164.24
+524288               4554.41
+1048576              8265.36
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [687852]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [687853]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [687854]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [687855]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      25.89
+8                      25.62
+16                     25.95
+32                     26.04
+64                     26.42
+128                    26.72
+256                    27.34
+512                    33.48
+1024                   33.71
+2048                   36.44
+4096                   39.82
+8192                   50.33
+16384                  53.12
+32768                  59.01
+65536                  76.27
+131072                 87.43
+262144                128.35
+524288                196.73
+1048576               353.34
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [688520]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [688521]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [688522]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [688523]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      25.20
+2                      25.03
+4                      24.97
+8                      25.54
+16                     25.74
+32                     25.87
+64                     26.03
+128                    26.33
+256                    29.05
+512                    33.83
+1024                   34.52
+2048                   35.64
+4096                   35.39
+8192                   37.80
+16384                  44.31
+32768                  48.97
+65536                  60.98
+131072                 91.35
+262144                136.81
+524288                254.10
+1048576               839.74
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [689190]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [689191]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [689192]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [689193]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA All-to-All Personalized Exchange Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      29.81
+2                      28.86
+4                      28.87
+8                      28.94
+16                     29.00
+32                     29.12
+64                     29.22
+128                    29.62
+256                    30.66
+512                    31.49
+1024                   32.07
+2048                   32.52
+4096                   33.26
+8192                   35.73
+16384                  40.63
+32768                  43.62
+65536                  51.09
+131072                 36.94
+262144                 54.30
+524288                105.44
+1048576               156.14
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_alltoall -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [689864]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [689865]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [689866]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [689867]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allreduce Latency Test v7.5.2
+# Datatype: MPI_INT.
+# Size       Avg Latency(us)
+4                      30.83
+8                      29.75
+16                     29.61
+32                     29.41
+64                     29.53
+128                    30.87
+256                    32.15
+512                    32.69
+1024                   32.96
+2048                   34.70
+4096                   35.93
+8192                   46.14
+16384                  48.43
+32768                  53.64
+65536                  67.61
+131072                 82.31
+262144                110.12
+524288                164.97
+1048576               287.45
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allreduce -d cuda
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+cpu-bind=MASK - gpu-1-1, task  0  0 [690542]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-1, task  1  1 [690543]: mask 0xffffffffffffffffff000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  2  2 [690544]: mask 0xffffffffffffffffff000000000000000000000000000000000000 set
+cpu-bind=MASK - gpu-1-1, task  3  3 [690545]: mask 0xffffffffffffffffff000000000000000000000000000000000000000000000000000000 set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 1 gpu 1 nic cxi1
+using SLURM envars
+rank 2 local 2 gpu 2 nic cxi2
+using SLURM envars
+rank 3 local 3 gpu 3 nic cxi3
+
+# OSU MPI-CUDA Allgather Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)
+1                      30.76
+2                      29.64
+4                      29.53
+8                      29.32
+16                     29.38
+32                     29.54
+64                     29.67
+128                    32.04
+256                    32.17
+512                    32.92
+1024                   33.90
+2048                   34.47
+4096                   35.65
+8192                   38.11
+16384                  47.18
+32768                  49.63
+65536                  60.54
+131072                 45.87
+262144                 62.99
+524288                 97.09
+1048576               164.99
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb-6x/libexec/osu-micro-benchmarks//mpi/collective/osu_allgather -d cuda
+
+Job 245559 consumed 0.0 billing hours and 0.1 GPU hours from project nn9997k.
+
+Submitted 2026-03-14T17:42:01; waited 3.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   59.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+245559              288            0.0 %  2026-03-14T17:42:04   59.0 s  0
+245559.batch        288      1     0.0 %  2026-03-14T17:42:04   59.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:07    8.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:15    6.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:21    6.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:27    7.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:34    5.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:39    6.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:45    6.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:51    6.0 s  0
+245559.gpubind.sh   288      4     0.0 %  2026-03-14T17:42:57    6.0 s  0
+
+Used CPU time:   0.7 CPU seconds
+Unused CPU time: 4.7 CPU hours
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+245559              700.0        
+245559.batch        700.0     0.2
+245559.gpubind.sh   700.0     1.1
+245559.gpubind.sh   700.0     1.0
+245559.gpubind.sh   700.0     1.0
+245559.gpubind.sh   700.0     0.7
+245559.gpubind.sh   700.0     0.7
+245559.gpubind.sh   700.0     0.7
+245559.gpubind.sh   700.0     1.0
+245559.gpubind.sh   700.0     1.0
+245559.gpubind.sh   700.0     1.0
+
+Job 245559 completed at Sat Mar 14 17:43:03 CET 2026
