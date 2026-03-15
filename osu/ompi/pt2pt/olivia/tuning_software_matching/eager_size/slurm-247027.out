@@ -1,0 +1,102 @@
+Starting job 247027 on gpu-1-[1-2] on Olivia at Sun Mar 15 12:20:56 CET 2026
+
+ROOT_DIR = /cluster/home/marcink/hpe_cug_paper/openmpi_on_ss11
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+cpu-bind=MASK - gpu-1-1, task  0  0 [940100]: mask 0xffffffffffffffffff set
+cpu-bind=MASK - gpu-1-2, task  1  0 [2833198]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+using SLURM envars
+rank 1 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       0.87
+2                       1.82
+4                       3.77
+8                       7.52
+16                     15.34
+32                     30.50
+64                     62.07
+128                   123.02
+256                   245.67
+512                   484.07
+1024                  897.08
+2048                 1821.89
+4096                 3297.00
+8192                 1017.05
+16384                1805.87
+32768               20241.15
+65536               28217.04
+131072              35340.75
+262144              39773.82
+524288              42344.08
+1048576             44050.48
+2097152             44729.02
+4194304             45759.43
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+-- srun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+cpu-bind=MASK - gpu-1-1, task  0  0 [940724]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 0 local 0 gpu 0 nic cxi0
+cpu-bind=MASK - gpu-1-2, task  1  0 [2833810]: mask 0xffffffffffffffffff set
+using SLURM envars
+rank 1 local 0 gpu 0 nic cxi0
+
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)
+1                       1.47
+2                       3.37
+4                       6.94
+8                      13.56
+16                     27.82
+32                     54.41
+64                    111.22
+128                   216.91
+256                   446.06
+512                   870.79
+1024                 1533.84
+2048                 3208.50
+4096                 5547.89
+8192                 1088.75
+16384                1944.96
+32768               26409.17
+65536               33552.82
+131072              39133.05
+262144              41904.12
+524288              43677.01
+1048576             44731.95
+2097152             45224.20
+4194304             45808.16
+-- mpirun /cluster/projects/nn9999k/marcink/software/osu-eb/libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -b multiple D D
+
+Job 247027 consumed 0.0 billing hours and 0.0 GPU hours from project nn9997k.
+
+Submitted 2026-03-15T12:20:55; waited 0.0 seconds in the queue after becoming eligible to run.
+
+Requested wallclock time: 30.0 minutes
+Elapsed wallclock time:   16.0 seconds
+
+Job exited normally.
+
+Task and CPU statistics:
+ID                 CPUs  Tasks  CPU util                Start  Elapsed  Exit status
+247027              144            0.0 %  2026-03-15T12:20:55   16.0 s  0
+247027.batch         72      1     0.0 %  2026-03-15T12:20:55   16.0 s  0
+247027.gpubind.sh   144      2     0.0 %  2026-03-15T12:20:59    7.0 s  0
+247027.gpubind.sh   144      2     0.0 %  2026-03-15T12:21:06    5.0 s  0
+
+Used CPU time:   0.5 CPU seconds
+Unused CPU time: 38.4 CPU minutes
+
+Memory statistics, in GiB:
+ID                  Alloc   Usage
+247027             1400.0        
+247027.batch        700.0     0.1
+247027.gpubind.sh  1400.0     0.7
+247027.gpubind.sh  1400.0     0.5
+
+Job 247027 completed at Sun Mar 15 12:21:12 CET 2026
