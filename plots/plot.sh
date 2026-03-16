@@ -1,7 +1,73 @@
 #!/bin/bash
 
-FILES=("craype/collectives/olivia/tuning/osu_allreduce_d_cuda_n64.txt"
-       "ompi/collectives/olivia/osu_allreduce_d_cuda_n64_cxi_srun.txt"
+FILES=("../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
+       "../osu/ompi/pt2pt/olivia/software_matching/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
+       "../osu/ompi/pt2pt/olivia/tuning_software_matching/thrs_1/osu_bibw_b_multiple_D_D_multinode_cxi_srun.txt"
+       "../osu/ompi/pt2pt/olivia/tuning_software_matching/thrs_1/osu_bibw_b_multiple_D_D_multinode_lnx_srun.txt"
+       "../osu/slingshot11_peak_bibw.txt"
+      )
+
+LABELS=("ompi cxi, hybrid matching"
+	"ompi lnx"
+	"ompi lnx, RDZV_THRESHOLD=0"
+	"ompi lnx, RDZV_EAGER_SIZE=0"
+	"SS11 peak bibw"
+       )
+STYLES=("g-"
+	"r-^"
+	"b--^"
+	"b-o"
+	"k-"
+       )
+
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-all-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile osu-internode-bibw-tuned-software-matching.png
+
+exit 0
+
+
+FILES=("../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_ob1_srun.txt"
+       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_lnx_srun.txt"
+       "../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_D_D_singlenode_cxi_srun.txt"
+       "../osu/slingshot11_peak_bibw.txt"
+      )
+
+LABELS=("ompi ob1 (smcuda)"
+	"ompi lnx (shm)"
+	"ompi cxi"
+	"SS11 peak bibw"
+       )
+STYLES=("b-o"
+	"r-o"
+	"g-o"
+	"k-"
+       )
+
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-all-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile osu-intranode-cxi-vs-lnx.png
+
+exit 0
+
+FILES=("../osu/ompi/pt2pt/olivia/osu_bibw_b_multiple_H_H_singlenode_lnx_srun.txt"
+       "../osu/ompi/pt2pt/olivia/shm_provider/osu_bibw_b_multiple_H_H_singlenode_lnx_srun.txt"
+       "../osu/ompi/pt2pt/olivia/shm_provider/osu_bibw_b_multiple_H_H_singlenode_shm_srun.txt"
+      )
+
+LABELS=("ompi lnx orig"
+	"ompi lnx patched"
+	"ompi shm"	
+       )
+STYLES=("g-"
+	"r--^"
+	"b:^"
+       )
+
+#./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "OSU inter-node bibw HH" --outfile ${SYSTEM}/osu-internode-bibw-all-HH.png
+./plot.py --files "${FILES[@]}" --labels "${LABELS[@]}" --styles "${STYLES[@]}" --title "" --outfile osu-intranode-shm.png
+exit 0
+
+
+FILES=("ompi/collectives/olivia/osu_allreduce_d_cuda_n64_cxi_srun.txt"
        "ompi/collectives/olivia/osu_allreduce_d_cuda_n64_lnx_srun.txt"
        "ompi/collectives/olivia/ompi6/osu_xccl_allreduce_n64_srun.txt"
        "ompi/collectives/olivia/osu_xccl_allreduce_n64_srun.txt"
