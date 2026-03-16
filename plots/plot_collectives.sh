@@ -4,7 +4,7 @@
 MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
-for MYUSER in marcink; do
+for MYUSER in alazzaro; do
 #for MYUSER in alazzaro; do
 
 echo "User: $MYUSER"
@@ -63,15 +63,54 @@ for n in ${NGPUS}; do
 	case "${SYSTEM}" in
 	    lumi)
 
-		FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_d_rocm_D_D_n${n}_hybrid_*.txt)"
-		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_${cmp}_n${n}_${TAGMODE}*.txt)"
-		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
-#		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
-#		       "$(ls ../osu/craype/collectives/lumi_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
-#		       "$(ls ../osu/craype/collectives/lumi/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
-		       "$(ls ../osu/craype/collectives/lumi_opt1_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
-		       "../osu/ompi/collectives/lumi_marcin_6.x/osu_${test}_d_rocm_lnx_n${n}.txt"
-		      )
+		if [[ ${n} == 8 ]]; then
+		    FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_d_rocm_D_D_n${n}_hybrid_*.txt)"
+			   "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_cxi_n${n}_software_*.txt)"
+			   "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
+			   "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_ob1_n${n}_${TAGMODE}*.txt)"
+			   #		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
+			   #		       "$(ls ../osu/craype/collectives/lumi_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   #		       "$(ls ../osu/craype/collectives/lumi/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   "$(ls ../osu/craype/collectives/lumi_opt1_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   "../osu/ompi/collectives/lumi_marcin_6.x/osu_${test}_d_rocm_lnx_n${n}.txt"
+			  )
+		    LABELS=("Cray MPI"
+			    "ompi5 cxi"
+			    "ompi5 lnx"
+			    "ompi5 ob1"
+			    "${XCCL} (${XCCL_TESTS})"
+			    "ompi6 ${cmp}"
+			   )
+		    STYLES=("b-o"
+			    "g-^"
+			    "g-o"
+			    "g--s"
+			    "r^:"
+			    "k-o"
+			   )
+		else
+		    FILES=("$(ls ../osu/craype/collectives/lumi_opt1/osu_${test}_i_100_d_rocm_D_D_n${n}_hybrid_*.txt)"
+			   "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_cxi_n${n}_software_*.txt)"
+			   "$(ls ../osu/ompi/collectives/lumi_opt1/osu_${test}_d_rocm_D_D_lnx_n${n}_software_*.txt)"
+			   #		       "$(ls ../osu/ompi/collectives/lumi_opt1/osu_xccl_${test}_d_rocm_D_D_n${n}_hybrid_*.txt)"
+			   #		       "$(ls ../osu/craype/collectives/lumi_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   #		       "$(ls ../osu/craype/collectives/lumi/${nccltest}_perf_d_uint8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   "$(ls ../osu/craype/collectives/lumi_opt1_rccl/${nccltest}_perf_d_int8_b_1_e_128M_f_2_g_1_n${n}_hybrid_*.txt)"
+			   "../osu/ompi/collectives/lumi_marcin_6.x/osu_${test}_d_rocm_lnx_n${n}.txt"
+			  )
+		    LABELS=("Cray MPI"
+			    "ompi5 cxi"
+			    "ompi5 lnx"
+			    "${XCCL} (${XCCL_TESTS})"
+			    "ompi6 ${cmp}"
+			   )
+		    STYLES=("b-o"
+			    "g-^"
+			    "g-o"
+			    "r^:"
+			    "k-o"
+			   )
+		fi
 	    ;;
 	    olivia)
 
