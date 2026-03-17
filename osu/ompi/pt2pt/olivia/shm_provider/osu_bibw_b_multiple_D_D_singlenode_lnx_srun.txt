@@ -1,0 +1,26 @@
+# OSU MPI-CUDA Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       0.21              Pass
+2                       0.41              Pass
+4                       0.82              Pass
+8                       1.58              Pass
+16                      3.16              Pass
+32                      6.30              Pass
+64                     12.63              Pass
+128                    25.23              Pass
+256                    50.22              Pass
+512                   100.67              Pass
+1024                  201.36              Pass
+2048                  401.51              Pass
+4096                  798.69              Pass
+8192                 1571.81              Pass
+16384                3125.29              Pass
+32768                6177.82              Pass
+65536               12078.90              Pass
+131072              22850.82              Pass
+262144              41696.67              Pass
+524288              70971.27              Pass
+1048576            109227.26              Pass
+2097152            149806.39              Pass
+4194304            187425.51              Pass
