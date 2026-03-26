@@ -4,7 +4,7 @@
 MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
 
-for MYUSER in alazzaro; do
+for MYUSER in marcink; do
 #for MYUSER in alazzaro; do
 
 echo "User: $MYUSER"
@@ -130,7 +130,7 @@ for n in ${NGPUS}; do
 			    "ompi5 lnx"
 			    "ompi5 ob1"
 			    "${XCCL} (${XCCL_TESTS})"
-			    "ompi6 ${cmp}"
+			    "ompi6 cxi"
 			   )
 		    STYLES=("b-o"
 			    "g-^"
