@@ -4,7 +4,36 @@ set -e
 
 ##### env and modules ###
 
+export GPU_ACCL=nccl
 source sourceme_nccl.sh
+
+## Check if CUDA is available for compilation
+if [[ -z "$CUDA_HOME" ]]; then
+    echo "ERROR: CUDA_HOME is not set"
+    echo ""
+    echo "NCCL compilation requires CUDA development tools."
+    echo "On this system, CUDA may only be available on compute nodes."
+    echo ""
+    echo "Solutions:"
+    echo "1. Set CUDA_HOME manually if you know the CUDA installation path:"
+    echo "   export CUDA_HOME=/path/to/cuda"
+    echo "2. Submit this build script as a job to run on a compute node with GPU"
+    echo "3. Use a pre-compiled NCCL module if available:"
+    echo "   module load NCCL"
+    echo "4. Build NCCL in an interactive session on a compute node:"
+    echo "   salloc -N 1 --partition=gpu"
+    echo ""
+    exit 1
+fi
+
+echo "Using CUDA installation: $CUDA_HOME"
+
+# Check if CUDA compiler is available
+if ! command -v nvcc &> /dev/null; then
+    echo "WARNING: nvcc (NVIDIA CUDA Compiler) not found in PATH"
+    echo "NCCL compilation may fail"
+    echo "Add CUDA bin directory to PATH: export PATH=\$CUDA_HOME/bin:\$PATH"
+fi
 
 ### Delete previous installation
 
@@ -34,6 +63,10 @@ cd aws-ofi-nccl-${VER}
 ./configure --prefix=${PREFIX_NCCL} --with-cuda=${CUDA_HOME} --with-libfabric=${PREFIX_LIBFABRIC} 
 make -j install
 cd ..
+
+# Generate module files
+echo "Generating NCCL module files..."
+$ROOT_DIR/generate_modulefiles.sh nccl
 
 # to compile OSU with NCCL support:
 # - with cray mpi

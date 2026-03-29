@@ -1,0 +1,61 @@
+-- Module file for RCCL @RCCL_VERSION@
+-- ROCm Communication Collectives Library (AMD)
+
+local base = "@ROOT_DIR@"
+local version = "@RCCL_VERSION@"
+local rccl_root = pathJoin(base, "install_rccl")
+
+whatis("RCCL " .. version .. " - ROCm Communication Collectives Library")
+whatis("GPU-optimized collective operations for AMD ROCm")
+
+help([[
+RCCL @RCCL_VERSION@ - ROCm Communication Collectives Library
+
+This module provides RCCL (ROCm Communication Collectives Library)
+built from source with optimizations for multi-GPU communications on AMD hardware.
+
+Features:
+- High-performance collective operations (allreduce, broadcast, etc.)
+- Multi-GPU and multi-node support
+- InfiniBand/Ethernet network support
+- Integration with MPI libraries
+- HIP stream synchronization
+- AWS OFI plugin support
+
+Prerequisites:
+- ROCm runtime and drivers  
+- Compatible AMD GPU hardware (e.g., Frontier, MI series)
+
+Environment Variables:
+- RCCL_DEBUG: Set to 'INFO' for debugging information
+- RCCL_IB_DISABLE: Set to '1' to disable InfiniBand
+- RCCL_P2P_DISABLE: Set to '1' to disable peer-to-peer communication
+
+For more information:
+    https://github.com/ROCm/rccl
+
+]])
+
+-- Prerequisites and conflicts
+conflict("rccl")
+conflict("nccl")
+
+-- Check if installation exists
+local install_check = pathJoin(rccl_root, "lib")
+if not isDir(install_check) then
+    LmodMessage("Warning: RCCL installation not found at " .. rccl_root)
+    LmodMessage("Run install_rccl.sh to build RCCL")
+end
+
+-- Environment variables
+setenv("RCCL_ROOT", rccl_root)
+
+-- Update paths
+prepend_path("PATH", pathJoin(rccl_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(rccl_root, "lib"))
+prepend_path("PKG_CONFIG_PATH", pathJoin(rccl_root, "lib/pkgconfig"))
+prepend_path("MANPATH", pathJoin(rccl_root, "man"))
+
+-- RCCL performance tuning (adjust as needed)
+-- setenv("RCCL_DEBUG", "WARN")
+-- setenv("NCCL_DEBUG", "WARN")  -- Some apps may still look for NCCL_DEBUG

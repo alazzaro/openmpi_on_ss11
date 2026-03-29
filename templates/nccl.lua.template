@@ -1,0 +1,59 @@
+-- Module file for NCCL @NCCL_VERSION@
+-- NVIDIA Collective Communications Library
+
+local base = "@ROOT_DIR@"
+local version = "@NCCL_VERSION@"
+local nccl_root = pathJoin(base, "install_nccl")
+
+whatis("NCCL " .. version .. " - NVIDIA Collective Communications Library")
+whatis("GPU-optimized collective operations for NVIDIA CUDA")
+
+help([[
+NCCL @NCCL_VERSION@ - NVIDIA Collective Communications Library
+
+This module provides NCCL (NVIDIA Collective Communications Library) 
+built from source with optimizations for multi-GPU communications.
+
+Features:
+- High-performance collective operations (allreduce, broadcast, etc.)
+- Multi-GPU and multi-node support
+- InfiniBand/Ethernet network support via OFI provider
+- Integration with MPI libraries
+- CUDA stream synchronization
+
+Prerequisites:
+- CUDA runtime and drivers
+- Compatible NVIDIA GPU hardware
+
+Environment Variables:
+- NCCL_DEBUG: Set to 'INFO' for debugging information
+- NCCL_IB_DISABLE: Set to '1' to disable InfiniBand
+- NCCL_P2P_DISABLE: Set to '1' to disable peer-to-peer communication
+
+For more information:
+    https://developer.nvidia.com/nccl
+
+]])
+
+-- Prerequisites and conflicts
+conflict("nccl")
+
+-- Check if installation exists
+local install_check = pathJoin(nccl_root, "lib")
+if not isDir(install_check) then
+    LmodMessage("Warning: NCCL installation not found at " .. nccl_root)
+    LmodMessage("Run install_nccl.sh to build NCCL")
+end
+
+-- Environment variables
+setenv("NCCL_ROOT", nccl_root)
+
+-- Update paths
+prepend_path("PATH", pathJoin(nccl_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(nccl_root, "lib"))
+prepend_path("PKG_CONFIG_PATH", pathJoin(nccl_root, "lib/pkgconfig"))
+prepend_path("MANPATH", pathJoin(nccl_root, "man"))
+
+-- NCCL performance tuning (adjust as needed)
+-- setenv("NCCL_DEBUG", "WARN")
+-- setenv("NCCL_TREE_THRESHOLD", "4294967296")

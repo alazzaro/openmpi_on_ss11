@@ -1,0 +1,54 @@
+#%Module 1.0
+## Module file for NCCL @NCCL_VERSION@
+## NVIDIA Collective Communications Library
+
+set base "@ROOT_DIR@"
+set version "@NCCL_VERSION@"
+set nccl_root "$base/install_nccl"
+
+proc ModulesHelp { } {
+    puts stderr "NCCL @NCCL_VERSION@ - NVIDIA Collective Communications Library"
+    puts stderr ""
+    puts stderr "This module provides NCCL (NVIDIA Collective Communications Library)"
+    puts stderr "built from source with optimizations for multi-GPU communications."
+    puts stderr ""
+    puts stderr "Features:"
+    puts stderr "- High-performance collective operations (allreduce, broadcast, etc.)"
+    puts stderr "- Multi-GPU and multi-node support"
+    puts stderr "- InfiniBand/Ethernet network support via OFI provider"
+    puts stderr "- Integration with MPI libraries"
+    puts stderr "- CUDA stream synchronization"
+    puts stderr ""
+    puts stderr "Prerequisites:"
+    puts stderr "- CUDA runtime and drivers"
+    puts stderr "- Compatible NVIDIA GPU hardware"
+    puts stderr ""
+    puts stderr "Environment Variables:"
+    puts stderr "- NCCL_DEBUG: Set to 'INFO' for debugging information"
+    puts stderr "- NCCL_IB_DISABLE: Set to '1' to disable InfiniBand"
+    puts stderr "- NCCL_P2P_DISABLE: Set to '1' to disable peer-to-peer communication"
+    puts stderr ""
+    puts stderr "For more information:"
+    puts stderr "    https://developer.nvidia.com/nccl"
+}
+
+module-whatis "NCCL @NCCL_VERSION@ - NVIDIA Collective Communications Library"
+module-whatis "GPU-optimized collective operations for NVIDIA CUDA"
+
+# Prerequisites and conflicts
+conflict nccl
+
+# Check if installation exists (TCL doesn't have isDir, so we'll skip this check)
+
+# Environment variables
+setenv NCCL_ROOT $nccl_root
+
+# Update paths
+prepend-path PATH $nccl_root/bin
+prepend-path LD_LIBRARY_PATH $nccl_root/lib
+prepend-path PKG_CONFIG_PATH $nccl_root/lib/pkgconfig
+prepend-path MANPATH $nccl_root/man
+
+# NCCL performance tuning (adjust as needed)
+# setenv NCCL_DEBUG WARN
+# setenv NCCL_TREE_THRESHOLD 4294967296
