@@ -33,7 +33,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo $SUFFIX
     echo "========"
 
-#    if false; then
+    if false; then
     (
 	echo "with LinkX"
 
@@ -56,18 +56,39 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
 	done
     )
-#    fi
+    fi
+
+    (
+	echo "with CXI"
+
+	export FI_SHM_USE_XPMEM=1
+	export FI_PROVIDER=cxi
+	export OMPI_MCA_pml=cm
+	export OMPI_MCA_mtl=ofi
+	#    export FI_LOG_LEVEL=debug
+
+	CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#CMDS=("osu_bibw -W 32 -b multiple D D")
+	#CMDS=("osu_bibw -b multiple D D")
+	#CMDS=("osu_bibw D D")
+	#CMDS=("osu_bibw D D" "osu_latency D D" "osu_bibw H H" "osu_latency H H")
+
+	for cmd in "${CMDS[@]}"; do
+	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
+	done
+    )
 
     # NCCL/RCCL
-
+    if false; then
     CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "xccl/pt2pt" "_${SUFFIX}"
     done
+    fi
 done
 #fi
 
-#if false; then
+if false; then
 echo "with OpenMPI internal transport"
 (
     SUFFIX="_ob1_singlenode_${SLURM_JOB_ID}"
@@ -91,4 +112,4 @@ echo "with OpenMPI internal transport"
 	run_osu_cmd "$cmd" "mpi/pt2pt" "${SUFFIX}"
     done
 )
-#fi
+fi
