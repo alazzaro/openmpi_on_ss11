@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1 16; do
+for NNODES in 16; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
@@ -27,6 +27,7 @@ USE_CPE=1 source \$ROOT_DIR/sourceme_rccl.sh
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
+export MPICH_OFI_NIC_POLICY=GPU
 #export NCCL_DEBUG=INFO
 #export FI_LOG_LEVEL=debug
 
@@ -44,6 +45,7 @@ env
 
 #for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 for FI_CXI_RX_MATCH_MODE in hybrid; do
+#for FI_CXI_RX_MATCH_MODE in hardware; do
     export FI_CXI_RX_MATCH_MODE=\$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="_n\${SLURM_NTASKS}_\${FI_CXI_RX_MATCH_MODE}_\${SLURM_JOB_ID}_opt1"
@@ -60,22 +62,26 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     (
 	CMDS=("osu_alltoall -i 100 -d rocm D D" "osu_allreduce -i 100 -d rocm D D" "osu_allgather -i 100 -d rocm D D" "osu_allreduce -i 100 H H" "osu_alltoall -i 100 H H" "osu_allgather -i 100 H H")
 #  	CMDS=("osu_allgather -d rocm D D" "osu_allgather H H")
+#	CMDS=("osu_allreduce -m 2^27:2^29:2 -d rocm D D" "osu_allgather -m 2^27:2^29:2 -d rocm D D")
         for cmd in "\${CMDS[@]}"; do
     	    run_osu_cmd "\$cmd" "mpi/collective" "\${SUFFIX}"
         done
     )
+#    fi
 
     # No validation available for RCCL
     OSU_ARGS=" "
-
+#    if false; then
     (
 	CMDS=("osu_xccl_alltoall -i 100 -d rocm D D" "osu_xccl_allreduce -i 100 -d rocm D D" "osu_xccl_allgather -i 100 -d rocm D D")
+#	CMDS=("osu_xccl_allreduce -m 2^27:2^29:2 -d rocm D D" "osu_xccl_allgather -m 2^27:2^29:2 -d rocm D D")
     	for cmd in "\${CMDS[@]}"; do
             run_osu_cmd "\$cmd" "xccl/collective" "\${SUFFIX}"
      	done
     )
 #    fi
 
+    if false; then
     echo "RCCL-tests"
     (
 	unset MPICH_GPU_SUPPORT_ENABLED
@@ -88,6 +94,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
 	done
     )
+    fi
 done
 
 EOF

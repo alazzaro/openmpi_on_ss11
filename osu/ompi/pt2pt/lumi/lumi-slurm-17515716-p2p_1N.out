@@ -1,0 +1,881 @@
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11 ~/flash_coe/openmpi_on_ss11/osu/ompi/pt2pt
+ROOT_DIR = /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+
+Lmod is automatically replacing "cce/19.0.0" with "gcc-native/14.2".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.6.0" with "PrgEnv-gnu/8.6.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-libsci/25.03.0     2) cray-mpich/8.1.32
+
+
+Currently Loaded Modules:
+  1) craype-x86-rome                      9) cray-python/3.11.7
+  2) libfabric/1.22.0                    10) gcc-native/14.2
+  3) craype-network-ofi                  11) craype/2.7.34
+  4) perftools-base/25.03.0              12) cray-dsmml/0.3.1
+  5) xpmem/2.11.5-1.3_g73ade43320bc      13) cray-mpich/8.1.32
+  6) ModuleLabel/label              (S)  14) cray-libsci/25.03.0
+  7) lumi-tools/24.05               (S)  15) PrgEnv-gnu/8.6.0
+  8) init-lumi/0.2                  (S)  16) rocm/6.3.4
+
+  Where:
+   S:  Module is Sticky, requires --force to unload or purge
+ROCM_PATH = /opt/rocm-6.3.4
+XPMEM Lib path  = /usr/lib64
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+~/flash_coe/openmpi_on_ss11/osu/ompi/pt2pt
+============
+#!/bin/bash
+
+# load runtime environment
+ORIGINAL_SCRIPT=$(scontrol show job "$SLURM_JOB_ID" | awk -F= '/Command=/{print $2}')
+export OUTPUT_DIR=$SLURM_SUBMIT_DIR
+export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../../.." &> /dev/null && pwd -P )
+echo "ROOT_DIR = "$ROOT_DIR
+
+if [ "$OSU_ARGS" == "" ];then
+    OSU_ARGS=" -c "
+fi
+
+# Enable OpenMPI and RCCL
+USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
+
+echo "============"
+cat $0
+echo "============"
+
+env
+
+export PRTE_MCA_ras_base_launch_orted_on_hn=1
+export PMIX_MCA_gds=^shmem2
+
+#if false; then
+for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+#for FI_CXI_RX_MATCH_MODE in hybrid; do
+    export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
+
+    SUFFIX="singlenode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
+
+    echo "========"
+    echo $SUFFIX
+    echo "========"
+
+    if false; then
+    (
+	echo "with LinkX"
+
+	export FI_SHM_USE_XPMEM=1
+	export FI_PROVIDER=lnx
+	export FI_LNX_PROV_LINKS=shm+cxi # changed in the binding script
+	export OMPI_MCA_opal_common_ofi_provider_include=lnx
+	export OMPI_MCA_mtl_ofi_av=table
+	export OMPI_MCA_pml=cm
+	export OMPI_MCA_mtl=ofi
+	#    export FI_LOG_LEVEL=debug
+
+	CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#CMDS=("osu_bibw -W 32 -b multiple D D")
+	#CMDS=("osu_bibw -b multiple D D")
+	#CMDS=("osu_bibw D D")
+	#CMDS=("osu_bibw D D" "osu_latency D D" "osu_bibw H H" "osu_latency H H")
+
+	for cmd in "${CMDS[@]}"; do
+	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
+	done
+    )
+    fi
+
+    (
+	echo "with CXI"
+
+	export FI_SHM_USE_XPMEM=1
+	export FI_PROVIDER=cxi
+	export OMPI_MCA_pml=cm
+	export OMPI_MCA_mtl=ofi
+	#    export FI_LOG_LEVEL=debug
+
+	CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#CMDS=("osu_bibw -W 32 -b multiple D D")
+	#CMDS=("osu_bibw -b multiple D D")
+	#CMDS=("osu_bibw D D")
+	#CMDS=("osu_bibw D D" "osu_latency D D" "osu_bibw H H" "osu_latency H H")
+
+	for cmd in "${CMDS[@]}"; do
+	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
+	done
+    )
+
+    # NCCL/RCCL
+    if false; then
+    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+    for cmd in "${CMDS[@]}"; do
+	run_osu_cmd "$cmd" "xccl/pt2pt" "_${SUFFIX}"
+    done
+    fi
+done
+#fi
+
+if false; then
+echo "with OpenMPI internal transport"
+(
+    SUFFIX="_ob1_singlenode_${SLURM_JOB_ID}"
+
+    unset FI_SHM_USE_XPMEM
+    unset FI_PROVIDER
+    unset FI_CXI_RX_MATCH_MODE
+    unset FI_LNX_PROV_LINKS
+    unset OMPI_MCA_opal_common_ofi_provider_include
+    unset OMPI_MCA_mtl_ofi_av
+    export OMPI_MCA_pml=ob1
+    # CUDA
+    #  export OMPI_MCA_btl=vader,smcuda,self
+    # ROCM
+    export OMPI_MCA_btl=vader,sm,self
+    unset OMPI_MCA_mtl
+    export OMPI_MCA_smsc=xpmem # Only OpenMPI
+
+    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    for cmd in "${CMDS[@]}"; do
+	run_osu_cmd "$cmd" "mpi/pt2pt" "${SUFFIX}"
+    done
+)
+fi
+============
+HYDRA_LAUNCHER_EXTRA_ARGS=--external-launcher
+__LMOD_REF_COUNT_PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH:1
+CRAY_LMOD_MPI=cray-mpich/8.0
+LUMI_LMOD_FAMILY_MPI=cray-mpich
+LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+LC_ALL=en_US.UTF-8
+SLURM_MEM_PER_CPU=0
+LS_COLORS=no=00:fi=00:di=01;33:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=00;35:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:
+LD_LIBRARY_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib:/opt/rocm-6.3.4/lib/roctracer:/opt/rocm-6.3.4/lib/rocprofiler:/opt/rocm-6.3.4/lib:/opt/cray/pe/python/3.11.7/lib:/opt/cray/pe/papi/7.2.0.1/lib64:/opt/cray/libfabric/1.22.0/lib64
+HOSTTYPE=x86_64
+CRAY_DSMML_ROOTDIR=/opt/cray/pe/dsmml/0.3.1
+LIBFABRIC_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric
+_ModuleTable017_=YXBwbC9sdW1pL21vZHVsZXMvU29mdHdhcmVTdGFjazovYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnM6L2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrOi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0K
+CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
+SLURM_NODEID=0
+SLURM_TASK_PID=5316
+__LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/8.1.32/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
+_ModuleTable002_=TGFiZWwvbGFiZWwubHVhIiwKZnVsbE5hbWUgPSAiTW9kdWxlTGFiZWwvbGFiZWwiLApsb2FkT3JkZXIgPSA2LApwcm9wVCA9IHsKbG1vZCA9IHsKc3RpY2t5ID0gMSwKfSwKfSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCndWID0gInNsYWJlbC4qemZpbmFsIiwKfSwKWyJQcmdFbnYtZ251Il0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvUHJnRW52LWdudS84LjYuMC5sdWEiLApmdWxsTmFtZSA9ICJQcmdFbnYtZ251LzguNi4wIiwKbG9hZE9yZGVyID0gMTUsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAi
+PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_OMP_REQUIRES= 
+SSH_CONNECTION=178.197.254.30 46638 193.167.209.164 22
+LUMI_LMOD_FAMILY_CRAYPE=craype
+LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+LESSCLOSE=lessclose.sh %s %s
+CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:/opt/cray/pe/mpich/8.1.32/gtl/lib:/opt/cray/pe/dsmml/0.3.1/dsmml/lib:/opt/cray/pe/perftools/25.03.0/lib64
+XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+SLURM_PRIO_PROCESS=0
+PE_ENV=GNU
+__LMOD_REF_COUNT_PE_DSMML_PKGCONFIG_LIBS=dsmml:1
+__LMOD_REF_COUNT_PE_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+EBDEVELLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05/easybuild/lumi-tools-24.05-easybuild-devel
+CRAYPAT_LD_LIBRARY_PATH=/opt/cray/pe/perftools/25.03.0/lib64
+GCC_PREFIX=/usr/lib64/gcc/x86_64-suse-linux/14
+CRAY_LMOD_COMPILER=gnu/12.0
+LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua
+CRAY_DSMML_PREFIX=/opt/cray/pe/dsmml/0.3.1/dsmml
+PE_PRODUCT_LIST=CRAYPE:CRAYPE_X86_ROME:PERFTOOLS:CRAYPAT:CRAY_ROCM
+LMOD_FAMILY_MPI_VERSION=8.1.32
+CRAYPAT_ROOT=/opt/cray/pe/perftools/25.03.0
+PE_PERFTOOLS_MPICH_LIBDIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib
+c=gnu
+PE_MPICH_GTL_DIR_amd_gfx906=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_LIBSCI_MODULE_NAME=cray-libsci/25.03.0
+I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+LANG=en_US.UTF-8
+GIT_HOOKS_PRE_COMMIT_HPE_CRAY_CHECKPATCH_SKIP=1
+SLURM_SUBMIT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/pt2pt
+PE_MPICH_GTL_DIR_amd_gfx908=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_DSMML_MODULE_NAME=cray-dsmml
+WINDOWMANAGER=xterm
+_ModuleTable008_=ID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NyYXlwZS10YXJnZXRzL2RlZmF1bHQvY3JheXBlLXg4Ni1yb21lLmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS14ODYtcm9tZSIsCmxvYWRPcmRlciA9IDEsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAwLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAiY3JheXBlLXg4Ni1yb21lIiwKd1YgPSAiTS4qemZpbmFsIiwKfSwKWyJnY2MtbmF0aXZlIl0gPSB7CmFjdGlvbkEgPSB7CgoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tcGlsZXIvZ251LzEyLjBcIikiCiwgInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9s
+HIP_LIB_PATH=/opt/rocm-6.3.4/lib
+LESS=-M -I -R
+OMPI_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
+LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
+LMOD_FAMILY_COMPILER_VERSION=14.2
+HOSTNAME=nid005161
+LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
+EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
+OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
+CSHEDIT=emacs
+ENVIRONMENT=BATCH
+GPG_TTY=/dev/pts/356
+LESS_ADVANCED_PREPROCESSOR=no
+__LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
+COLORTERM=1
+__LMOD_REF_COUNT_XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:1;/usr/share:1
+OSU_HOME=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks/
+FPATH=/opt/cray/pe/lmod/lmod/init/ksh_funcs
+_ModuleTable007_=ZWZpbGVzL25ldC9vZmkvMS4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdC9jcmF5cGUtbmV0d29yay1vZmkubHVhIiwKZnVsbE5hbWUgPSAiY3JheXBlLW5ldHdvcmstb2ZpIiwKbG9hZE9yZGVyID0gMywKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUtbmV0d29yay1vZmkiLAp3ViA9ICJNLip6ZmluYWwiLAp9LApbImNyYXlwZS14ODYtcm9tZSJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMFwiKSIsCn0sCmZu
+CRAY_PERFTOOLS_VERSION=25.03.0
+ROCR_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+LUMI_LMOD_FAMILY_PRGENV_VERSION=8.6.0
+ROCM_PATH=/opt/rocm-6.3.4
+OMPI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/openmpi5
+LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_STACK_LMOD_AVAIL_STYLE=PGxhYmVsPjpQRWhpZXJhcmNoeTpzeXN0ZW0=
+LMOD_FAMILY_CRAYPE_VERSION=2.7.34
+PE_XPMEM_PKGCONFIG_LIBS=cray-xpmem
+CRAY_ROCM_POST_LINK_OPTS= -L/opt/rocm-6.3.4/lib -L/opt/rocm-6.3.4/lib/rocprofiler -L/opt/rocm-6.3.4/lib/roctracer -lamdhip64
+APP2_STATE=25.03.0
+SLURM_PROCID=0
+LMOD_FAMILY_GCC_COMPILER=gcc-native
+CFLAGS=-g -O -Wno-error=maybe-uninitialized -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+SLURM_JOB_GID=10013986
+MACHTYPE=x86_64-suse-linux
+LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+I_MPI_HYDRA_BOOTSTRAP=slurm
+__LMOD_REF_COUNT_LD_LIBRARY_PATH=/opt/rocm-6.3.4/lib/roctracer:1;/opt/rocm-6.3.4/lib/rocprofiler:1;/opt/rocm-6.3.4/lib:1;/opt/cray/pe/python/3.11.7/lib:1;/opt/cray/pe/papi/7.2.0.1/lib64:1;/opt/cray/libfabric/1.22.0/lib64:1
+CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1
+OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi/
+GNU_VERSION=14.2
+SLURMD_NODENAME=nid005161
+PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:PE_MPICH:PE_DSMML:PE_XPMEM
+_ModuleTable015_=ci9nbnUvMTIuMCIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0iCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4IiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9sbW9kL21vZHVsZWZpbGVzL0NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
+SLURM_JOB_END_TIME=1776171860
+LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
+CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/8.1.32/ofi
+PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+_ModuleTable004_=YnNjaS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gImNyYXktbGlic2NpLzI1LjAzLjAiLApsb2FkT3JkZXIgPSAxNCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5LWxpYnNjaSIsCndWID0gIl4wMDAwMDAyNS4wMDAwMDAwMDMuKnpmaW5hbCIsCn0sClsiY3JheS1tcGljaCJdID0gewphY3Rpb25BID0gewoicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21uZXQvZ251LzEyLjAvb2ZpLzEuMC9jcmF5LW1w
+PE_LIBSCI_GENCOMPILERS_GNU_x86_64=12.3
+MINICOM=-c on
+SLURM_TASKS_PER_NODE=2
+__LMOD_REF_COUNT_PYTHONPATH=/opt/cray/pe/python/3.11.7:1
+PRTE_MCA_plm_slurm_args=--external-launcher
+PE_MPICH_PKGCONFIG_VARIABLES=PE_MPICH_GTL_DIR_@accelerator@:PE_MPICH_GTL_LIBS_@accelerator@
+PREFIX_CXI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi
+PE_MPICH_PKGCONFIG_LIBS=mpich
+USE_SRUN=0
+OSTYPE=linux
+CC=gcc-14
+XDG_SESSION_ID=1475499
+CRAY_DSMML_VER=0.3.1
+__LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
+LUMI_LMOD_FAMILY_MPI_VERSION=8.1.32
+USER=lazzaroa
+SLURM_NNODES=1
+LUMI_LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+CXXFLAGS=-g -O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PAGER=less
+LUMI_LMOD_FAMILY_GCC_COMPILER=gcc-native
+CRAY_PYTHON_LEVEL=3.11.7
+LMOD_FAMILY_PRGENV_VERSION=8.6.0
+LMOD_FAMILY_LIBSCI=cray-libsci
+_ModuleTable012_=MDAwMDAyNC4wMDAwMDAwMDUuKnpmaW5hbCIsCn0sClsicGVyZnRvb2xzLWJhc2UiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wXCIpIiwKfSwKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9wZXJmdG9vbHMtYmFzZS8yNS4wMy4wLmx1YSIsCmZ1bGxOYW1lID0gInBlcmZ0b29scy1iYXNlLzI1LjAzLjAiLApsb2FkT3JkZXIgPSA0LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gInBlcmZ0b29scy1iYXNlIiwKd1YgPSAiXjAwMDAwMDI1LjAwMDAwMDAwMy4qemZpbmFs
+PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
+CRAY_CPU_TARGET=x86-rome
+PE_GCC_LEVEL=14
+PE_LIBSCI_VOLATILE_PRGENV=GNU
+SLURM_JOB_START_TIME=1776170060
+SLURM_NTASKS_PER_NODE=2
+PKGCONFIG_ENABLED=1
+__LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
+MORE=-sl
+CRAY_PERFTOOLS_PREFIX=/opt/cray/pe/perftools/25.03.0
+PE_FORTRAN_PKGCONFIG_LIBS=mpichf90
+CRAY_ROCM_DIR=/opt/rocm-6.3.4
+__LMOD_REF_COUNT_CRAY_LD_LIBRARY_PATH=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64/lib:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib:1;/opt/cray/pe/mpich/8.1.32/gtl/lib:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib:1;/opt/cray/pe/perftools/25.03.0/lib64:1
+GCC_VERSION=14.2
+CRAY_LIBSCI_BASE_DIR=/opt/cray/pe/libsci/25.03.0
+PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/ompi/pt2pt
+LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
+PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+SLURM_JOB_NODELIST=nid005161
+HOME=/users/lazzaroa
+SLURM_CLUSTER_NAME=lumi
+PELOCAL_PRGENV=true
+CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
+PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
+PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
+SLURM_NODELIST=nid005161
+PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
+LIBCXI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric/libcxi
+HOST=uan02
+SLURM_NETWORK=single_node_vni
+SLURM_GPUS_ON_NODE=8
+SSH_CLIENT=178.197.254.30 46638 22
+__LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig:1
+__LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
+LMOD_VERSION=8.7.55
+XNLSPATH=/usr/X11R6/lib/X11/nls
+PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90
+SLURM_NTASKS=2
+PE_LIBSCI_PKGCONFIG_LIBS=libsci_mpi:libsci
+XDG_SESSION_TYPE=tty
+PREFIX_RCCL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
+SDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+CRAY_LMOD_CPU=x86-rome/1.0
+PE_MPICH_GTL_LIBS_nvidia80=-lmpi_gtl_cuda
+PE_LIBSCI_OMP_REQUIRES_openmp=_mp
+LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SLURM_JOB_CPUS_PER_NODE=56
+GCC_PATH=/opt/cray/pe/gcc-native/14/bin
+BASH_ENV=/opt/cray/pe/lmod/lmod/init/bash
+XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
+_LUMI_INIT_FIRST_LOAD=1
+__LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
+SLURM_THREADS_PER_CORE=1
+SLURM_TOPOLOGY_ADDR=nid005161
+PYTHON_PATH=/opt/cray/pe/python/3.11.7
+LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+CRAY_LMOD_NET=ofi/1.0
+__LMOD_REF_COUNT_PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:1;PE_MPICH:1;PE_DSMML:1;PE_XPMEM:1
+PE_MPICH_MODULE_NAME=cray-mpich
+RCCL_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/rccl
+LIBGL_DEBUG=quiet
+FCFLAGS=-O -I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+PE_LIBSCI_VOLATILE_PKGCONFIG_PATH=/opt/cray/pe/libsci/25.03.0/@PRGENV@/@PE_LIBSCI_GENCOMPS@/@PE_LIBSCI_TARGET@/lib/pkgconfig
+JDK_HOME=/usr/lib64/jvm/java-11-openjdk-11
+__LMOD_REF_COUNT_PE_MPICH_FIXED_PRGENV=GNU:1
+PE_MPICH_GTL_DIR_amd_gfx940=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+PE_MPICH_GTL_DIR_amd_gfx942=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+OUTPUT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/ompi/pt2pt
+SLURM_JOB_NAME=job_lumi_singlenode.slurm
+PROFILEREAD=true
+TMPDIR=/tmp
+PERFTOOLS_VERSION=25.03.0
+SLURM_JOB_GPUS=0,1,2,3,4,5,6,7
+__LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW/system/EB/lumi-tools/24.05:1
+LMOD_sys=Linux
+_ModuleTable010_=bmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9hcHBsL2x1bWkvbW9kdWxlcy9lYXN5YnVpbGQvc3lzdGVtXCIpIiwKfSwKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrL2luaXQtbHVtaS8wLjIubHVhIiwKZnVsbE5hbWUgPSAiaW5pdC1sdW1pLzAuMiIsCmxvYWRPcmRlciA9IDgsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImluaXQtbHVtaSIsCndWID0gIjAwMDAwMDAwMC4wMDAwMDAwMDIuKnpmaW5hbCIsCn0sCmxpYmZhYnJpYyA9IHsKZm4gPSAiL29wdC9jcmF5L21vZHVsZWZpbGVzL2xpYmZhYnJpYy8xLjIyLjAiLApmdWxsTmFt
+PE_PKGCONFIG_LIBS=rocm-6.3.4:libsci_mpi:libsci:mpich:dsmml
+SLURM_JOBID=17515716
+_ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXJvbWUiLApjcmF5cGVfbmV0d29yayA9ICJjcmF5cGUtbmV0d29yay1vZmkiLApnY2NfY29tcGlsZXIgPSAiZ2NjLW5hdGl2ZSIsCmxpYnNjaSA9ICJjcmF5LWxpYnNjaSIsCm1waSA9ICJjcmF5LW1waWNoIiwKfSwKbVQgPSB7Ck1vZHVsZUxhYmVsID0gewpmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMvTW9kdWxl
+SLURM_CONF=/etc/slurm/slurm.conf
+LOADEDMODULES=craype-x86-rome:libfabric/1.22.0:craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-mpich/8.1.32:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:rocm/6.3.4
+LMOD_AVAIL_STYLE=<label>:PEhierarchy:system
+FC=gfortran-14
+CRAYPE_NETWORK_TARGET=ofi
+_ModuleTable006_=cHl0aG9uIiwKd1YgPSAiXjAwMDAwMDAzLjAwMDAwMDAxMS4wMDAwMDAwMDcuKnpmaW5hbCIsCn0sCmNyYXlwZSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9jcmF5cGUvMi43LjM0Lmx1YSIsCmZ1bGxOYW1lID0gImNyYXlwZS8yLjcuMzQiLApsb2FkT3JkZXIgPSAxMSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJjcmF5cGUiLAp3ViA9ICJeMDAwMDAwMDIuMDAwMDAwMDA3LjAwMDAwMDAzNC4qemZpbmFsIiwKfSwKWyJjcmF5cGUtbmV0d29yay1vZmkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBlbmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9vcHQvY3JheS9wZS9sbW9kL21vZHVs
+__LMOD_REF_COUNT_MANPATH=/opt/rocm-6.3.4/share/man:1;/opt/cray/pe/libsci/25.03.0/share/man:1;/opt/cray/pe/mpich/8.1.32/ofi/man:1;/opt/cray/pe/mpich/8.1.32/man/mpich:1;/opt/cray/pe/dsmml/0.3.1/dsmml/man:1;/opt/cray/pe/craype/2.7.34/man:1;/opt/cray/pe/python/3.11.7/share/man:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:1;/opt/cray/pe/perftools/25.03.0/man:1;/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:1;/opt/cray/libfabric/1.22.0/share/man:1;/opt/cray/pe/lmod/lmod/share/man:1;/users/lazzaroa/.local/share/man:1;/usr/local/man:1;/usr/share/man:1
+_ModuleTable003_=UHJnRW52LWdudSIsCndWID0gIl4wMDAwMDAwOC4wMDAwMDAwMDYuKnpmaW5hbCIsCn0sClsiY3JheS1kc21tbCJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktZHNtbWwvMC4zLjEubHVhIiwKZnVsbE5hbWUgPSAiY3JheS1kc21tbC8wLjMuMSIsCmxvYWRPcmRlciA9IDEyLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktZHNtbWwiLAp3ViA9ICJeMDAwMDAwMDAuMDAwMDAwMDAzLjAwMDAwMDAwMS4qemZpbmFsIiwKfSwKWyJjcmF5LWxpYnNjaSJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxlci9nbnUvMTIuMC9jcmF5LWxp
+LMOD_ROOT=/opt/cray/pe/lmod
+SLURM_JOB_QOS=normal
+SLURM_TOPOLOGY_ADDR_PATTERN=node
+SSH_TTY=/dev/pts/356
+PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
+LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
+CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/8.1.32
+_ModuleTable013_=IiwKfSwKcm9jbSA9IHsKZm4gPSAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29yZS9yb2NtLzYuMy40Lmx1YSIsCmZ1bGxOYW1lID0gInJvY20vNi4zLjQiLApsb2FkT3JkZXIgPSAxNiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJyb2NtIiwKd1YgPSAiXjAwMDAwMDA2LjAwMDAwMDAwMy4wMDAwMDAwMDQuKnpmaW5hbCIsCn0sCnhwbWVtID0gewpmbiA9ICIvb3B0L2NyYXkvbW9kdWxlZmlsZXMveHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKZnVsbE5hbWUgPSAieHBtZW0vMi4xMS41LTEuM19nNzNhZGU0MzMyMGJjIiwKbG9hZE9yZGVyID0gNSwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9
+MOTD_SHOWN=pam
+MAIL=/var/spool/mail/lazzaroa
+SLURM_CPUS_ON_NODE=56
+CXX=g++-14
+SLURM_JOB_NUM_NODES=1
+_ModuleTable016_=L2NyYXlwZS10YXJnZXRzL2RlZmF1bHQiCiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9Tb2Z0d2FyZVN0YWNrIiwgIi9hcHBsL2x1bWkvbW9kdWxlcy9TdHlsZU1vZGlmaWVycyIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrIiwgIi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0sCnN5c3RlbUJhc2VNUEFUSCA9ICIvb3B0L2NyYXkvcGUvbW9kdWxlZmlsZXMvTGludXg6L29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbG1vZC9tb2R1bGVmaWxlcy9Db3JlOi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmU6L29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3JheXBlLXRhcmdldHMvZGVmYXVsdDov
+LESSKEY=/etc/lesskey.bin
+LUMI_LMOD_FAMILY_COMPILER=gcc-native
+_ModuleTable009_=bW9kL21vZHVsZWZpbGVzL21peF9jb21waWxlcnNcIikiLCAicHJlcGVuZF9wYXRoKFwiTU9EVUxFUEFUSFwiLFwiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY29tbmV0L2dudS8xMi4wL29maS8xLjBcIikiLAp9LApmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2djYy1uYXRpdmUvMTQuMi5sdWEiLApmdWxsTmFtZSA9ICJnY2MtbmF0aXZlLzE0LjIiLApsb2FkT3JkZXIgPSAxMCwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJnY2MtbmF0aXZlIiwKd1YgPSAiXjAwMDAwMDE0LjAwMDAwMDAwMi4qemZpbmFsIiwKfSwKWyJpbml0LWx1bWkiXSA9IHsKYWN0aW9uQSA9IHsKInByZXBl
+TERM=xterm-256color
+SHELL=/bin/bash
+LUMI_LMOD_FAMILY_COMPILER_VERSION=14.2
+CRAY_MPICH_VER=8.1.32
+LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+XDG_SESSION_CLASS=user
+PE_MPICH_FIXED_PRGENV=GNU
+CRAY_LIBSCI_PREFIX=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+CRAY_ROCM_VERSION=6.3.4
+LMOD_FAMILY_PRGENV=PrgEnv-gnu
+_ModuleTable_Sz_=17
+SLURM_JOB_UID=10013986
+CRAY_PYTHON_PREFIX=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_VERSION=25.03.0
+SLURM_JOB_PARTITION=standard-g
+LMOD_FAMILY_COMPILER=gcc-native
+CRAY_DSMML_BASEDIR=/opt/cray/pe/dsmml/0.3.1
+SLURM_HINT=nomultithread
+CRAY_XPMEM_POST_LINK_OPTS=-L/usr/lib64
+PE_MPICH_GENCOMPILERS_GNU=12.3
+SLURM_JOB_USER=lazzaroa
+SLURM_NPROCS=2
+LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
+SHLVL=3
+SLURM_SUBMIT_HOST=uan02
+PYTHONPATH=/opt/cray/pe/python/3.11.7
+CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
+G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
+SLURM_JOB_ACCOUNT=project_462000031
+GPUBIND=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/select_gpu.sh
+MANPATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/share/man:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/man:/opt/rocm-6.3.4/share/man:/opt/cray/pe/libsci/25.03.0/share/man:/opt/cray/pe/mpich/8.1.32/ofi/man:/opt/cray/pe/mpich/8.1.32/man/mpich:/opt/cray/pe/dsmml/0.3.1/dsmml/man:/opt/cray/pe/craype/2.7.34/man:/opt/cray/pe/python/3.11.7/share/man:/appl/lumi/SW/system/EB/lumi-tools/24.05/share/man:/opt/cray/pe/perftools/25.03.0/man:/opt/cray/pe/papi/7.2.0.1/share/pdoc/man:/opt/cray/libfabric/1.22.0/share/man:/opt/cray/pe/lmod/lmod/share/man:/users/lazzaroa/.local/share/man:/usr/local/man:/usr/share/man
+CRAY_DSMML_VERSION=0.3.1
+CPPFLAGS=-I/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/include -I/opt/rocm-6.3.4/include
+CRAY_ROCM_INCLUDE_OPTS=-I/opt/rocm-6.3.4/include -I/opt/rocm-6.3.4/include/rocprofiler -I/opt/rocm-6.3.4/include/roctracer -I/opt/rocm-6.3.4/include/hip -D__HIP_PLATFORM_AMD__
+MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+EBVERSIONLUMIMINTOOLS=24.05
+HYDRA_BOOTSTRAP=slurm
+PE_MPICH_GTL_LIBS_nvidia90=-lmpi_gtl_cuda
+ROOT_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
+LUMI_LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
+MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:/opt/cray/pe/lmod/modulefiles/mix_compilers:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:/appl/lumi/modules/easybuild/system:/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:/opt/cray/pe/modulefiles/Linux:/opt/cray/pe/modulefiles/Core:/opt/cray/pe/lmod/lmod/modulefiles/Core:/opt/cray/pe/lmod/modulefiles/core:/opt/cray/pe/lmod/modulefiles/craype-targets/default:/appl/lumi/modules/SoftwareStack:/appl/lumi/modules/StyleModifiers:/appl/lumi/modules/init-LUMI-SoftwareStack:/opt/cray/modulefiles
+CRAY_MPICH_DIR=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+CRAY_PYTHON_VERSION=3.11.7
+SLURM_GTIDS=0
+LMOD_FAMILY_CRAYPE=craype
+LOGNAME=lazzaroa
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/10013986/bus
+CRAY_MPICH_VERSION=8.1.32
+XDG_RUNTIME_DIR=/run/user/10013986
+PREFIX_OMPI=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi
+LDFLAGS=-g -O -L/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib -L/opt/rocm-6.3.4/lib
+MODULEPATH_ROOT=/opt/cray/pe/modulefiles
+LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+PE_MPICH_GTL_LIBS_amd_gfx906=-lmpi_gtl_hsa
+PE_DSMML_PKGCONFIG_LIBS=dsmml
+JRE_HOME=/usr/lib64/jvm/java-11-openjdk-11
+PE_LIBSCI_PKGCONFIG_VARIABLES=PE_LIBSCI_OMP_REQUIRES_@openmp@:PE_SCI_EXT_LIBPATH:PE_SCI_EXT_LIBNAME
+XDG_CONFIG_DIRS=/etc/xdg
+PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/bin:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/bin:/opt/rocm-6.3.4/bin:/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/8.1.32/bin:/opt/cray/pe/craype/2.7.34/bin:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/python/3.11.7/bin:/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:/opt/cray/pe/perftools/25.03.0/bin:/opt/cray/pe/papi/7.2.0.1/bin:/opt/cray/libfabric/1.22.0/bin:/users/lazzaroa/.local/bin:/users/lazzaroa/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/mit/bin:/usr/lib/mit/sbin:/opt/cray/pe/bin
+PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
+_ModuleTable014_=IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndWID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9taXhfY29tcGlsZXJzIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxl
+JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
+SLURM_JOB_ID=17515716
+PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
+__LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE:1;CRAYPE_X86_ROME:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ROCM:1
+_LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-rome.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/8.1.32.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
+LMOD_FAMILY_LIBSCI_VERSION=25.03.0
+MODULESHOME=/opt/cray/pe/lmod/lmod
+PKG_CONFIG_PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_ompi/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric/lib/pkgconfig:/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_cxi/lib/pkgconfig:/usr/lib64/pkgconfig:/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:/opt/cray/pe/craype/2.7.34/pkg-config:/opt/cray/libfabric/1.22.0/lib64/pkgconfig
+LMOD_SETTARG_FULL_SUPPORT=no
+G_BROKEN_FILENAMES=1
+PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig
+_ModuleTable011_=ZSA9ICJsaWJmYWJyaWMvMS4yMi4wIiwKbG9hZE9yZGVyID0gMiwKcHJvcFQgPSB7fSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJsaWJmYWJyaWMiLAp3ViA9ICJeMDAwMDAwMDEuMDAwMDAwMDIyLip6ZmluYWwiLAp9LApbImx1bWktdG9vbHMiXSA9IHsKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0vbHVtaS10b29scy8yNC4wNS5sdWEiLApmdWxsTmFtZSA9ICJsdW1pLXRvb2xzLzI0LjA1IiwKbG9hZE9yZGVyID0gNywKcHJvcFQgPSB7Cmxtb2QgPSB7CnN0aWNreSA9IDEsCn0sCn0sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAibHVtaS10b29scyIsCndWID0gIjAw
+PREFIX_LIBFABRIC=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_libfabric
+PE_MPICH_GTL_LIBS_amd_gfx90a=-lmpi_gtl_hsa
+HISTSIZE=1000
+CRAYPE_DIR=/opt/cray/pe/craype/2.7.34
+LMOD_PKG=/opt/cray/pe/lmod/lmod
+__LMOD_REF_COUNT_PE_MPICH_PKGCONFIG_LIBS=mpich:1
+GPUSID=4 2
+OFFLOAD_INIT=on_start
+__LMOD_REF_COUNT_PE_PKGCONFIG_LIBS=rocm-6.3.4:1;libsci_mpi:1;libsci:1;mpich:1;dsmml:1
+CPU=x86_64
+SSH_SENDS_LOCALE=yes
+CRAYPE_VERSION=2.7.34
+EBU_USER_PREFIX=/project/project_462000031/lazzaroa/EasyBuild
+_ModuleTable005_=aWNoLzguMS4zMi5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LW1waWNoLzguMS4zMiIsCmxvYWRPcmRlciA9IDEzLApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMSwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXktbXBpY2giLAp3ViA9ICJeMDAwMDAwMDguMDAwMDAwMDAxLjAwMDAwMDAzMi4qemZpbmFsIiwKfSwKWyJjcmF5LXB5dGhvbiJdID0gewpmbiA9ICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb3JlL2NyYXktcHl0aG9uLzMuMTEuNy5sdWEiLApmdWxsTmFtZSA9ICJjcmF5LXB5dGhvbi8zLjExLjciLApsb2FkT3JkZXIgPSA5LApwcm9wVCA9IHt9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImNyYXkt
+LMOD_CMD=/opt/cray/pe/lmod/lmod/libexec/lmod
+SLURM_LOCALID=0
+CRAY_MPICH_PREFIX=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3
+PE_GCC_EXTERNAL=native
+LESSOPEN=lessopen.sh %s
+CRAYPAT_OPTS_EXECUTABLE=libexec64/opts
+CRAY_XPMEM_INCLUDE_OPTS=-I/usr/include
+PE_LIBSCI_GENCOMPS_GNU_x86_64=123
+LMOD_DIR=/opt/cray/pe/lmod/lmod/libexec
+LMOD_FAMILY_MPI=cray-mpich
+BASH_FUNC_module%%=() {  if [ -z "${LMOD_SH_DBG_ON+x}" ]; then
+ case "$-" in 
+ *v*x*)
+ __lmod_sh_dbg='vx'
+ ;;
+ *v*)
+ __lmod_sh_dbg='v'
+ ;;
+ *x*)
+ __lmod_sh_dbg='x'
+ ;;
+ esac;
+ fi;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ set +$__lmod_sh_dbg;
+ echo "Shell debugging temporarily silenced: export LMOD_SH_DBG_ON=1 for Lmod's output" 1>&2;
+ fi;
+ eval "$($LMOD_CMD shell "$@")" && eval "$(${LMOD_SETTARG_CMD:-:} -s sh)";
+ __lmod_my_status=$?;
+ if [ -n "${__lmod_sh_dbg:-}" ]; then
+ echo "Shell debugging restarted" 1>&2;
+ set -$__lmod_sh_dbg;
+ fi;
+ unset __lmod_sh_dbg;
+ return $__lmod_my_status
+}
+BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
+}
+_=/usr/bin/env
+========
+singlenode_hardware_17515716
+========
+with CXI
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
+[nid005161:05508] Rank 0 bound to package[0][core:0-13]
+[nid005161:05508] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.43              Pass
+2                       2.77              Pass
+4                       5.57              Pass
+8                      11.24              Pass
+16                     22.46              Pass
+32                     44.44              Pass
+64                     89.36              Pass
+128                   175.04              Pass
+256                   368.35              Pass
+512                   729.94              Pass
+1024                 1438.82              Pass
+2048                 2922.02              Pass
+4096                 5817.65              Pass
+8192                11625.42              Pass
+16384               21549.03              Pass
+32768               13733.75              Pass
+65536               23361.60              Pass
+131072              25532.97              Pass
+262144              34219.85              Pass
+524288              34301.67              Pass
+1048576             34488.35              Pass
+2097152             34609.42              Pass
+4194304             34675.06              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
+[nid005161:05649] Rank 1 bound to package[0][core:14-27]
+[nid005161:05649] Rank 0 bound to package[0][core:0-13]
+
+# OSU MPI-ROCM Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.77              Pass
+2                       2.78              Pass
+4                       2.78              Pass
+8                       2.78              Pass
+16                      2.78              Pass
+32                      2.77              Pass
+64                      2.78              Pass
+128                     3.11              Pass
+256                     3.29              Pass
+512                     3.36              Pass
+1024                    3.53              Pass
+2048                    3.66              Pass
+4096                    3.66              Pass
+8192                    5.19              Pass
+16384                   6.93              Pass
+32768                   8.48              Pass
+65536                  95.83              Pass
+131072                304.37              Pass
+262144                 25.42              Pass
+524288                 79.38              Pass
+1048576               148.34              Pass
+2097152                92.75              Pass
+4194304               179.40              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+[nid005161:05800] Rank 0 bound to package[0][core:0-13]
+[nid005161:05800] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.36              Pass
+2                       2.72              Pass
+4                       5.44              Pass
+8                      10.89              Pass
+16                     21.78              Pass
+32                     43.69              Pass
+64                     87.09              Pass
+128                   174.27              Pass
+256                   350.55              Pass
+512                   701.36              Pass
+1024                 1398.31              Pass
+2048                 2794.58              Pass
+4096                 5536.70              Pass
+8192                10996.31              Pass
+16384               19469.61              Pass
+32768               22930.90              Pass
+65536               27720.35              Pass
+131072              30543.75              Pass
+262144              31657.77              Pass
+524288              27942.28              Pass
+1048576             28773.99              Pass
+2097152             28389.86              Pass
+4194304             28666.90              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+[nid005161:05907] Rank 0 bound to package[0][core:0-13]
+[nid005161:05907] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.49              Pass
+2                       2.50              Pass
+4                       2.49              Pass
+8                       2.49              Pass
+16                      2.49              Pass
+32                      2.49              Pass
+64                      2.49              Pass
+128                     3.02              Pass
+256                     3.10              Pass
+512                     3.12              Pass
+1024                    3.18              Pass
+2048                    3.33              Pass
+4096                    3.46              Pass
+8192                    3.85              Pass
+16384                   4.44              Pass
+32768                   7.09              Pass
+65536                   8.56              Pass
+131072                 11.45              Pass
+262144                 17.23              Pass
+524288                 28.85              Pass
+1048576                52.13              Pass
+2097152                98.53              Pass
+4194304               191.48              Pass
+========
+singlenode_software_17515716
+========
+with CXI
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
+[nid005161:06018] Rank 0 bound to package[0][core:0-13]
+[nid005161:06018] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.69              Pass
+2                       3.30              Pass
+4                       6.71              Pass
+8                      13.09              Pass
+16                     26.41              Pass
+32                     52.32              Pass
+64                    106.29              Pass
+128                   207.66              Pass
+256                   437.32              Pass
+512                   830.60              Pass
+1024                 1601.20              Pass
+2048                 2969.44              Pass
+4096                 5168.50              Pass
+8192                   65.88              Pass
+16384                1424.84              Pass
+32768                3799.04              Pass
+65536                7604.53              Pass
+131072              15108.85              Pass
+262144              30184.61              Pass
+524288              34611.92              Pass
+1048576             34650.39              Pass
+2097152             34681.77              Pass
+4194304             34687.69              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
+[nid005161:06156] Rank 0 bound to package[0][core:0-13]
+[nid005161:06156] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI-ROCM Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.60              Pass
+2                       2.61              Pass
+4                       2.61              Pass
+8                       2.83              Pass
+16                      2.62              Pass
+32                      2.63              Pass
+64                      2.64              Pass
+128                     3.21              Pass
+256                     3.45              Pass
+512                     3.61              Pass
+1024                    3.78              Pass
+2048                    3.97              Pass
+4096                    4.34              Pass
+8192                  180.83              Pass
+16384                  22.76              Pass
+32768                  28.15              Pass
+65536                  29.37              Pass
+131072                 32.10              Pass
+262144                 37.45              Pass
+524288                 48.40              Pass
+1048576                70.04              Pass
+2097152               113.04              Pass
+4194304               199.62              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+[nid005161:06591] Rank 0 bound to package[0][core:0-13]
+[nid005161:06591] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.60              Pass
+2                       3.20              Pass
+4                       6.40              Pass
+8                      12.80              Pass
+16                     25.41              Pass
+32                     51.27              Pass
+64                    102.35              Pass
+128                   204.08              Pass
+256                   409.14              Pass
+512                   795.36              Pass
+1024                 1568.66              Pass
+2048                 2926.52              Pass
+4096                 5374.20              Pass
+8192                 9392.63              Pass
+16384               14507.91              Pass
+32768               22420.35              Pass
+65536               28346.72              Pass
+131072              30070.78              Pass
+262144              29942.82              Pass
+524288              27517.36              Pass
+1048576             28409.53              Pass
+2097152             28088.72              Pass
+4194304             27625.47              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+[nid005161:06714] Rank 0 bound to package[0][core:0-13]
+[nid005161:06714] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.67              Pass
+2                       2.69              Pass
+4                       2.68              Pass
+8                       2.90              Pass
+16                      2.70              Pass
+32                      2.70              Pass
+64                      2.71              Pass
+128                     3.28              Pass
+256                     3.32              Pass
+512                     3.39              Pass
+1024                    3.48              Pass
+2048                    3.74              Pass
+4096                    3.98              Pass
+8192                    4.62              Pass
+16384                   5.68              Pass
+32768                  10.95              Pass
+65536                  12.42              Pass
+131072                 15.28              Pass
+262144                 21.12              Pass
+524288                 32.77              Pass
+1048576                56.07              Pass
+2097152               102.51              Pass
+4194304               195.49              Pass
+========
+singlenode_hybrid_17515716
+========
+with CXI
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
+[nid005161:06819] Rank 0 bound to package[0][core:0-13]
+[nid005161:06819] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.42              Pass
+2                       2.80              Pass
+4                       5.58              Pass
+8                      11.07              Pass
+16                     22.46              Pass
+32                     44.34              Pass
+64                     89.24              Pass
+128                   176.93              Pass
+256                   354.28              Pass
+512                   716.63              Pass
+1024                 1455.13              Pass
+2048                 2929.50              Pass
+4096                 5855.67              Pass
+8192                11665.44              Pass
+16384               21622.53              Pass
+32768               18552.52              Pass
+65536               18177.79              Pass
+131072              33814.19              Pass
+262144              34351.26              Pass
+524288              34323.40              Pass
+1048576             34498.66              Pass
+2097152             34630.25              Pass
+4194304             34687.84              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
+[nid005161:06944] Rank 0 bound to package[0][core:0-13]
+[nid005161:06944] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI-ROCM Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.75              Pass
+2                       2.75              Pass
+4                       2.76              Pass
+8                       2.77              Pass
+16                      2.76              Pass
+32                      2.77              Pass
+64                      2.76              Pass
+128                     3.07              Pass
+256                     3.31              Pass
+512                     3.39              Pass
+1024                    3.54              Pass
+2048                    3.53              Pass
+4096                    3.66              Pass
+8192                    4.42              Pass
+16384                   5.27              Pass
+32768                   7.72              Pass
+65536                  76.65              Pass
+131072                181.01              Pass
+262144                 21.24              Pass
+524288                 89.55              Pass
+1048576               146.94              Pass
+2097152                92.75              Pass
+4194304               179.40              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
+[nid005161:07081] Rank 0 bound to package[0][core:0-13]
+[nid005161:07081] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Bi-Directional Bandwidth Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size      Bandwidth (MB/s)        Validation
+1                       1.36              Pass
+2                       2.71              Pass
+4                       5.43              Pass
+8                      10.86              Pass
+16                     21.75              Pass
+32                     43.53              Pass
+64                     87.18              Pass
+128                   173.95              Pass
+256                   349.51              Pass
+512                   697.70              Pass
+1024                 1395.45              Pass
+2048                 2788.97              Pass
+4096                 5549.80              Pass
+8192                10961.50              Pass
+16384               19461.26              Pass
+32768               19750.62              Pass
+65536               27699.69              Pass
+131072              30597.16              Pass
+262144              30700.40              Pass
+524288              28035.20              Pass
+1048576             28170.80              Pass
+2097152             28158.62              Pass
+4194304             28353.74              Pass
+-- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
+[nid005161:07189] Rank 0 bound to package[0][core:0-13]
+[nid005161:07189] Rank 1 bound to package[0][core:14-27]
+
+# OSU MPI Latency Test v7.5.2
+# Datatype: MPI_CHAR.
+# Size       Avg Latency(us)        Validation
+1                       2.50              Pass
+2                       2.49              Pass
+4                       2.49              Pass
+8                       2.49              Pass
+16                      2.49              Pass
+32                      2.50              Pass
+64                      2.49              Pass
+128                     3.02              Pass
+256                     3.09              Pass
+512                     3.12              Pass
+1024                    3.19              Pass
+2048                    3.34              Pass
+4096                    3.47              Pass
+8192                    3.85              Pass
+16384                   4.46              Pass
+32768                   7.10              Pass
+65536                  11.04              Pass
+131072                 11.46              Pass
+262144                 17.23              Pass
+524288                 28.86              Pass
+1048576                52.14              Pass
+2097152                98.57              Pass
+4194304               191.55              Pass
