@@ -12,3 +12,4 @@ install_rccl/
 install_rccl_cpe/
 core
 gpucore.*
+.DS_Store
