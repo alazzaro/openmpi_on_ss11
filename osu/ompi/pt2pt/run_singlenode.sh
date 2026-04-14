@@ -23,8 +23,8 @@ export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
 #if false; then
-for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
-#for FI_CXI_RX_MATCH_MODE in hybrid; do
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hybrid; do
     export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="singlenode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
@@ -63,6 +63,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 
 	export FI_SHM_USE_XPMEM=1
 	export FI_PROVIDER=cxi
+	export OMPI_MCA_opal_common_ofi_provider_include=cxi
+	export OMPI_MCA_mtl_ofi_av=table
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
 	#    export FI_LOG_LEVEL=debug
