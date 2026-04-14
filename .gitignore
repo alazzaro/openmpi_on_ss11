@@ -15,9 +15,9 @@ core
 gpucore.*
 .github
 .vscode*
-*.log
-*.out
 *.o
 *.so
 *.exe
 modulefiles/
+.DS_Store
+
