@@ -55,8 +55,8 @@ export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
 
 #if false; then
-for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
-#for FI_CXI_RX_MATCH_MODE in hybrid; do
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hybrid; do
     export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="singlenode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
@@ -95,6 +95,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 
 	export FI_SHM_USE_XPMEM=1
 	export FI_PROVIDER=cxi
+	export OMPI_MCA_opal_common_ofi_provider_include=cxi
+	export OMPI_MCA_mtl_ofi_av=table
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
 	#    export FI_LOG_LEVEL=debug
@@ -161,12 +163,12 @@ LIBFABRIC_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/lib
 _ModuleTable017_=YXBwbC9sdW1pL21vZHVsZXMvU29mdHdhcmVTdGFjazovYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnM6L2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrOi9vcHQvY3JheS9tb2R1bGVmaWxlcyIsCn0K
 CRAY_DSMML_DIR=/opt/cray/pe/dsmml/0.3.1/dsmml
 SLURM_NODEID=0
-SLURM_TASK_PID=5316
+SLURM_TASK_PID=13222
 __LMOD_REF_COUNT_PATH=/opt/rocm-6.3.4/bin:1;/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/bin:1;/opt/cray/pe/mpich/8.1.32/bin:1;/opt/cray/pe/craype/2.7.34/bin:1;/opt/cray/pe/gcc-native/14/bin:1;/opt/cray/pe/python/3.11.7/bin:1;/appl/lumi/SW/system/EB/lumi-tools/24.05/bin:1;/opt/cray/pe/perftools/25.03.0/bin:1;/opt/cray/pe/papi/7.2.0.1/bin:1;/opt/cray/libfabric/1.22.0/bin:1;/users/lazzaroa/.local/bin:1;/users/lazzaroa/bin:1;/usr/local/bin:1;/usr/bin:1;/bin:1;/usr/lib/mit/bin:1;/usr/lib/mit/sbin:1;/opt/cray/pe/bin:1
 _ModuleTable002_=TGFiZWwvbGFiZWwubHVhIiwKZnVsbE5hbWUgPSAiTW9kdWxlTGFiZWwvbGFiZWwiLApsb2FkT3JkZXIgPSA2LApwcm9wVCA9IHsKbG1vZCA9IHsKc3RpY2t5ID0gMSwKfSwKfSwKc3RhY2tEZXB0aCA9IDEsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJNb2R1bGVMYWJlbC9sYWJlbCIsCndWID0gInNsYWJlbC4qemZpbmFsIiwKfSwKWyJQcmdFbnYtZ251Il0gPSB7CmZuID0gIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUvUHJnRW52LWdudS84LjYuMC5sdWEiLApmdWxsTmFtZSA9ICJQcmdFbnYtZ251LzguNi4wIiwKbG9hZE9yZGVyID0gMTUsCnByb3BUID0ge30sCnN0YWNrRGVwdGggPSAxLApzdGF0dXMgPSAiYWN0aXZlIiwKdXNlck5hbWUgPSAi
 PE_MPICH_GTL_DIR_amd_gfx90a=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
 PE_LIBSCI_OMP_REQUIRES= 
-SSH_CONNECTION=178.197.254.30 46638 193.167.209.164 22
+SSH_CONNECTION=178.197.254.30 48198 193.167.209.165 22
 LUMI_LMOD_FAMILY_CRAYPE=craype
 LUMI_LMOD_FAMILY_CRAYPE_VERSION=2.7.34
 LESSCLOSE=lessclose.sh %s %s
@@ -204,14 +206,14 @@ OMPI_MCA_plm_slurm_args=--external-launcher
 PE_MPICH_GTL_LIBS_nvidia70=-lmpi_gtl_cuda
 LUMI_LMOD_FAMILY_PRGENV=PrgEnv-gnu
 LMOD_FAMILY_COMPILER_VERSION=14.2
-HOSTNAME=nid005161
+HOSTNAME=nid006675
 LMOD_SYSTEM_DEFAULT_MODULES=craype-x86-rome:craype-network-ofi:perftools-base:xpmem:PrgEnv-cray:init-lumi
 EBROOTLUMIMINTOOLS=/appl/lumi/SW/system/EB/lumi-tools/24.05
 OLDPWD=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11
 LUMI_LMOD_FAMILY_CRAYPE_NETWORK_VERSION=false
 CSHEDIT=emacs
 ENVIRONMENT=BATCH
-GPG_TTY=/dev/pts/356
+GPG_TTY=/dev/pts/45
 LESS_ADVANCED_PREPROCESSOR=no
 __LMOD_REF_COUNT_PE_MPICH_GENCOMPILERS_GNU=12.3:1
 COLORTERM=1
@@ -243,10 +245,10 @@ CRAY_ROCM_PREFIX=/opt/rocm-6.3.4
 __LMOD_REF_COUNT_PKG_CONFIG_PATH=/usr/lib64/pkgconfig:1;/opt/cray/pe/dsmml/0.3.1/dsmml/lib/pkgconfig:1;/opt/cray/pe/craype/2.7.34/pkg-config:1;/opt/cray/libfabric/1.22.0/lib64/pkgconfig:1
 OSU_INSTALL=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi/
 GNU_VERSION=14.2
-SLURMD_NODENAME=nid005161
+SLURMD_NODENAME=nid006675
 PE_PKGCONFIG_PRODUCTS=PE_LIBSCI:PE_MPICH:PE_DSMML:PE_XPMEM
 _ModuleTable015_=ci9nbnUvMTIuMCIKLCAiL2FwcGwvbHVtaS9tb2R1bGVzL2Vhc3lidWlsZC9zeXN0ZW0iCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL3BlcmZ0b29scy8yNS4wMy4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9uZXQvb2ZpLzEuMCIKLCAiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvY3B1L3g4Ni1yb21lLzEuMCIKLCAiL29wdC9jcmF5L3BlL21vZHVsZWZpbGVzL0xpbnV4IiwgIi9vcHQvY3JheS9wZS9tb2R1bGVmaWxlcy9Db3JlIgosICIvb3B0L2NyYXkvcGUvbG1vZC9sbW9kL21vZHVsZWZpbGVzL0NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvcmUiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVz
-SLURM_JOB_END_TIME=1776171860
+SLURM_JOB_END_TIME=1776231220
 LUMI_LMOD_FAMILY_LIBSCI=cray-libsci
 CRAY_MPICH_BASEDIR=/opt/cray/pe/mpich/8.1.32/ofi
 PE_MPICH_GTL_DIR_nvidia80=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
@@ -262,7 +264,7 @@ PE_MPICH_PKGCONFIG_LIBS=mpich
 USE_SRUN=0
 OSTYPE=linux
 CC=gcc-14
-XDG_SESSION_ID=1475499
+XDG_SESSION_ID=2152967
 CRAY_DSMML_VER=0.3.1
 __LMOD_REF_COUNT_PYTHON_PATH=/opt/cray/pe/python/3.11.7:1
 LUMI_LMOD_FAMILY_MPI_VERSION=8.1.32
@@ -280,7 +282,7 @@ PE_MPICH_GTL_LIBS_ponteVecchio=-lmpi_gtl_ze
 CRAY_CPU_TARGET=x86-rome
 PE_GCC_LEVEL=14
 PE_LIBSCI_VOLATILE_PRGENV=GNU
-SLURM_JOB_START_TIME=1776170060
+SLURM_JOB_START_TIME=1776229420
 SLURM_NTASKS_PER_NODE=2
 PKGCONFIG_ENABLED=1
 __LMOD_REF_COUNT_MODULEPATH=/opt/cray/pe/lmod/modulefiles/mpi/gnu/12.0/ofi/1.0/cray-mpich/8.0:1;/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/mix_compilers:1;/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0:1;/appl/lumi/modules/easybuild/system:1;/opt/cray/pe/lmod/modulefiles/perftools/25.03.0:1;/opt/cray/pe/lmod/modulefiles/net/ofi/1.0:1;/opt/cray/pe/lmod/modulefiles/cpu/x86-rome/1.0:1;/opt/cray/pe/modulefiles/Linux:1;/opt/cray/pe/modulefiles/Core:1;/opt/cray/pe/lmod/lmod/modulefiles/Core:1;/opt/cray/pe/lmod/modulefiles/core:1;/opt/cray/pe/lmod/modulefiles/craype-targets/default:1;/appl/lumi/modules/SoftwareStack:1;/appl/lumi/modules/StyleModifiers:1;/appl/lumi/modules/init-LUMI-SoftwareStack:1;/opt/cray/modulefiles:1
@@ -295,20 +297,20 @@ PWD=/users/lazzaroa/flash_coe/openmpi_on_ss11/osu/ompi/pt2pt
 LUMI_LMOD_FAMILY_CRAYPE_CPU=craype-x86-rome
 PE_MPICH_GTL_DIR_ponteVecchio=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
 PE_MPICH_GTL_DIR_nvidia70=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
-SLURM_JOB_NODELIST=nid005161
+SLURM_JOB_NODELIST=nid006675
 HOME=/users/lazzaroa
 SLURM_CLUSTER_NAME=lumi
 PELOCAL_PRGENV=true
 CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:/appl/lumi/SW/system/EB/lumi-tools/24.05
 PE_LIBSCI_REQUIRED_PRODUCTS=PE_MPICH
 PE_MPICH_GTL_LIBS_amd_gfx942=-lmpi_gtl_hsa
-SLURM_NODELIST=nid005161
+SLURM_NODELIST=nid006675
 PE_MPICH_GTL_LIBS_amd_gfx940=-lmpi_gtl_hsa
 LIBCXI_DIR=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/libfabric/libcxi
-HOST=uan02
+HOST=uan03
 SLURM_NETWORK=single_node_vni
 SLURM_GPUS_ON_NODE=8
-SSH_CLIENT=178.197.254.30 46638 22
+SSH_CLIENT=178.197.254.30 48198 22
 __LMOD_REF_COUNT_PE_GNU_FIXED_PKGCONFIG_PATH=/opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3/lib/pkgconfig:1
 __LMOD_REF_COUNT_LMOD_MODULERCFILE=/appl/lumi/LUMI-SoftwareStack/LMOD/modulerc.lua:1
 LMOD_VERSION=8.7.55
@@ -330,7 +332,7 @@ XDG_DATA_DIRS=/appl/lumi/SW/system/EB/lumi-tools/24.05/share:/usr/share
 _LUMI_INIT_FIRST_LOAD=1
 __LMOD_REF_COUNT_PE_MPICH_FORTRAN_PKGCONFIG_LIBS=mpichf90:1
 SLURM_THREADS_PER_CORE=1
-SLURM_TOPOLOGY_ADDR=nid005161
+SLURM_TOPOLOGY_ADDR=nid006675
 PYTHON_PATH=/opt/cray/pe/python/3.11.7
 LMOD_FAMILY_GCC_COMPILER_VERSION=14.2
 CRAY_LMOD_NET=ofi/1.0
@@ -354,7 +356,7 @@ __LMOD_REF_COUNT_CMAKE_PREFIX_PATH=/opt/rocm-6.3.4/lib/cmake/hip:1;/appl/lumi/SW
 LMOD_sys=Linux
 _ModuleTable010_=bmRfcGF0aChcIk1PRFVMRVBBVEhcIixcIi9hcHBsL2x1bWkvbW9kdWxlcy9lYXN5YnVpbGQvc3lzdGVtXCIpIiwKfSwKZm4gPSAiL2FwcGwvbHVtaS9tb2R1bGVzL2luaXQtTFVNSS1Tb2Z0d2FyZVN0YWNrL2luaXQtbHVtaS8wLjIubHVhIiwKZnVsbE5hbWUgPSAiaW5pdC1sdW1pLzAuMiIsCmxvYWRPcmRlciA9IDgsCnByb3BUID0gewpsbW9kID0gewpzdGlja3kgPSAxLAp9LAp9LApzdGFja0RlcHRoID0gMCwKc3RhdHVzID0gImFjdGl2ZSIsCnVzZXJOYW1lID0gImluaXQtbHVtaSIsCndWID0gIjAwMDAwMDAwMC4wMDAwMDAwMDIuKnpmaW5hbCIsCn0sCmxpYmZhYnJpYyA9IHsKZm4gPSAiL29wdC9jcmF5L21vZHVsZWZpbGVzL2xpYmZhYnJpYy8xLjIyLjAiLApmdWxsTmFt
 PE_PKGCONFIG_LIBS=rocm-6.3.4:libsci_mpi:libsci:mpich:dsmml
-SLURM_JOBID=17515716
+SLURM_JOBID=17528243
 _ModuleTable001_=X01vZHVsZVRhYmxlXyA9IHsKTVR2ZXJzaW9uID0gMywKY19yZWJ1aWxkVGltZSA9IGZhbHNlLApjX3Nob3J0VGltZSA9IGZhbHNlLApkZXB0aFQgPSB7fSwKZmFtaWx5ID0gewpQcmdFbnYgPSAiUHJnRW52LWdudSIsCmNvbXBpbGVyID0gImdjYy1uYXRpdmUiLApjcmF5cGUgPSAiY3JheXBlIiwKY3JheXBlX2NwdSA9ICJjcmF5cGUteDg2LXJvbWUiLApjcmF5cGVfbmV0d29yayA9ICJjcmF5cGUtbmV0d29yay1vZmkiLApnY2NfY29tcGlsZXIgPSAiZ2NjLW5hdGl2ZSIsCmxpYnNjaSA9ICJjcmF5LWxpYnNjaSIsCm1waSA9ICJjcmF5LW1waWNoIiwKfSwKbVQgPSB7Ck1vZHVsZUxhYmVsID0gewpmbiA9ICIvYXBwbC9sdW1pL21vZHVsZXMvU3R5bGVNb2RpZmllcnMvTW9kdWxl
 SLURM_CONF=/etc/slurm/slurm.conf
 LOADEDMODULES=craype-x86-rome:libfabric/1.22.0:craype-network-ofi:perftools-base/25.03.0:xpmem/2.11.5-1.3_g73ade43320bc:ModuleLabel/label:lumi-tools/24.05:init-lumi/0.2:cray-python/3.11.7:gcc-native/14.2:craype/2.7.34:cray-dsmml/0.3.1:cray-mpich/8.1.32:cray-libsci/25.03.0:PrgEnv-gnu/8.6.0:rocm/6.3.4
@@ -367,7 +369,7 @@ _ModuleTable003_=UHJnRW52LWdudSIsCndWID0gIl4wMDAwMDAwOC4wMDAwMDAwMDYuKnpmaW5hbCI
 LMOD_ROOT=/opt/cray/pe/lmod
 SLURM_JOB_QOS=normal
 SLURM_TOPOLOGY_ADDR_PATTERN=node
-SSH_TTY=/dev/pts/356
+SSH_TTY=/dev/pts/45
 PAT_RT_PERFCTR_DISABLE_COMPONENTS=nvml,rocm_smi
 LUMI_LMOD_FAMILY_CRAYPE_NETWORK=craype-network-ofi
 CRAY_MPICH_ROOTDIR=/opt/cray/pe/mpich/8.1.32
@@ -405,7 +407,7 @@ SLURM_JOB_USER=lazzaroa
 SLURM_NPROCS=2
 LUMI_LMOD_FAMILY_CRAYPE_CPU_VERSION=false
 SHLVL=3
-SLURM_SUBMIT_HOST=uan02
+SLURM_SUBMIT_HOST=uan03
 PYTHONPATH=/opt/cray/pe/python/3.11.7
 CRAY_LIBSCI_PREFIX_DIR=/opt/cray/pe/libsci/25.03.0/GNU/12.3/x86_64
 G_FILENAME_ENCODING=@locale,UTF-8,ISO-8859-15,CP1252
@@ -443,7 +445,7 @@ PATH=/pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/install_rccl
 PE_MPICH_GTL_LIBS_amd_gfx908=-lmpi_gtl_hsa
 _ModuleTable014_=IDAsCnN0YXR1cyA9ICJhY3RpdmUiLAp1c2VyTmFtZSA9ICJ4cG1lbSIsCndWID0gIjAwMDAwMDAwMi4wMDAwMDAwMTEuMDAwMDAwMDA1Lip6ZmluYWwtLjAwMDAwMDAwMS4wMDAwMDAwMDMuKl8uKmcuMDAwMDAwMDczLiphZGUuMDAwMDQzMzIwLipiYy4qemZpbmFsIiwKfSwKfSwKbXBhdGhBID0gewoiL29wdC9jcmF5L3BlL2xtb2QvbW9kdWxlZmlsZXMvbXBpL2dudS8xMi4wL29maS8xLjAvY3JheS1tcGljaC84LjAiCiwgIi9vcHQvY3JheS9wZS9sbW9kL21vZHVsZWZpbGVzL2NvbW5ldC9nbnUvMTIuMC9vZmkvMS4wIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9taXhfY29tcGlsZXJzIgosICIvb3B0L2NyYXkvcGUvbG1vZC9tb2R1bGVmaWxlcy9jb21waWxl
 JAVA_BINDIR=/usr/lib64/jvm/java-11-openjdk-11/bin
-SLURM_JOB_ID=17515716
+SLURM_JOB_ID=17528243
 PE_MPICH_GTL_DIR_nvidia90=-L/opt/cray/pe/mpich/8.1.32/gtl/lib
 __LMOD_REF_COUNT_PE_PRODUCT_LIST=CRAYPE:1;CRAYPE_X86_ROME:1;PERFTOOLS:1;CRAYPAT:1;CRAY_ROCM:1
 _LMFILES_=/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-x86-rome.lua:/opt/cray/modulefiles/libfabric/1.22.0:/opt/cray/pe/lmod/modulefiles/craype-targets/default/craype-network-ofi.lua:/opt/cray/pe/lmod/modulefiles/core/perftools-base/25.03.0.lua:/opt/cray/modulefiles/xpmem/2.11.5-1.3_g73ade43320bc:/appl/lumi/modules/StyleModifiers/ModuleLabel/label.lua:/appl/lumi/modules/easybuild/system/lumi-tools/24.05.lua:/appl/lumi/modules/init-LUMI-SoftwareStack/init-lumi/0.2.lua:/opt/cray/pe/lmod/modulefiles/core/cray-python/3.11.7.lua:/opt/cray/pe/lmod/modulefiles/core/gcc-native/14.2.lua:/opt/cray/pe/lmod/modulefiles/core/craype/2.7.34.lua:/opt/cray/pe/lmod/modulefiles/core/cray-dsmml/0.3.1.lua:/opt/cray/pe/lmod/modulefiles/comnet/gnu/12.0/ofi/1.0/cray-mpich/8.1.32.lua:/opt/cray/pe/lmod/modulefiles/compiler/gnu/12.0/cray-libsci/25.03.0.lua:/opt/cray/pe/lmod/modulefiles/core/PrgEnv-gnu/8.6.0.lua:/opt/cray/pe/lmod/modulefiles/core/rocm/6.3.4.lua
@@ -508,374 +510,126 @@ BASH_FUNC_ml%%=() {  eval "$($LMOD_DIR/ml_cmd "$@")"
 }
 _=/usr/bin/env
 ========
-singlenode_hardware_17515716
+singlenode_hybrid_17528243
 ========
 with CXI
 -- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
-[nid005161:05508] Rank 0 bound to package[0][core:0-13]
-[nid005161:05508] Rank 1 bound to package[0][core:14-27]
+[nid006675:13463] Rank 0 bound to package[0][core:0-13]
+[nid006675:13463] Rank 1 bound to package[0][core:14-27]
 
 # OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size      Bandwidth (MB/s)        Validation
-1                       1.43              Pass
-2                       2.77              Pass
-4                       5.57              Pass
-8                      11.24              Pass
-16                     22.46              Pass
-32                     44.44              Pass
-64                     89.36              Pass
-128                   175.04              Pass
-256                   368.35              Pass
-512                   729.94              Pass
-1024                 1438.82              Pass
-2048                 2922.02              Pass
-4096                 5817.65              Pass
-8192                11625.42              Pass
-16384               21549.03              Pass
-32768               13733.75              Pass
-65536               23361.60              Pass
-131072              25532.97              Pass
-262144              34219.85              Pass
-524288              34301.67              Pass
-1048576             34488.35              Pass
-2097152             34609.42              Pass
-4194304             34675.06              Pass
+1                       1.41              Pass
+2                       2.66              Pass
+4                       5.56              Pass
+8                      11.00              Pass
+16                     21.81              Pass
+32                     42.69              Pass
+64                     88.94              Pass
+128                   175.96              Pass
+256                   363.54              Pass
+512                   732.23              Pass
+1024                 1432.12              Pass
+2048                 2849.50              Pass
+4096                 5836.28              Pass
+8192                11740.72              Pass
+16384               23219.84              Pass
+32768               30466.75              Pass
+65536               35807.80              Pass
+131072              39374.22              Pass
+262144              43675.02              Pass
+524288              45187.08              Pass
+1048576             45944.86              Pass
+2097152             46332.46              Pass
+4194304             46519.21              Pass
 -- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
-[nid005161:05649] Rank 1 bound to package[0][core:14-27]
-[nid005161:05649] Rank 0 bound to package[0][core:0-13]
+[nid006675:14382] Rank 0 bound to package[0][core:0-13]
+[nid006675:14382] Rank 1 bound to package[0][core:14-27]
 
 # OSU MPI-ROCM Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)        Validation
-1                       2.77              Pass
-2                       2.78              Pass
-4                       2.78              Pass
-8                       2.78              Pass
-16                      2.78              Pass
-32                      2.77              Pass
-64                      2.78              Pass
-128                     3.11              Pass
-256                     3.29              Pass
-512                     3.36              Pass
-1024                    3.53              Pass
-2048                    3.66              Pass
-4096                    3.66              Pass
-8192                    5.19              Pass
-16384                   6.93              Pass
-32768                   8.48              Pass
-65536                  95.83              Pass
-131072                304.37              Pass
-262144                 25.42              Pass
-524288                 79.38              Pass
-1048576               148.34              Pass
-2097152                92.75              Pass
-4194304               179.40              Pass
+1                       2.73              Pass
+2                       2.74              Pass
+4                       2.75              Pass
+8                       2.74              Pass
+16                      2.72              Pass
+32                      2.73              Pass
+64                      2.72              Pass
+128                     3.05              Pass
+256                     3.17              Pass
+512                     3.26              Pass
+1024                    3.31              Pass
+2048                    3.48              Pass
+4096                    3.70              Pass
+8192                    4.46              Pass
+16384                   5.67              Pass
+32768                  14.32              Pass
+65536                  89.53              Pass
+131072                399.41              Pass
+262144                175.67              Pass
+524288                 27.62              Pass
+1048576                49.35              Pass
+2097152                92.57              Pass
+4194304               178.90              Pass
 -- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
-[nid005161:05800] Rank 0 bound to package[0][core:0-13]
-[nid005161:05800] Rank 1 bound to package[0][core:14-27]
+[nid006675:15328] Rank 0 bound to package[0][core:0-13]
+[nid006675:15328] Rank 1 bound to package[0][core:14-27]
 
 # OSU MPI Bi-Directional Bandwidth Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size      Bandwidth (MB/s)        Validation
-1                       1.36              Pass
-2                       2.72              Pass
+1                       1.31              Pass
+2                       2.70              Pass
 4                       5.44              Pass
-8                      10.89              Pass
-16                     21.78              Pass
-32                     43.69              Pass
-64                     87.09              Pass
-128                   174.27              Pass
-256                   350.55              Pass
-512                   701.36              Pass
-1024                 1398.31              Pass
-2048                 2794.58              Pass
-4096                 5536.70              Pass
-8192                10996.31              Pass
-16384               19469.61              Pass
-32768               22930.90              Pass
-65536               27720.35              Pass
-131072              30543.75              Pass
-262144              31657.77              Pass
-524288              27942.28              Pass
-1048576             28773.99              Pass
-2097152             28389.86              Pass
-4194304             28666.90              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
-[nid005161:05907] Rank 0 bound to package[0][core:0-13]
-[nid005161:05907] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI Latency Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size       Avg Latency(us)        Validation
-1                       2.49              Pass
-2                       2.50              Pass
-4                       2.49              Pass
-8                       2.49              Pass
-16                      2.49              Pass
-32                      2.49              Pass
-64                      2.49              Pass
-128                     3.02              Pass
-256                     3.10              Pass
-512                     3.12              Pass
-1024                    3.18              Pass
-2048                    3.33              Pass
-4096                    3.46              Pass
-8192                    3.85              Pass
-16384                   4.44              Pass
-32768                   7.09              Pass
-65536                   8.56              Pass
-131072                 11.45              Pass
-262144                 17.23              Pass
-524288                 28.85              Pass
-1048576                52.13              Pass
-2097152                98.53              Pass
-4194304               191.48              Pass
-========
-singlenode_software_17515716
-========
-with CXI
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
-[nid005161:06018] Rank 0 bound to package[0][core:0-13]
-[nid005161:06018] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size      Bandwidth (MB/s)        Validation
-1                       1.69              Pass
-2                       3.30              Pass
-4                       6.71              Pass
-8                      13.09              Pass
-16                     26.41              Pass
-32                     52.32              Pass
-64                    106.29              Pass
-128                   207.66              Pass
-256                   437.32              Pass
-512                   830.60              Pass
-1024                 1601.20              Pass
-2048                 2969.44              Pass
-4096                 5168.50              Pass
-8192                   65.88              Pass
-16384                1424.84              Pass
-32768                3799.04              Pass
-65536                7604.53              Pass
-131072              15108.85              Pass
-262144              30184.61              Pass
-524288              34611.92              Pass
-1048576             34650.39              Pass
-2097152             34681.77              Pass
-4194304             34687.69              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
-[nid005161:06156] Rank 0 bound to package[0][core:0-13]
-[nid005161:06156] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI-ROCM Latency Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size       Avg Latency(us)        Validation
-1                       2.60              Pass
-2                       2.61              Pass
-4                       2.61              Pass
-8                       2.83              Pass
-16                      2.62              Pass
-32                      2.63              Pass
-64                      2.64              Pass
-128                     3.21              Pass
-256                     3.45              Pass
-512                     3.61              Pass
-1024                    3.78              Pass
-2048                    3.97              Pass
-4096                    4.34              Pass
-8192                  180.83              Pass
-16384                  22.76              Pass
-32768                  28.15              Pass
-65536                  29.37              Pass
-131072                 32.10              Pass
-262144                 37.45              Pass
-524288                 48.40              Pass
-1048576                70.04              Pass
-2097152               113.04              Pass
-4194304               199.62              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
-[nid005161:06591] Rank 0 bound to package[0][core:0-13]
-[nid005161:06591] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI Bi-Directional Bandwidth Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size      Bandwidth (MB/s)        Validation
-1                       1.60              Pass
-2                       3.20              Pass
-4                       6.40              Pass
-8                      12.80              Pass
-16                     25.41              Pass
-32                     51.27              Pass
-64                    102.35              Pass
-128                   204.08              Pass
-256                   409.14              Pass
-512                   795.36              Pass
-1024                 1568.66              Pass
-2048                 2926.52              Pass
-4096                 5374.20              Pass
-8192                 9392.63              Pass
-16384               14507.91              Pass
-32768               22420.35              Pass
-65536               28346.72              Pass
-131072              30070.78              Pass
-262144              29942.82              Pass
-524288              27517.36              Pass
-1048576             28409.53              Pass
-2097152             28088.72              Pass
-4194304             27625.47              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
-[nid005161:06714] Rank 0 bound to package[0][core:0-13]
-[nid005161:06714] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI Latency Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size       Avg Latency(us)        Validation
-1                       2.67              Pass
-2                       2.69              Pass
-4                       2.68              Pass
-8                       2.90              Pass
-16                      2.70              Pass
-32                      2.70              Pass
-64                      2.71              Pass
-128                     3.28              Pass
-256                     3.32              Pass
-512                     3.39              Pass
-1024                    3.48              Pass
-2048                    3.74              Pass
-4096                    3.98              Pass
-8192                    4.62              Pass
-16384                   5.68              Pass
-32768                  10.95              Pass
-65536                  12.42              Pass
-131072                 15.28              Pass
-262144                 21.12              Pass
-524288                 32.77              Pass
-1048576                56.07              Pass
-2097152               102.51              Pass
-4194304               195.49              Pass
-========
-singlenode_hybrid_17515716
-========
-with CXI
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple -d rocm D D
-[nid005161:06819] Rank 0 bound to package[0][core:0-13]
-[nid005161:06819] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI-ROCM Bi-Directional Bandwidth Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size      Bandwidth (MB/s)        Validation
-1                       1.42              Pass
-2                       2.80              Pass
-4                       5.58              Pass
-8                      11.07              Pass
-16                     22.46              Pass
-32                     44.34              Pass
-64                     89.24              Pass
-128                   176.93              Pass
-256                   354.28              Pass
-512                   716.63              Pass
-1024                 1455.13              Pass
-2048                 2929.50              Pass
-4096                 5855.67              Pass
-8192                11665.44              Pass
-16384               21622.53              Pass
-32768               18552.52              Pass
-65536               18177.79              Pass
-131072              33814.19              Pass
-262144              34351.26              Pass
-524288              34323.40              Pass
-1048576             34498.66              Pass
-2097152             34630.25              Pass
-4194304             34687.84              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c -d rocm D D
-[nid005161:06944] Rank 0 bound to package[0][core:0-13]
-[nid005161:06944] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI-ROCM Latency Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size       Avg Latency(us)        Validation
-1                       2.75              Pass
-2                       2.75              Pass
-4                       2.76              Pass
-8                       2.77              Pass
-16                      2.76              Pass
-32                      2.77              Pass
-64                      2.76              Pass
-128                     3.07              Pass
-256                     3.31              Pass
-512                     3.39              Pass
-1024                    3.54              Pass
-2048                    3.53              Pass
-4096                    3.66              Pass
-8192                    4.42              Pass
-16384                   5.27              Pass
-32768                   7.72              Pass
-65536                  76.65              Pass
-131072                181.01              Pass
-262144                 21.24              Pass
-524288                 89.55              Pass
-1048576               146.94              Pass
-2097152                92.75              Pass
-4194304               179.40              Pass
--- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_bibw -c -b multiple H H
-[nid005161:07081] Rank 0 bound to package[0][core:0-13]
-[nid005161:07081] Rank 1 bound to package[0][core:14-27]
-
-# OSU MPI Bi-Directional Bandwidth Test v7.5.2
-# Datatype: MPI_CHAR.
-# Size      Bandwidth (MB/s)        Validation
-1                       1.36              Pass
-2                       2.71              Pass
-4                       5.43              Pass
-8                      10.86              Pass
-16                     21.75              Pass
-32                     43.53              Pass
+8                      10.87              Pass
+16                     21.72              Pass
+32                     43.49              Pass
 64                     87.18              Pass
-128                   173.95              Pass
-256                   349.51              Pass
-512                   697.70              Pass
-1024                 1395.45              Pass
-2048                 2788.97              Pass
-4096                 5549.80              Pass
-8192                10961.50              Pass
-16384               19461.26              Pass
-32768               19750.62              Pass
-65536               27699.69              Pass
-131072              30597.16              Pass
-262144              30700.40              Pass
-524288              28035.20              Pass
-1048576             28170.80              Pass
-2097152             28158.62              Pass
-4194304             28353.74              Pass
+128                   173.86              Pass
+256                   349.07              Pass
+512                   697.44              Pass
+1024                 1391.81              Pass
+2048                 2784.01              Pass
+4096                 5473.27              Pass
+8192                10858.55              Pass
+16384               19387.85              Pass
+32768               23250.65              Pass
+65536               27703.77              Pass
+131072              30222.76              Pass
+262144              30535.52              Pass
+524288              26969.86              Pass
+1048576             26903.22              Pass
+2097152             26957.96              Pass
+4194304             26950.87              Pass
 -- mpirun /pfs/lustref1/flash/project_462000031/lazzaroa/openmpi_on_ss11/osu/osu-ompi//libexec/osu-micro-benchmarks//mpi/pt2pt/osu_latency -c H H
-[nid005161:07189] Rank 0 bound to package[0][core:0-13]
-[nid005161:07189] Rank 1 bound to package[0][core:14-27]
+[nid006675:16049] Rank 0 bound to package[0][core:0-13]
+[nid006675:16049] Rank 1 bound to package[0][core:14-27]
 
 # OSU MPI Latency Test v7.5.2
 # Datatype: MPI_CHAR.
 # Size       Avg Latency(us)        Validation
 1                       2.50              Pass
 2                       2.49              Pass
-4                       2.49              Pass
-8                       2.49              Pass
-16                      2.49              Pass
+4                       2.52              Pass
+8                       2.50              Pass
+16                      2.50              Pass
 32                      2.50              Pass
 64                      2.49              Pass
-128                     3.02              Pass
-256                     3.09              Pass
+128                     3.04              Pass
+256                     3.10              Pass
 512                     3.12              Pass
 1024                    3.19              Pass
-2048                    3.34              Pass
-4096                    3.47              Pass
+2048                    3.33              Pass
+4096                    3.46              Pass
 8192                    3.85              Pass
 16384                   4.46              Pass
-32768                   7.10              Pass
-65536                  11.04              Pass
+32768                   7.07              Pass
+65536                   8.57              Pass
 131072                 11.46              Pass
-262144                 17.23              Pass
-524288                 28.86              Pass
-1048576                52.14              Pass
-2097152                98.57              Pass
-4194304               191.55              Pass
+262144                 17.28              Pass
+524288                 28.92              Pass
+1048576                52.22              Pass
+2097152                98.72              Pass
+4194304               191.88              Pass
