@@ -1,12 +1,13 @@
 #!/bin/bash
 
 #for NNODES in 1 2 4 8 16 32 64; do
-for NNODES in 1 2 16; do
-#for NNODES in 2; do
+#for NNODES in 1 2 16; do
+for NNODES in 1 2; do
 #for NNODES in 64; do
 sbatch -N $NNODES <<EOF
 #!/bin/bash
 #SBATCH --ntasks-per-node=8
+##SBATCH --ntasks-per-node=4
 #SBATCH -A project_462000031
 #SBATCH -p standard-g
 #SBATCH --gres=gpu:8
@@ -54,6 +55,11 @@ echo "============"
 cat $0
 echo "============"
 
+#export NCCL_ALGO=Ring
+#export NCCL_ALGO=Tree
+
+export NCCL_DMABUF_ENABLE=1
+
 env
 
 #for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
@@ -84,7 +90,11 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     	for cmd in "\${CMDS[@]}"; do
 	    logname=\$(echo "\${cmd}" | sed -e 's/ /_/g' -e 's/-//g')
 	    echo -- srun \$cmd
-	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+#	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+	    srun --cpu-bind=mask_cpu:0xfe000000000000,0xfe00000000000000,0xfe0000,0xfe000000,0xfe,0xfe00,0xfe00000000,0xfe0000000000  \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+#	    srun --ntasks-per-node=4 --cpu-bind=mask_cpu:0xfe000000000000,0xfe0000,0xfe,0xfe00000000  \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
+#	    export HSA_ENABLE_SDMA=1
+#	    srun --ntasks-per-node=4 --cpu-bind=mask_cpu:0xfe000000000000,0xfe00000000000000,0xfe0000,0xfe000000  \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/\${logname}"\${SUFFIX}.txt"
 #	    srun --cpu-bind=verbose,cores \${GPUBIND} \${PREFIX_RCCL}/bin/\$cmd \${FLAGS} | tee \${OUTPUT_DIR}/rccl_\$i/\${logname}"\${SUFFIX}.txt"
 	done
 #	done
