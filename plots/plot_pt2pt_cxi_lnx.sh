@@ -1,8 +1,10 @@
 #!/bin/bash
 
-#MYUSER="marcink"
-MYUSER="alazzaro"
+MYUSER="marcink"
+#MYUSER="alazzaro"
 #MYUSER=${MYUSER:-${USER}}
+
+PYTHON="python3.14"
 
 echo "User: $MYUSER"
 
@@ -26,11 +28,11 @@ case "${SYSTEM}" in
 
 	FILES=("../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_ob1_singlenode_16489870_mpirun.txt"
 	       "../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_lnx_singlenode_hybrid_16489870_mpirun.txt"
-	       "../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_singlenode_hybrid_17516843_mpirun.txt"
+	       "../osu/ompi/pt2pt/lumi/osu_bibw_b_multiple_d_rocm_D_D_cxi_singlenode_hybrid_17528243_mpirun.txt"
 	       "../osu/slingshot11_peak_bibw.txt"
 	      )
 
-	LABELS=("ompi ob1 (sm)"
+	LABELS=("ompi ob1"
 		"ompi lnx (shm)"
 		"ompi cxi"
 		"SS11 peak bibw"
@@ -46,7 +48,7 @@ case "${SYSTEM}" in
 	       "../osu/slingshot11_peak_bibw.txt"
 	      )
 
-	LABELS=("ompi ob1 (smcuda)"
+	LABELS=("ompi ob1"
 		"ompi lnx (shm)"
 		"ompi cxi"
 		"SS11 peak bibw"
