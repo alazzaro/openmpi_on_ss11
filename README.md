@@ -18,7 +18,7 @@
    source ./setup_modules.sh
    module load libfabric openmpi
    ```
-   
+
    **OR use source scripts** (alternative):
    ```bash
    source sourceme_libfabric.sh
@@ -27,7 +27,7 @@
 
 ## Module Files
 
-Installation scripts automatically generate portable module files for easy environment setup. See [modulefiles/README.md](modulefiles/README.md) for details.
+Installation scripts automatically generate portable module files for easy environment setup. See [templates/README.md](templates/README.md) for details.
 
 ## Dependencies
 
@@ -49,7 +49,7 @@ export USER_LIBFABRIC=system
 source sourceme_libfabric.sh
 
 # Build libfabric from source (optimal customization)
-export USER_LIBFABRIC=build  
+export USER_LIBFABRIC=build
 source sourceme_libfabric.sh
 
 # Automatic detection (default)
@@ -72,12 +72,12 @@ source sourceme_libfabric.sh
 On systems with both AMD and NVIDIA GPU capabilities, you can explicitly choose which GPU acceleration library to use by setting the `USER_GPU_ACCEL` environment variable before sourcing the configuration scripts:
 
 ```bash
-# Force NCCL/CUDA support  
+# Force NCCL/CUDA support
 export USER_GPU_ACCEL=nccl
 source sourceme_nccl.sh
 
 # Force RCCL/ROCm support
-export USER_GPU_ACCEL=rccl  
+export USER_GPU_ACCEL=rccl
 source sourceme_rccl.sh
 
 # Automatic detection (default)
@@ -87,7 +87,7 @@ source sourceme_libfabric.sh
 
 **Valid options:**
 - `nccl` - Force NCCL (NVIDIA CUDA) support
-- `rccl` - Force RCCL (AMD ROCm) support  
+- `rccl` - Force RCCL (AMD ROCm) support
 - `auto` - Automatic detection based on available hardware/modules (default)
 
 > **Note:** For backwards compatibility, the `GPU_ACCEL` environment variable is also supported.
