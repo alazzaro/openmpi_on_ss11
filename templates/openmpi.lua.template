@@ -1,0 +1,59 @@
+-- Module file for OpenMPI @OPENMPI_VERSION@
+-- Built with libfabric and GPU support
+
+local base = "@ROOT_DIR@"
+local version = "@OPENMPI_VERSION@"
+local ompi_root = pathJoin(base, "install_ompi")
+
+whatis("OpenMPI " .. version .. " - High-performance MPI implementation")
+whatis("Built with libfabric CXI provider and GPU support")
+
+help([[
+OpenMPI @OPENMPI_VERSION@ - High-performance MPI implementation
+
+This module provides OpenMPI built from source with optimizations for
+HPE SS11 systems including:
+
+Features:
+- libfabric CXI provider support for Slingshot interconnect
+- GPU-aware MPI with CUDA/ROCm support
+- NCCL/RCCL integration for collective communications
+- XPMEM support for optimized intranode communication
+- Hardware topology detection with hwloc
+
+Usage:
+    mpirun <options> <program>    - Run MPI programs
+    mpicc <files>                 - Compile C programs
+    mpicxx <files>                - Compile C++ programs
+    mpifort <files>               - Compile Fortran programs
+
+For more information:
+    mpirun --help
+    man mpirun
+    ompi_info
+
+]])
+
+-- Prerequisites and conflicts
+conflict("openmpi")
+conflict("mpi")
+
+-- Environment variables
+setenv("MPI_ROOT", ompi_root)
+setenv("OMPI_ROOT", ompi_root)
+
+-- Update paths
+prepend_path("PATH", pathJoin(ompi_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(ompi_root, "lib"))
+prepend_path("PKG_CONFIG_PATH", pathJoin(ompi_root, "lib/pkgconfig"))
+prepend_path("MANPATH", pathJoin(ompi_root, "share/man"))
+
+-- MPI compiler environment
+setenv("MPICC", pathJoin(ompi_root, "bin/mpicc"))
+setenv("MPICXX", pathJoin(ompi_root, "bin/mpicxx"))
+setenv("MPIFORT", pathJoin(ompi_root, "bin/mpifort"))
+setenv("MPIF90", pathJoin(ompi_root, "bin/mpif90"))
+
+-- Optional performance tuning (uncomment if desired)
+-- setenv("OMPI_MCA_btl", "^openib")  -- Disable deprecated OpenIB BTL
+-- setenv("OMPI_MCA_pml", "ucx")      -- Use UCX for point-to-point

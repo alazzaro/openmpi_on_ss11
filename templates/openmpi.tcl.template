@@ -1,0 +1,59 @@
+#%Module 1.0
+## Module file for OpenMPI @OPENMPI_VERSION@
+## Built with libfabric and GPU support
+
+set base "@ROOT_DIR@"
+set version "@OPENMPI_VERSION@"
+set ompi_root "$base/install_ompi"
+
+proc ModulesHelp { } {
+    puts stderr "OpenMPI @OPENMPI_VERSION@ - High-performance MPI implementation"
+    puts stderr ""
+    puts stderr "This module provides OpenMPI built from source with optimizations for"
+    puts stderr "HPE SS11 systems including:"
+    puts stderr ""
+    puts stderr "Features:"
+    puts stderr "- libfabric CXI provider support for Slingshot interconnect"
+    puts stderr "- GPU-aware MPI with CUDA/ROCm support"
+    puts stderr "- NCCL/RCCL integration for collective communications"
+    puts stderr "- XPMEM support for optimized intranode communication"
+    puts stderr "- Hardware topology detection with hwloc"
+    puts stderr ""
+    puts stderr "Usage:"
+    puts stderr "    mpirun <options> <program>    - Run MPI programs"
+    puts stderr "    mpicc <files>                 - Compile C programs"
+    puts stderr "    mpicxx <files>                - Compile C++ programs"
+    puts stderr "    mpifort <files>               - Compile Fortran programs"
+    puts stderr ""
+    puts stderr "For more information:"
+    puts stderr "    mpirun --help"
+    puts stderr "    man mpirun"
+    puts stderr "    ompi_info"
+}
+
+module-whatis "OpenMPI @OPENMPI_VERSION@ - High-performance MPI implementation"
+module-whatis "Built with libfabric CXI provider and GPU support"
+
+# Prerequisites and conflicts
+conflict openmpi
+conflict mpi
+
+# Environment variables
+setenv MPI_ROOT $ompi_root
+setenv OMPI_ROOT $ompi_root
+
+# Update paths
+prepend-path PATH $ompi_root/bin
+prepend-path LD_LIBRARY_PATH $ompi_root/lib
+prepend-path PKG_CONFIG_PATH $ompi_root/lib/pkgconfig
+prepend-path MANPATH $ompi_root/share/man
+
+# MPI compiler environment
+setenv MPICC $ompi_root/bin/mpicc
+setenv MPICXX $ompi_root/bin/mpicxx
+setenv MPIFORT $ompi_root/bin/mpifort
+setenv MPIF90 $ompi_root/bin/mpif90
+
+# Optional performance tuning (uncomment if desired)
+# setenv OMPI_MCA_btl "^openib"  # Disable deprecated OpenIB BTL
+# setenv OMPI_MCA_pml "ucx"      # Use UCX for point-to-point

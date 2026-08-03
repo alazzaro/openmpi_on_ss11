@@ -28,3 +28,7 @@ cd openmpi-${VER}
             --enable-mca-no-build=btl-usnic \
             2>&1 | tee configure.log
 make -j 10 install 2>&1 | tee make.log
+
+# Generate module files
+echo "Generating OpenMPI module files..."
+$ROOT_DIR/generate_modulefiles.sh openmpi

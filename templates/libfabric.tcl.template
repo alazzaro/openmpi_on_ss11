@@ -1,0 +1,49 @@
+#%Module 1.0
+## Module file for libfabric @LIBFABRIC_VERSION@
+## Built from source with CXI provider support
+
+set base "@ROOT_DIR@"
+set version "@LIBFABRIC_VERSION@"
+set libfabric_root "$base/install_libfabric"
+set cxi_root "$base/install_cxi"
+
+proc ModulesHelp { } {
+    puts stderr "libfabric @LIBFABRIC_VERSION@ - High-performance fabric software"
+    puts stderr ""
+    puts stderr "This module provides libfabric built from source with CXI provider"
+    puts stderr "support optimized for HPE SS11 networks."
+    puts stderr ""
+    puts stderr "Features:"
+    puts stderr "- CXI provider for HPE Slingshot interconnect"
+    puts stderr "- GPU memory registration support (CUDA/ROCm)"
+    puts stderr "- XPMEM support for optimized memory transfers"
+    puts stderr ""
+    puts stderr "For more information:"
+    puts stderr "    fi_info           - Display fabric information"
+    puts stderr "    man fi_info       - Manual page for fi_info"
+}
+
+module-whatis "libfabric @LIBFABRIC_VERSION@ - High-performance fabric software"
+module-whatis "Built with CXI provider support for HPE SS11"
+
+# Prerequisites and conflicts
+conflict libfabric
+
+# Environment variables
+setenv LIBFABRIC_ROOT $libfabric_root
+
+# Update paths
+prepend-path PATH $libfabric_root/bin
+prepend-path LD_LIBRARY_PATH $libfabric_root/lib
+prepend-path PKG_CONFIG_PATH $libfabric_root/lib/pkgconfig
+prepend-path MANPATH $libfabric_root/share/man
+
+# CXI provider paths
+prepend-path PATH $cxi_root/bin
+prepend-path LD_LIBRARY_PATH $cxi_root/lib
+prepend-path PKG_CONFIG_PATH $cxi_root/lib/pkgconfig
+prepend-path MANPATH $cxi_root/man
+
+# Set fabric interface environment for optimal performance
+setenv FI_LOG_LEVEL warn
+setenv FI_PROVIDER cxi

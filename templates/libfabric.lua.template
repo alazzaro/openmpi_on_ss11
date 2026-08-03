@@ -1,0 +1,49 @@
+-- Module file for libfabric @LIBFABRIC_VERSION@
+-- Built from source with CXI provider support
+
+local base = "@ROOT_DIR@"
+local version = "@LIBFABRIC_VERSION@"
+local libfabric_root = pathJoin(base, "install_libfabric")
+local cxi_root = pathJoin(base, "install_cxi")
+
+whatis("libfabric " .. version .. " - High-performance fabric software")
+whatis("Built with CXI provider support for HPE SS11")
+
+help([[
+libfabric @LIBFABRIC_VERSION@ - High-performance fabric software
+
+This module provides libfabric built from source with CXI provider
+support optimized for HPE SS11 networks.
+
+Features:
+- CXI provider for HPE Slingshot interconnect
+- GPU memory registration support (CUDA/ROCm)
+- XPMEM support for optimized memory transfers
+
+For more information:
+    fi_info           - Display fabric information
+    man fi_info       - Manual page for fi_info
+
+]])
+
+-- Prerequisites and conflicts
+conflict("libfabric")
+
+-- Environment variables
+setenv("LIBFABRIC_ROOT", libfabric_root)
+
+-- Update paths
+prepend_path("PATH", pathJoin(libfabric_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(libfabric_root, "lib"))
+prepend_path("PKG_CONFIG_PATH", pathJoin(libfabric_root, "lib/pkgconfig"))
+prepend_path("MANPATH", pathJoin(libfabric_root, "share/man"))
+
+-- CXI provider paths
+prepend_path("PATH", pathJoin(cxi_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(cxi_root, "lib"))
+prepend_path("PKG_CONFIG_PATH", pathJoin(cxi_root, "lib/pkgconfig"))
+prepend_path("MANPATH", pathJoin(cxi_root, "man"))
+
+-- Set fabric interface environment for optimal performance
+setenv("FI_LOG_LEVEL", "warn")
+setenv("FI_PROVIDER", "cxi")
