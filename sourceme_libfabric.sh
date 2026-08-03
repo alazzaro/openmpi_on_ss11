@@ -102,6 +102,9 @@ configure_libfabric() {
         fi
     fi
 
+    # Default installation directory
+    export PREFIX_LIBFABRIC="$ROOT_DIR/install_libfabric"
+
     # Make decision based on user preference
     case "${USER_LIBFABRIC}" in
         "system")
@@ -116,18 +119,21 @@ configure_libfabric() {
             ;;
         "build")
             use_system_libfabric=false
-            echo "User preference: Building libfabric from source"
+            echo "User preference: Building/using libfabric from source"
             ;;
         "auto")
             # Auto-detect: prefer system libfabric for certain cases, build for others
-            if [[ "$SYSTEM_CONFIG" == *"cray_libfabric_preinstalled"* ]] || [[ "$SYSTEM_CONFIG" == *"nris_"* ]]; then
+	    if [[ -d ${PREFIX_LIBFABRIC} ]]; then # use existing installation if it exists
+                use_system_libfabric=false
+                echo "Auto-detected: Building/using libfabric from source for optimal configuration"
+	    elif [[ "$SYSTEM_CONFIG" == *"cray_libfabric_preinstalled"* ]] || [[ "$SYSTEM_CONFIG" == *"nris_"* ]]; then
                 if [[ -n "$system_libfabric_path" ]]; then
                     use_system_libfabric=true
                     echo "Auto-detected: Using system libfabric at $system_libfabric_path"
                 fi
             else
                 use_system_libfabric=false
-                echo "Auto-detected: Building libfabric from source for optimal configuration"
+                echo "Auto-detected: Building/using libfabric from source for optimal configuration"
             fi
             ;;
         *)
@@ -143,7 +149,6 @@ configure_libfabric() {
         export LIBFABRIC_SOURCE="system"
         echo "Using system libfabric: $PREFIX_LIBFABRIC"
     else
-        export PREFIX_LIBFABRIC="$ROOT_DIR/install_libfabric"
         export LIBFABRIC_SOURCE="build"
         echo "Will build libfabric at: $PREFIX_LIBFABRIC"
     fi
