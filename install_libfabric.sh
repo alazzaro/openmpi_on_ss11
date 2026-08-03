@@ -4,6 +4,7 @@ set -e
 
 ##### env and modules ###
 
+export USER_LIBFABRIC=build
 source sourceme_libfabric.sh
 
 ### Delete previous installation
