@@ -1,5 +1,5 @@
 
-# Running OpenMPI on HPE SS11 network
+# Running OpenMPI on HPE SS11 network with GPU support (AMD and NVIDIA)
 
 > [!CAUTION]
 > This repository is not an official guide on how to install OpenMPI
