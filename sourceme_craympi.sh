@@ -8,7 +8,7 @@ run_osu_cmd() {
     logname=$(echo "$cmd" | sed -e 's/ /_/g' -e 's/-//g')
 
     # Replace first space in cmd with $OSU_ARGS
-    cmd=$(echo "$cmd $OSU_ARGS")
+    cmd=$(echo "$cmd" | sed -e "s/ /$OSU_ARGS/")
 
     # Split cmd into program + args
     # shellcheck disable=SC2086
@@ -24,16 +24,22 @@ run_osu_cmd() {
     srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}.txt"
 }
 
+function change_dir() {
+    local SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
+    cd $SCRIPT_DIR
+}
+
 export PE_LD_LIBRARY_PATH=system # Force update of the LD_LIBRARY_PATH, instead of CRAY_LD_LIBRARY_PATH
 
-export ROOT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd -P )
-echo "ROOT_DIR = "$ROOT_DIR
+OLDDIR=`pwd -P`
+change_dir
 
 # Source libfabric config to get SYSTEM_CONFIG
+export USER_LIBFABRIC="${USER_LIBFABRIC:-system}" # we default to the system libfabric for CrayMPI
 source sourceme_libfabric.sh
 
 case "$SYSTEM_CONFIG" in
-    "cray_rocm")
+    *"cray_rocm"*)
 	# Basic modules (PrgEnv-gnu, rocm, xpmem) already loaded by sourceme_libfabric.sh
 	module load libfabric
 	module load cray-mpich/9.0.1
@@ -41,7 +47,7 @@ case "$SYSTEM_CONFIG" in
 	module load craype-accel-amd-gfx90a
 	OSU_COMPILE_FLAGS="--enable-rocm"
         ;;
-    "cray_cuda")
+    *"cray_cuda"*)
 	# Basic modules (PrgEnv-gnu, cuda, xpmem) already loaded by sourceme_libfabric.sh
 	module load libfabric
 	module load cray-mpich/9.0.1
@@ -53,7 +59,7 @@ case "$SYSTEM_CONFIG" in
 	fi
 	OSU_COMPILE_FLAGS="--enable-cuda"
         ;;
-    "nris_cuda"|"nris_generic")
+    *"nris_cuda"*|*"nris_generic"*)
 	ml reset
 	ml load CrayEnv
 	# ml swap cray-mpich/9.0.1
@@ -73,7 +79,7 @@ case "$SYSTEM_CONFIG" in
 	    echo "Warning: NCCL library path not found from modules"
 	fi
 	;;
-    "cray_preinstalled"|"cray_generic"|"rocm_generic"|"cuda_generic"|"generic")
+    *"cray_preinstalled"*|*"cray_generic"*|*"rocm_generic"*|*"cuda_generic"*|*"generic"*)
         echo "No Cray MPI configuration available for this system"
         return -1
         ;;
@@ -84,3 +90,5 @@ module list
 export OSU_INSTALL=$ROOT_DIR/osu/osu-craype/
 export OSU_HOME="${USER_OSU_HOME:-$OSU_INSTALL/libexec/osu-micro-benchmarks/}"
 export GPUBIND="${USER_GPUBIND:-$ROOT_DIR/select_gpu.sh}"
+
+cd $OLDDIR

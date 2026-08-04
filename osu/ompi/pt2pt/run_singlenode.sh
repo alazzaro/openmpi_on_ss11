@@ -11,7 +11,10 @@ if [ "$OSU_ARGS" == "" ];then
 fi
 
 # Enable OpenMPI and RCCL
-USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
+#USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
+
+# Enable OpenMPI with new libfabric
+source $ROOT_DIR/sourceme_ompi.sh
 
 echo "============"
 cat $0
@@ -33,7 +36,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     echo $SUFFIX
     echo "========"
 
-    if false; then
+#    if false; then
     (
 	echo "with LinkX"
 
@@ -56,8 +59,9 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
 	done
     )
-    fi
+ #   fi
 
+    if false; then
     (
 	echo "with CXI"
 
@@ -79,6 +83,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
 	done
     )
+    fi
 
     # NCCL/RCCL
     if false; then

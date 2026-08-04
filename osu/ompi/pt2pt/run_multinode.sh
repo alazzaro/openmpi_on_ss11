@@ -11,7 +11,10 @@ if [ "$OSU_ARGS" == "" ];then
 fi
 
 # Enable OpenMPI and RCCL
-USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
+#USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
+
+# Enable OpenMPI with new libfabric
+source $ROOT_DIR/sourceme_ompi.sh
 
 echo "============"
 cat $0
@@ -58,7 +61,7 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     )
 #    fi
 
-#    if false; then
+    if false; then
     (
 	echo "no OpenMPI internal transport, only libfabric. Use CXI directly"
 	export FI_SHM_USE_XPMEM=1
@@ -81,5 +84,5 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     for cmd in "${CMDS[@]}"; do
         run_osu_cmd "$cmd" "xccl/pt2pt" "_${SUFFIX}"
     done
-    #fi
+    fi
 done

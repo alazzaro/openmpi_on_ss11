@@ -7,12 +7,15 @@ export ROOT_DIR=$( cd -- "$( dirname -- "${ORIGINAL_SCRIPT}" )/../../.." &> /dev
 echo "ROOT_DIR = "$ROOT_DIR
 
 if [ "$OSU_ARGS" == "" ];then
-#    OSU_ARGS=" -c "
-    OSU_ARGS=" "
+    OSU_ARGS=" -c "
+#    OSU_ARGS=" "
 fi
 
 # Enable Cray-mpich and RCCL
-USE_CPE=1 source $ROOT_DIR/sourceme_rccl.sh
+#USE_CPE=1 source $ROOT_DIR/sourceme_rccl.sh
+
+# Enable CrayMPI
+source $ROOT_DIR/sourceme_craympi.sh
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
@@ -45,9 +48,9 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     echo $SUFFIX
     echo "========"
 
-#    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
 #    CMDS=("osu_bibw -b single -d rocm D D" "osu_bibw -b single H H")
-    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_bibw -b multiple H H")
+#    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_bibw -b multiple H H")
     #CMDS=("osu_bibw -W 32 -b multiple D D")
     #CMDS=("osu_bibw -b multiple D D")
     #CMDS=("osu_bibw D D")
@@ -59,11 +62,11 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 
     # NCCL/RCCL
 
-#    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
-    CMDS=("osu_xccl_bibw -b multiple -d rocm D D")
-#    CMDS=("osu_xccl_bibw -b single -d rocm D D")
-    for cmd in "${CMDS[@]}"; do
-	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
-    done
+##    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+#    CMDS=("osu_xccl_bibw -b multiple -d rocm D D")
+##    CMDS=("osu_xccl_bibw -b single -d rocm D D")
+#    for cmd in "${CMDS[@]}"; do
+#	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
+#    done
 
 done
