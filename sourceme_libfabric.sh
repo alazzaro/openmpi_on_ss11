@@ -166,6 +166,7 @@ export XPMEM_LIBFABRIC=""
 
 # Initialize GPU variables to ensure they're always defined
 export GPU_INCLUDE=""
+export GPU_LIBRARY=""
 export GPU_LIBFABRIC=""
 
 case "$SYSTEM_CONFIG" in
@@ -194,6 +195,7 @@ case "$SYSTEM_CONFIG" in
 	echo "ROCM_PATH = "$ROCM_PATH
 
 	GPU_INCLUDE="-I$ROCM_PATH/include"
+	GPU_LIBRARY="-L$ROCM_PATH/lib"
 	GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
         ;;
     *"cray_cuda"*)
@@ -209,7 +211,7 @@ case "$SYSTEM_CONFIG" in
         if module load nvhpc-hpcx-cuda12 &>/dev/null 2>&1; then
             echo "Loaded nvhpc-hpcx-cuda12 module"
             # Set CUDA_HOME for NVIDIA HPC SDK
-            export CUDA_HOME="/opt/nvidia/hpc_sdk/Linux_x86_64/$(module list 2>&1 | grep nvhpc-hpcx-cuda12 | sed 's/.*nvhpc-hpcx-cuda12\///g' | awk '{print $1}')/cuda"
+	    export CUDA_HOME=$NVHPC_ROOT/cuda/12.9
             cuda_loaded=true
         elif module load cuda &>/dev/null 2>&1; then
             echo "Loaded cuda module"
@@ -329,6 +331,7 @@ case "$SYSTEM_CONFIG" in
         XPMEM_LIBFABRIC=""
         if [[ -n "$ROCM_PATH" ]]; then
             GPU_INCLUDE="-I$ROCM_PATH/include"
+	    GPU_LIBRARY="-L$ROCM_PATH/lib"
             GPU_LIBFABRIC="--with-rocr=$ROCM_PATH"
         fi
         ;;
@@ -373,7 +376,7 @@ export CXXFLAGS="-g -O -I$PREFIX_CXI/include $GPU_INCLUDE"
 export FC=gfortran
 export FCFLAGS="-O -I$PREFIX_CXI/include $GPU_INCLUDE"
 
-export LDFLAGS="-g -O -L$PREFIX_CXI/lib -L$ROCM_PATH/lib"
+export LDFLAGS="-g -O -L$PREFIX_CXI/lib $GPU_LIBRARY"
 
 export PATH=${PREFIX_CXI}/bin:${PATH}
 export LD_LIBRARY_PATH=${PREFIX_CXI}/lib:${LD_LIBRARY_PATH}
