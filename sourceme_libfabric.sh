@@ -151,6 +151,8 @@ configure_libfabric() {
     else
         export LIBFABRIC_SOURCE="build"
         echo "Will build libfabric at: $PREFIX_LIBFABRIC"
+	# Unload any existing libfabric
+	module unload libfabric &>/dev/null 2>&1 || true
     fi
 }
 

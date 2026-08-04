@@ -7,7 +7,7 @@ This directory contains module files for the software packages built by the inst
 Module files are **automatically generated** from templates when you run the installation scripts. The system uses:
 
 - **Templates**: Located in [templates/](../templates/) directory with placeholder variables
-- **Generator Script**: [`generate_modulefiles.sh`](../generate_modulefiles.sh) substitutes variables 
+- **Generator Script**: [`generate_modulefiles.sh`](../generate_modulefiles.sh) substitutes variables
 - **Integration**: Installation scripts call the generator after successful builds
 
 This ensures module files always use the correct paths and versions for your system.
@@ -17,7 +17,8 @@ This ensures module files always use the correct paths and versions for your sys
 After running the installation scripts, the following modules will be available:
 
 - **libfabric/&lt;version&gt;** - High-performance fabric software with CXI provider support
-- **openmpi/&lt;version&gt;** - OpenMPI built with libfabric and GPU support  
+- **openmpi/system/&lt;version&gt;** - OpenMPI built with system libfabric and GPU support
+- **openmpi/build/&lt;version&gt;** - OpenMPI built with built libfabric and GPU support
 - **nccl/&lt;version&gt;** - NVIDIA Collective Communications Library (requires CUDA)
 - **rccl/&lt;version&gt;** - ROCm Communication Collectives Library (requires ROCm)
 
@@ -40,7 +41,8 @@ You can manually regenerate module files after installation:
 
 # Generate modules for specific software
 ./generate_modulefiles.sh libfabric
-./generate_modulefiles.sh openmpi 
+./generate_modulefiles.sh openmpi system
+./generate_modulefiles.sh openmpi build
 ./generate_modulefiles.sh nccl
 ./generate_modulefiles.sh rccl
 ```
@@ -58,7 +60,7 @@ source ./setup_modules.sh
 # OR manually for Lmod (if using Lua modules)
 export MODULEPATH="/path/to/your/openmpi_on_ss11/modulefiles:$MODULEPATH"
 
-# OR manually for Environment Modules (if using TCL modules)  
+# OR manually for Environment Modules (if using TCL modules)
 module use /path/to/your/openmpi_on_ss11/modulefiles
 ```
 
@@ -67,7 +69,7 @@ module use /path/to/your/openmpi_on_ss11/modulefiles
 ```bash
 # Load individual modules
 module load libfabric/<version>
-module load openmpi/<version>
+module load openmpi/build/<version>
 
 # Or load specific GPU acceleration library
 module load nccl/<version>    # For NVIDIA systems
@@ -80,7 +82,7 @@ module load rccl/<version>     # For AMD systems
 For MPI applications on HPE SS11:
 ```bash
 module load libfabric/<version>
-module load openmpi/<version>
+module load openmpi/build/<version>
 # Optionally load NCCL or RCCL for GPU-aware MPI
 ```
 

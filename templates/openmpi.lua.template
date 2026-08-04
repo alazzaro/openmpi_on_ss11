@@ -35,6 +35,9 @@ For more information:
 ]])
 
 -- Prerequisites and conflicts
+if os.getenv("LMOD_FAMILY_PRGENV") ~= nil then
+   load("PrgEnv-gnu")
+end
 conflict("openmpi")
 conflict("mpi")
 

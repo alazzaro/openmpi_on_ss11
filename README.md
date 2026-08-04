@@ -16,7 +16,7 @@
 2. **Use modules** (recommended):
    ```bash
    source ./setup_modules.sh
-   module load libfabric openmpi
+   module load libfabric openmpi/build
    ```
 
    **OR use source scripts** (alternative):
@@ -35,7 +35,7 @@ If not relying on system-installed libraries, then these scripts must be run in 
 
 1. `./install_libfabric.sh` (if building libfabric from source)
 2. `./install_nccl.sh` (if building NCCL from source) OR `./install_rccl.sh` (if building RCCL from source)
-4. `./install_openmpi.sh` (must be run after libfabric and GPU libraries are configured)
+4. `./install_ompi.sh` (must be run after libfabric and GPU libraries are configured)
 
 ## Configuration
 
