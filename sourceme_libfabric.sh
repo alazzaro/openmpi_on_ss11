@@ -30,18 +30,18 @@ detect_system_config() {
     fi
 
     # Check for NRIS environment
-    if module avail NRIS/GPU &>/dev/null 2>&1; then
+    if module avail NRIS/GPU 2>&1 | grep -q "NRIS/GPU" ; then
         is_nris=true
     fi
 
     # Check for ROCm availability
-    if [[ -n "$ROCM_PATH" ]] || module avail rocm &>/dev/null 2>&1 || [[ -d "/opt/rocm" ]]; then
+    if [[ -n "$ROCM_PATH" ]] || module avail rocm 2>&1 | grep -q rocm || [[ -d "/opt/rocm" ]]; then
         has_rocm=true
     fi
 
     # Check for CUDA availability
     if command -v nvidia-smi &>/dev/null || [[ -n "$CUDA_HOME" ]] || [[ -n "$CUDA_PATH" ]] ||
-       module avail cuda &>/dev/null 2>&1 || [[ -d "/usr/local/cuda" ]] || [[ -d "/opt/cuda" ]]; then
+       module avail cuda 2>&1 | grep -q cuda || [[ -d "/usr/local/cuda" ]] || [[ -d "/opt/cuda" ]]; then
         has_cuda=true
     fi
 
@@ -87,7 +87,7 @@ configure_libfabric() {
         if [[ -n "$cray_lf_version" ]]; then
             system_libfabric_path="/opt/cray/libfabric/$cray_lf_version"
         fi
-    elif module avail libfabric &>/dev/null 2>&1; then
+    elif module avail libfabric 2>&1 | grep -q libfabric ; then
         # System has libfabric module
         if module list 2>&1 | grep -q libfabric; then
             # Already loaded, get path from PKG_CONFIG_PATH or LD_LIBRARY_PATH
@@ -299,9 +299,9 @@ case "$SYSTEM_CONFIG" in
             ml load NRIS/GPU
             # Only try to load NRIS libfabric if we're supposed to use system libfabric
             if [[ "$LIBFABRIC_SOURCE" == "system" ]]; then
-                if module avail libfabric/2.3.1-GCCcore-14.3.0 &>/dev/null 2>&1; then
+                if module avail libfabric/2.3.1-GCCcore-14.3.0 2>&1 | grep -q "libfabric/2.3.1-GCCcore-14.3.0" ; then
                     ml load libfabric/2.3.1-GCCcore-14.3.0
-                elif module avail libfabric &>/dev/null 2>&1; then
+                elif module avail libfabric 2>&1 | grep -q libfabric ; then
                     ml load libfabric
                 fi
             fi
@@ -315,9 +315,9 @@ case "$SYSTEM_CONFIG" in
         ml load NRIS/GPU
         # Only try to load NRIS libfabric if we're supposed to use system libfabric
         if [[ "$LIBFABRIC_SOURCE" == "system" ]]; then
-            if module avail libfabric/2.3.1-GCCcore-14.3.0 &>/dev/null 2>&1; then
+            if module avail libfabric/2.3.1-GCCcore-14.3.0 2>&1 | grep -q "libfabric/2.3.1-GCCcore-14.3.0" ; then
                 ml load libfabric/2.3.1-GCCcore-14.3.0
-            elif module avail libfabric &>/dev/null 2>&1; then
+            elif module avail libfabric 2>&1 | grep -q "libfabric" ; then
                 ml load libfabric
             fi
         fi
