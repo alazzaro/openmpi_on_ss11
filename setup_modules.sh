@@ -15,7 +15,7 @@ if command -v ml >/dev/null 2>&1 || [ -n "$LMOD_VERSION" ]; then
 
     echo ""
     echo "Available modules:"
-    module --ignore_cache avail 2>&1 | grep -E "(libfabric|openmpi|nccl|rccl)" || echo "  No modules found - run installation scripts first"
+    module --ignore_cache avail 2>&1 | grep --color=never -E "(libfabric|openmpi|nccl|rccl)" || echo "  No modules found - run installation scripts first"
 
 elif command -v module >/dev/null 2>&1; then
     echo "Detected Environment Modules system"
@@ -37,7 +37,7 @@ fi
 
 echo ""
 echo "Usage examples:"
-echo "  module load libfabric/2.3.1"
+echo "  module load libfabric/build/2.3.1"
 echo "  module load openmpi/build/5.0.9 # For the version of OpenMPI based on the build libfabric"
 echo "  module load nccl/2.29.2     # For NVIDIA systems"
 echo "  module load rccl/6.2.1      # For AMD systems"

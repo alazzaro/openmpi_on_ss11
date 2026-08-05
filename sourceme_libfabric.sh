@@ -150,6 +150,7 @@ configure_libfabric() {
         echo "Using system libfabric: $PREFIX_LIBFABRIC"
     else
         export LIBFABRIC_SOURCE="build"
+	export PREFIX_LIBFABRIC=$PREFIX_LIBFABRIC/$LIBFABRIC_SOURCE
         echo "Will build libfabric at: $PREFIX_LIBFABRIC"
 	# Unload any existing libfabric
 	module unload libfabric &>/dev/null 2>&1 || true

@@ -125,4 +125,4 @@ make -j 10 install 2>&1 | tee make.log
 
 # Generate module files
 echo "Generating libfabric module files..."
-$ROOT_DIR/generate_modulefiles.sh libfabric
+$ROOT_DIR/generate_modulefiles.sh libfabric "${LIBFABRIC_SOURCE}"
