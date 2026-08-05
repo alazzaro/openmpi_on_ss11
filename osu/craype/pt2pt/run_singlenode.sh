@@ -15,7 +15,10 @@ fi
 #USE_CPE=1 source $ROOT_DIR/sourceme_rccl.sh
 
 # Enable CrayMPI
+export USER_LIBFABRIC=build
 source $ROOT_DIR/sourceme_craympi.sh
+
+fi_info --version
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM

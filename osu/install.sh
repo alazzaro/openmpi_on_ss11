@@ -5,13 +5,19 @@ wget https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-$V
 tar xf osu-micro-benchmarks-$VERSION.tar.gz
 cd osu-micro-benchmarks-$VERSION
 
+DO_OMPI=1
+DO_CRAYMPI=1
+
+if [ -n "$DO_OMPI" ]; then
 (
     source ../../sourceme_ompi.sh
     rm -rf $OSU_INSTALL
     ./configure --prefix=$OSU_INSTALL CC=mpicc CXX=mpicxx CFLAGS=-O3 CXXFLAGS=-O3 ${OSU_COMPILE_FLAGS}
     make -j 10 install
 )
+fi
 
+if [ -n "$DO_CRAYMPI" ]; then
 (
     source ../../sourceme_craympi.sh
     rm -rf $OSU_INSTALL
@@ -19,3 +25,4 @@ cd osu-micro-benchmarks-$VERSION
     ./configure --prefix=$OSU_INSTALL CC=cc CXX=CC CFLAGS=-O3 CXXFLAGS=-O3 ${OSU_COMPILE_FLAGS}
     make -j 10 install
 )
+fi
