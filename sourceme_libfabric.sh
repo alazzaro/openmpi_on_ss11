@@ -208,12 +208,12 @@ case "$SYSTEM_CONFIG" in
 
         # Try different CUDA module variations with actual loading attempts
         cuda_loaded=false
-        if module load nvhpc-hpcx-cuda12 &>/dev/null 2>&1; then
-            echo "Loaded nvhpc-hpcx-cuda12 module"
+        if module load nvhpc-hpcx-cuda13 &>/dev/null 2>&1; then
+            echo "Loaded nvhpc-hpcx-cuda13 module"
             # Set CUDA_HOME for NVIDIA HPC SDK
-	    export CUDA_HOME=$NVHPC_ROOT/cuda/12.9
+	    export CUDA_HOME=$NVHPC_ROOT/cuda/13.1
             cuda_loaded=true
-        elif module load cuda &>/dev/null 2>&1; then
+        elif module load cuda/13.1 &>/dev/null 2>&1; then
             echo "Loaded cuda module"
             cuda_loaded=true
 	elif module load cpe-cuda &>/dev/null 2>&1; then
@@ -234,7 +234,7 @@ case "$SYSTEM_CONFIG" in
 	fi
 
         if ! $cuda_loaded; then
-	    echo "Info: No CUDA modules available on login node (nvhpc-hpcx-cuda12/cuda/cpe-cuda/cray-cuda)"
+	    echo "Info: No CUDA modules available on login node (nvhpc-hpcx-cuda13/cuda/cpe-cuda/cray-cuda)"
 	    echo "Info: Checking for CUDA in standard NVIDIA HPC SDK locations..."
             # Fallback: try to find CUDA in NVIDIA HPC SDK without modules
             if [[ -d "/opt/nvidia/hpc_sdk/Linux_x86_64" ]]; then

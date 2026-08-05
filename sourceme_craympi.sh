@@ -52,8 +52,10 @@ case "$SYSTEM_CONFIG" in
 	module load cray-mpich
 	# Try different NVIDIA accelerator module variations
 	if module avail craype-accel-nvidia90 2>&1 | grep -q "craype-accel-nvidia90" ; then
+	    module load cuda/13.1
 	    module load craype-accel-nvidia90
 	elif module avail craype-accel-nvidia 2>&1 | grep -q "craype-accel-nvidia" ; then
+	    module load cuda
 	    module load craype-accel-nvidia
 	fi
 	OSU_COMPILE_FLAGS="--enable-cuda"
