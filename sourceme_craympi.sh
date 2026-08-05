@@ -45,7 +45,8 @@ case "$SYSTEM_CONFIG" in
 	module load cray-mpich/9.0.1
 	module load craype-x86-trento
 	module load craype-accel-amd-gfx90a
-	OSU_COMPILE_FLAGS="--enable-rocm"
+	export OSU_ACC="rocm"
+	OSU_COMPILE_FLAGS="--enable-$OSU_ACC"
         ;;
     *"cray_cuda"*)
 	# Basic modules (PrgEnv-gnu, cuda, xpmem) already loaded by sourceme_libfabric.sh
@@ -58,7 +59,8 @@ case "$SYSTEM_CONFIG" in
 	    module load cuda
 	    module load craype-accel-nvidia
 	fi
-	OSU_COMPILE_FLAGS="--enable-cuda"
+	export OSU_ACC="cuda"
+	OSU_COMPILE_FLAGS="--enable-$OSU_ACC"
         ;;
     *"nris_cuda"*|*"nris_generic"*)
 	ml reset

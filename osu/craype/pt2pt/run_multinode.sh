@@ -18,6 +18,7 @@ fi
 export USER_LIBFABRIC=build
 source $ROOT_DIR/sourceme_craympi.sh
 
+which fi_info
 fi_info --version
 
 export MPICH_GPU_SUPPORT_ENABLED=1
@@ -43,8 +44,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo $SUFFIX
     echo "========"
 
-    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
-#    CMDS=("osu_bibw -b single -d rocm D D" "osu_bibw -b single H H")
+    CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+#    CMDS=("osu_bibw -b single -d $OSU_ACC D D" "osu_bibw -b single H H")
     #CMDS=("osu_bibw -W 32 -b multiple D D")
     #CMDS=("osu_bibw -b multiple D D")
     #CMDS=("osu_bibw D D")
@@ -56,8 +57,8 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
 
     # NCCL/RCCL
 
-##    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
-#    CMDS=("osu_xccl_bibw -b single -d rocm D D")
+##    CMDS=("osu_xccl_bibw -b multiple -d $OSU_ACC D D" "osu_xccl_latency -d $OSU_ACC D D")
+#    CMDS=("osu_xccl_bibw -b single -d $OSU_ACC D D")
 #    for cmd in "${CMDS[@]}"; do
 #	run_osu_cmd "$cmd" "xccl/pt2pt" "${SUFFIX}"
 #    done

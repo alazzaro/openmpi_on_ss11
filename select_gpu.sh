@@ -1,6 +1,15 @@
 #!/bin/bash
 
-GPUSID=${GPUSID:-"4 5 2 3 6 7 0 1"}
+if command -v rocm-smi &>/dev/null; then
+    # bardpeak nodes
+    GPUSID=${GPUSID:-"4 5 2 3 6 7 0 1"}
+elif command -v nvidia-smi &>/dev/null; then
+    # blancapeak nodes
+    GPUSID=${GPUSID:-"0 1 2 3"}
+else
+    echo "no rocm-smi and nvidia-smi found!"
+    exit -1
+fi
 GPUSID=(${GPUSID})
 
 LOCALID=0
@@ -44,5 +53,7 @@ fi
 #export HIP_VISIBLE_DEVICES=${LOCALID}
 
 #echo $LOCALID gpu $HIP_VISIBLE_DEVICES $NTASKS_PER_NODE
+
+export CUDA_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES
 
 exec $*
