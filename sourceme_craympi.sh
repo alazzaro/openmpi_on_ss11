@@ -41,20 +41,19 @@ source sourceme_libfabric.sh
 case "$SYSTEM_CONFIG" in
     *"cray_rocm"*)
 	# Basic modules (PrgEnv-gnu, rocm, xpmem) already loaded by sourceme_libfabric.sh
-	module load libfabric
+	# LUMI modules
 	module load cray-mpich/9.0.1
-	module swap craype-x86-rome craype-x86-trento
+	module load craype-x86-trento
 	module load craype-accel-amd-gfx90a
 	OSU_COMPILE_FLAGS="--enable-rocm"
         ;;
     *"cray_cuda"*)
 	# Basic modules (PrgEnv-gnu, cuda, xpmem) already loaded by sourceme_libfabric.sh
-	module load libfabric
-	module load cray-mpich/9.0.1
+	module load cray-mpich
 	# Try different NVIDIA accelerator module variations
-	if module avail craype-accel-nvidia90 &>/dev/null 2>&1; then
+	if module avail craype-accel-nvidia90 2>&1 | grep -q "craype-accel-nvidia90" ; then
 	    module load craype-accel-nvidia90
-	elif module avail craype-accel-nvidia &>/dev/null 2>&1; then
+	elif module avail craype-accel-nvidia 2>&1 | grep -q "craype-accel-nvidia" ; then
 	    module load craype-accel-nvidia
 	fi
 	OSU_COMPILE_FLAGS="--enable-cuda"
