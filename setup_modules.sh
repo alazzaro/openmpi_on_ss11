@@ -37,8 +37,8 @@ fi
 
 echo ""
 echo "Usage examples:"
-echo "  module load libfabric/build/2.3.1"
-echo "  module load openmpi/build/5.0.9 # For the version of OpenMPI based on the build libfabric"
+echo "  module load libfabric/2.3.1_build"
+echo "  module load openmpi/5.0.9_build # For the version of OpenMPI based on the build libfabric"
 echo "  module load nccl/2.29.2     # For NVIDIA systems"
 echo "  module load rccl/6.2.1      # For AMD systems"
 echo ""

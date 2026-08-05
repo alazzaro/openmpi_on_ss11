@@ -31,4 +31,4 @@ make -j 10 install 2>&1 | tee make.log
 
 # Generate module files
 echo "Generating OpenMPI module files..."
-$ROOT_DIR/generate_modulefiles.sh openmpi "${LIBFABRIC_SOURCE}"
+$ROOT_DIR/generate_modulefiles.sh openmpi

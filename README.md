@@ -16,7 +16,7 @@
 2. **Use modules** (recommended):
    ```bash
    source ./setup_modules.sh
-   module load libfabric/build openmpi/build
+   module load libfabric openmpi
    ```
 
    **OR use source scripts** (alternative):

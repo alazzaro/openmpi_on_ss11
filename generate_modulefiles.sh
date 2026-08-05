@@ -14,17 +14,19 @@ detect_version() {
 
     case "$software" in
         libfabric)
+	    # Mark with _build suffix to make sure we distinguish from system versions
             if [[ -x "$install_dir/bin/fi_info" ]]; then
-                "$install_dir/bin/fi_info" --version 2>/dev/null | head -1 | awk '{print $2}'
+                "$install_dir/bin/fi_info" --version 2>/dev/null | head -1 | awk '{print $2"_build"}'
             else
-                echo "2.3.1"  # Default fallback
+                echo "2.3.1_build"  # Default fallback
             fi
             ;;
         openmpi)
+	    # Mark with _build suffix to make sure we distinguish from system versions
             if [[ -x "$install_dir/bin/mpirun" ]]; then
-                "$install_dir/bin/mpirun" --version 2>/dev/null | head -1 | awk '{print $4}'
+                "$install_dir/bin/mpirun" --version 2>/dev/null | head -1 | awk '{print $4"_build"}'
             else
-                echo "5.0.9"  # Default fallback
+                echo "5.0.9_build"  # Default fallback
             fi
             ;;
         nccl)
@@ -61,8 +63,7 @@ generate_module() {
 # Function to create modules for a specific software
 create_modules() {
     local software="$1"
-    local suffix="$2"
-    local install_dir="$ROOT_DIR/install_$software/$suffix"
+    local install_dir="$ROOT_DIR/install_$software"
 
     echo "Creating module files for $software..."
 
@@ -83,20 +84,14 @@ create_modules() {
         echo "  → Warning: Lua template not found: $lua_template"
     else
         generate_module "$software" "$version" "$lua_template" \
-            "$MODULEFILES_DIR/$software/$suffix/$version.lua"
-	# For OpenMPI we add the depending libfabric
-
-	if [ "$software" = "openmpi" ]; then
-	    echo "load(\"libfabric/"$(fi_info --version 2>/dev/null | head -1 | awk '{print $2}')"\")" >> $MODULEFILES_DIR/$software/$suffix/$version.lua
-	fi
-
+            "$MODULEFILES_DIR/$software/$version.lua"
     fi
 
     if [[ ! -f "$tcl_template" ]]; then
         echo "  → Warning: TCL template not found: $tcl_template"
     else
         generate_module "$software" "$version" "$tcl_template" \
-            "$MODULEFILES_DIR/$software/$suffix/$version"
+            "$MODULEFILES_DIR/$software/$version"
     fi
 
     echo "  → Completed module files for $software"
@@ -105,7 +100,6 @@ create_modules() {
 # Main function
 main() {
     local software="$1"
-    local suffix="$2"
 
     echo "Module file generator"
     echo "Root directory: $ROOT_DIR"
@@ -120,9 +114,9 @@ main() {
         # Create modules for specific software
         case "$software" in
             libfabric|openmpi|nccl|rccl)
-		local install_dir="$ROOT_DIR/install_$software/$suffix"
+		local install_dir="$ROOT_DIR/install_$software"
 		if [[ -d "$install_dir" ]] && [[ -n "$(find "$install_dir" -maxdepth 2 -type f 2>/dev/null | head -1)" ]]; then
-                    create_modules "$software" "$suffix"
+                    create_modules "$software"
 		else
 		    echo "No installed software found. Run installation scripts first:"
 		    echo "  ./install_$software.sh"

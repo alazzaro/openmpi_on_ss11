@@ -109,7 +109,7 @@ case "$SYSTEM_CONFIG" in
         ;;
 esac
 
-export PREFIX_OMPI=$ROOT_DIR/install_openmpi/${LIBFABRIC_SOURCE} # installation directory
+export PREFIX_OMPI=$ROOT_DIR/install_openmpi # installation directory
 export OMPI_DIR=$ROOT_DIR/openmpi5
 
 export PATH=${PREFIX_OMPI}/bin:${PATH}
