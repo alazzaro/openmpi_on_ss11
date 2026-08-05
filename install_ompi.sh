@@ -22,6 +22,7 @@ tar xvf openmpi-${VER}.tar.bz2
 cd openmpi-${VER}
 ./configure --prefix=$PREFIX_OMPI ${XPMEM_OMPI} ${GPU_OMPI} \
             --without-ucx \
+	    --without-ucc \
             --with-ofi=${PREFIX_LIBFABRIC} \
             --without-lsf --with-slurm --with-pmix=internal \
             --without-knem --with-libevent=internal --with-hwloc=internal \

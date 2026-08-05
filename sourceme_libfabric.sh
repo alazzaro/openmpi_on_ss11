@@ -212,6 +212,7 @@ case "$SYSTEM_CONFIG" in
             echo "Loaded nvhpc-hpcx-cuda13 module"
             # Set CUDA_HOME for NVIDIA HPC SDK
 	    export CUDA_HOME=$NVHPC_ROOT/cuda/13.1
+	    module unload hpcx # remove runtime
             cuda_loaded=true
         elif module load cuda/13.1 &>/dev/null 2>&1; then
             echo "Loaded cuda module"
@@ -284,10 +285,12 @@ case "$SYSTEM_CONFIG" in
 
         if [[ -n "$CUDA_HOME" ]]; then
             GPU_INCLUDE="-I$CUDA_HOME/include"
+	    GPU_LIBRARY="-L$CUDA_HOME/lib64"
             GPU_LIBFABRIC="--with-cuda=$CUDA_HOME"
             echo "Using CUDA_HOME: $CUDA_HOME"
         elif [[ -n "$CUDA_PATH" ]]; then
             GPU_INCLUDE="-I$CUDA_PATH/include"
+	    GPU_LIBRARY="-L$CUDA_PATH/lib64"
             GPU_LIBFABRIC="--with-cuda=$CUDA_PATH"
             echo "Using CUDA_PATH: $CUDA_PATH"
         else

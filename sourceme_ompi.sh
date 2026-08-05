@@ -55,8 +55,9 @@ case "$SYSTEM_CONFIG" in
             echo "Warning: XPMEM_ROOT not set, proceeding without XPMEM support"
             XPMEM_OMPI=""
         fi
-        GPU_OMPI="--with-rocm=$ROCM_PATH"
-	OSU_COMPILE_FLAGS="--enable-rocm"
+	GPU_OMPI="--with-rocm=$ROCM_PATH"
+	export OSU_ACC="rocm"
+        OSU_COMPILE_FLAGS="--enable-$OSU_ACC"
         ;;
     *"cray_cuda"*)
         if [[ -n "$XPMEM_ROOT" ]]; then
@@ -71,7 +72,8 @@ case "$SYSTEM_CONFIG" in
         elif [[ -n "$CUDA_PATH" ]]; then
             GPU_OMPI="--with-cuda=$CUDA_PATH"
         fi
-	OSU_COMPILE_FLAGS="--enable-cuda"
+	export OSU_ACC="cuda"
+        OSU_COMPILE_FLAGS="--enable-$OSU_ACC"	
         ;;
     *"nris_cuda"*|*"nris_generic"*)
 	# seems to be needed. slurm race?
@@ -92,7 +94,8 @@ case "$SYSTEM_CONFIG" in
         if [[ -n "$ROCM_PATH" ]]; then
             GPU_OMPI="--with-rocm=$ROCM_PATH"
         fi
-	OSU_COMPILE_FLAGS="--enable-rocm"
+	export OSU_ACC="rocm"
+        OSU_COMPILE_FLAGS="--enable-$OSU_ACC"
         ;;
     *"cuda_generic"*)
         if [[ -n "$CUDA_HOME" ]]; then
@@ -100,7 +103,8 @@ case "$SYSTEM_CONFIG" in
         elif [[ -n "$CUDA_PATH" ]]; then
             GPU_OMPI="--with-cuda=$CUDA_PATH"
         fi
-	OSU_COMPILE_FLAGS="--enable-cuda"
+	export OSU_ACC="cuda"
+        OSU_COMPILE_FLAGS="--enable-$OSU_ACC"	
         ;;
     *"cray_libfabric_preinstalled"*|*"cray_generic"*|*"generic"*)
         echo "No OpenMPI configuration available for this system"
