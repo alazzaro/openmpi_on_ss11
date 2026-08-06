@@ -30,6 +30,7 @@ run_osu_cmd() {
     # gpu-1-62:4117765:4118287 [0] NCCL INFO [Proxy Service] Device 0 CPU core 73
     # gpu-1-62:4117765:4118290 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 74
     BINDING=${BINDING:-"--bind-to numa --map-by numa"}
+    ldd $fullprog
     mpirun ${BINDING} --report-bindings $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_mpirun.txt"
 }
 

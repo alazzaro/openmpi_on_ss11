@@ -8,6 +8,7 @@ echo "ROOT_DIR = "$ROOT_DIR
 
 if [ "$OSU_ARGS" == "" ];then
     OSU_ARGS=" -c "
+#    OSU_ARGS=" "
 fi
 
 # Enable OpenMPI and RCCL
@@ -15,6 +16,9 @@ fi
 
 # Enable OpenMPI with new libfabric
 source $ROOT_DIR/sourceme_ompi.sh
+
+which fi_info
+fi_info --version
 
 echo "============"
 cat $0
@@ -24,6 +28,8 @@ env
 
 export PRTE_MCA_ras_base_launch_orted_on_hn=1
 export PMIX_MCA_gds=^shmem2
+#export FI_HMEM_CUDA_USE_GDRCOPY=1
+#export FI_MR_CACHE_MONITOR=kdreg2
 
 #if false; then
 #for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
@@ -47,9 +53,10 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	export OMPI_MCA_mtl_ofi_av=table
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
-	#    export FI_LOG_LEVEL=debug
+	#	export FI_LOG_LEVEL=debug
 
-	CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+       	CMDS=("osu_bibw -b multiple H H")
 	#CMDS=("osu_bibw -W 32 -b multiple D D")
 	#CMDS=("osu_bibw -b multiple D D")
 	#CMDS=("osu_bibw D D")
@@ -59,7 +66,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
 	done
     )
- #   fi
+#    fi
 
     if false; then
     (
@@ -73,7 +80,8 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	export OMPI_MCA_mtl=ofi
 	#    export FI_LOG_LEVEL=debug
 
-	CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	CMDS=("osu_bibw -b multiple H H")
 	#CMDS=("osu_bibw -W 32 -b multiple D D")
 	#CMDS=("osu_bibw -b multiple D D")
 	#CMDS=("osu_bibw D D")
@@ -87,7 +95,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 
     # NCCL/RCCL
     if false; then
-    CMDS=("osu_xccl_bibw -b multiple -d rocm D D" "osu_xccl_latency -d rocm D D")
+    CMDS=("osu_xccl_bibw -b multiple -d $OSU_ACC D D" "osu_xccl_latency -d $OSU_ACC D D")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "xccl/pt2pt" "_${SUFFIX}"
     done
@@ -114,7 +122,7 @@ echo "with OpenMPI internal transport"
     unset OMPI_MCA_mtl
     export OMPI_MCA_smsc=xpmem # Only OpenMPI
 
-    CMDS=("osu_bibw -b multiple -d rocm D D" "osu_latency -d rocm D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
     for cmd in "${CMDS[@]}"; do
 	run_osu_cmd "$cmd" "mpi/pt2pt" "${SUFFIX}"
     done

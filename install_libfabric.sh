@@ -184,6 +184,7 @@ cd libfabric-${VER}
             --disable-mrail --disable-rxd --disable-tcp --disable-usnic \
             --disable-efa --disable-psm2 --disable-psm3 --disable-opx \
             ${XPMEM_LIBFABRIC} 2>&1 | tee configure.log
+# --enable-cuda-dlopen=no --enable-gdrcopy-dlopen=no
 make -j 10 install 2>&1 | tee make.log
 
 # Generate module files
