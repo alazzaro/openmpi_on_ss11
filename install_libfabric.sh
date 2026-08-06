@@ -49,6 +49,69 @@ cd lm-sensors-3-6-0/
 make CC=$CC 2>&1 | tee make.log
 make CC=$CC PREFIX=$PREFIX_CXI install 2>&1 | tee make_install.log
 
+# install fuse 2.x (https://github.com/libfuse/libfuse)
+# we need just the headers, the library is already installed
+cd $ROOT_DIR
+mkdir -p $LIBCXI_DIR
+cd $LIBCXI_DIR
+wget https://github.com/libfuse/libfuse/releases/download/fuse-2.9.7/fuse-2.9.7.tar.gz
+tar xvf fuse-2.9.7.tar.gz
+cd fuse-2.9.7
+# patch for new glibc
+#  diff -u include/fuse_kernel.h include/fuse_kernel.h.fixed
+cat <<'EOF' >> fuse_kernel.h.patch
+--- include/fuse_kernel.h	2016-06-20 14:48:39.000000000 -0500
++++ include/fuse_kernel.h.fixed	2026-08-05 13:48:38.806392330 -0500
+@@ -89,11 +89,16 @@
+ #define _LINUX_FUSE_H
+ 
+ #include <sys/types.h>
++#ifdef __linux__
++#include <linux/types.h>
++#else
++#include <stdint.h>
+ #define __u64 uint64_t
+ #define __s64 int64_t
+ #define __u32 uint32_t
+ #define __s32 int32_t
+ #define __u16 uint16_t
++#endif
+ 
+ /*
+  * Version negotiation:
+EOF
+patch include/fuse_kernel.h < fuse_kernel.h.patch
+# diff -u util/ulockmgr_server.c util/ulockmgr_server.c.fixed
+cat <<'EOF' >> ulockmgr_server.c.patch
+--- util/ulockmgr_server.c	2016-06-20 14:48:39.000000000 -0500
++++ util/ulockmgr_server.c.fixed	2026-08-05 13:52:43.215776704 -0500
+@@ -124,6 +124,7 @@
+ 	return res;
+ }
+ 
++#if !defined(__linux__)
+ static int closefrom(int minfd)
+ {
+ 	DIR *dir = opendir("/proc/self/fd");
+@@ -141,6 +142,7 @@
+ 	}
+ 	return 0;
+ }
++#endif
+ 
+ static void send_reply(int cfd, struct message *msg)
+ {
+EOF
+patch util/ulockmgr_server.c < ulockmgr_server.c.patch
+./configure --prefix=$PREFIX_CXI
+make -j install MOUNT_FUSE_PATH=$PREFIX_CXI/sbin INIT_D_PATH=$PREFIX_CXI/etc UDEV_RULES_PATH=$PREFIX_CXI/etc/udev/rules.d
+#make
+#make install -k || true # Ignore the error
+cd $PREFIX_CXI/bin
+rm fusermount
+ln -s `which fusermount` # note: system fusermount is 2.9.7, same as the version installed
+export PKG_CONFIG_PATH="$PREFIX_CXI/lib/pkgconfig:$PKG_CONFIG_PATH"
+
 ### Install LibCXI ###
 
 SHS_VERSION=12.0.2

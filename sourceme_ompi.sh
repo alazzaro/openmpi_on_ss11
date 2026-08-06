@@ -22,7 +22,7 @@ run_osu_cmd() {
 
     if [ "${USE_SRUN}" = "1" ]; then
 	echo -- srun "$fullprog" "${args[@]}"
-        srun --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_srun.txt"
+        srun --mpi=pmix --cpu-bind=verbose,cores $GPUBIND "$fullprog" "${args[@]}" | tee "$OUTPUT_DIR/$logname${logsuffix}_srun.txt"
     fi
 
     echo -- mpirun "$fullprog" "${args[@]}"
@@ -39,7 +39,7 @@ function change_dir() {
 }
 
 # system-specific - check if your system supports running OpenMPI apps using srun
-export USE_SRUN=0
+export USE_SRUN=${USE_SRUN:-0}
 
 OLDDIR=`pwd -P`
 change_dir

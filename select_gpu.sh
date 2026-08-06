@@ -3,9 +3,11 @@
 if command -v rocm-smi &>/dev/null; then
     # bardpeak nodes
     GPUSID=${GPUSID:-"4 5 2 3 6 7 0 1"}
+    CXISID="2 1 3 0"
 elif command -v nvidia-smi &>/dev/null; then
     # blancapeak nodes
     GPUSID=${GPUSID:-"0 1 2 3"}
+    CXISID="0 1 2 3"
 else
     echo "no rocm-smi and nvidia-smi found!"
     exit -1
@@ -18,7 +20,6 @@ if [ "$OMPI_COMM_WORLD_LOCAL_RANK" ]; then
     LOCALID=$OMPI_COMM_WORLD_LOCAL_RANK
     NTASKS_PER_NODE=$OMPI_COMM_WORLD_LOCAL_SIZE
 
-    CXISID="2 1 3 0"
     CXISID=(${CXISID})
     # For multi-NIC systems set the NIC you want
     if [ ${NTASKS_PER_NODE} -lt ${#CXISID[@]} ]; then
