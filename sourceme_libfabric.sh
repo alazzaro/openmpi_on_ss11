@@ -364,30 +364,36 @@ echo "Libfabric path: ${PREFIX_LIBFABRIC}"
 echo "XPMEM configuration: ${XPMEM_LIBFABRIC:-"(disabled)"}"
 echo "GPU acceleration: ${GPU_LIBFABRIC:-"(disabled)"}"
 
-export PREFIX_CXI=$ROOT_DIR/install_cxi # installation directory
-export LIBFABRIC_DIR=$ROOT_DIR/libfabric
-export LIBCXI_DIR=$LIBFABRIC_DIR/libcxi
+if [ "$LIBFABRIC_SOURCE" = "build" ]; then
 
-export c=gnu
-export CC=gcc
-export CFLAGS="-g -O -Wno-error=maybe-uninitialized -I$PREFIX_CXI/include $GPU_INCLUDE"
-export CPPFLAGS="-I$PREFIX_CXI/include $GPU_INCLUDE"
+    export PREFIX_CXI=$ROOT_DIR/install_cxi # installation directory
+    export LIBFABRIC_DIR=$ROOT_DIR/libfabric
+    export LIBCXI_DIR=$LIBFABRIC_DIR/libcxi
+    
+    export c=gnu
+    export CC=gcc
+    export CFLAGS="-g -O -Wno-error=maybe-uninitialized -I$PREFIX_CXI/include $GPU_INCLUDE"
+    export CPPFLAGS="-I$PREFIX_CXI/include $GPU_INCLUDE"
+    
+    export CXX=g++
+    export CXXFLAGS="-g -O -I$PREFIX_CXI/include $GPU_INCLUDE"
+    
+    export FC=gfortran
+    export FCFLAGS="-O -I$PREFIX_CXI/include $GPU_INCLUDE"
+    
+    export LDFLAGS="-g -O -L$PREFIX_CXI/lib $GPU_LIBRARY"
 
-export CXX=g++
-export CXXFLAGS="-g -O -I$PREFIX_CXI/include $GPU_INCLUDE"
+    export PATH=${PREFIX_CXI}/bin:${PATH}
+    export LD_LIBRARY_PATH=${PREFIX_CXI}/lib:${LD_LIBRARY_PATH}
+    export PKG_CONFIG_PATH=$PREFIX_CXI/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=$PREFIX_CXI/man:$MANPATH
+    export MANPATH=$PREFIX_CXI/share/man:$MANPATH
 
-export FC=gfortran
-export FCFLAGS="-O -I$PREFIX_CXI/include $GPU_INCLUDE"
-
-export LDFLAGS="-g -O -L$PREFIX_CXI/lib $GPU_LIBRARY"
-
-export PATH=${PREFIX_CXI}/bin:${PATH}
-export LD_LIBRARY_PATH=${PREFIX_CXI}/lib:${LD_LIBRARY_PATH}
-export PKG_CONFIG_PATH=$PREFIX_CXI/lib/pkgconfig:$PKG_CONFIG_PATH
-export MANPATH=$PREFIX_CXI/man:$MANPATH
-export MANPATH=$PREFIX_CXI/share/man:$MANPATH
-
-export PATH=${PREFIX_LIBFABRIC}/bin:${PATH}
-export LD_LIBRARY_PATH=${PREFIX_LIBFABRIC}/lib:${LD_LIBRARY_PATH}
-export PKG_CONFIG_PATH=$PREFIX_LIBFABRIC/lib/pkgconfig:$PKG_CONFIG_PATH
-export MANPATH=$PREFIX_LIBFABRIC/share/man:$MANPATH
+    export PATH=${PREFIX_LIBFABRIC}/bin:${PATH}
+    export LD_LIBRARY_PATH=${PREFIX_LIBFABRIC}/lib:${LD_LIBRARY_PATH}
+    export PKG_CONFIG_PATH=$PREFIX_LIBFABRIC/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=$PREFIX_LIBFABRIC/share/man:$MANPATH
+elif [ "$LIBFABRIC_SOURCE" = "system" ]; then
+    # priority to system libraries
+    export LD_LIBRARY_PATH=/usr/lib64/:$LD_LIBRARY_PATH
+fi
