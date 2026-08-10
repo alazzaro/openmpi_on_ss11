@@ -14,6 +14,7 @@ fi
 #USE_CPE=0 source $ROOT_DIR/sourceme_rccl.sh
 
 # Enable OpenMPI with new libfabric
+#export USER_LIBFABRIC=system
 source $ROOT_DIR/sourceme_ompi.sh
 
 which fi_info
@@ -50,9 +51,11 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
         export OMPI_MCA_mtl_ofi_av=table
         export OMPI_MCA_pml=cm
         export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_opal_cuda_support=false # improve performance for small messages
         #    export FI_LOG_LEVEL=debug
 
-        CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	#        CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_bibw -b multiple H H")
         #CMDS=("osu_bibw -d $OSU_ACC D D")
         #CMDS=("osu_bibw -W 32 -b multiple D D")
         #CMDS=("osu_bibw -b multiple D D")
@@ -75,13 +78,17 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	export OMPI_MCA_mtl_ofi_av=table
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
+	export OMPI_MCA_opal_cuda_support=false
 
-	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+#	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_bibw -b multiple H H")
 	for cmd in "${CMDS[@]}"; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
 	done
     )
-
+    fi
+    
+    if false; then
     # NCCL/RCCL
 
     CMDS=("osu_xccl_bibw -b multiple -d $OSU_ACC D D" "osu_xccl_latency -d $OSU_ACC D D")

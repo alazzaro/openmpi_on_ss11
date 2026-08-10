@@ -15,13 +15,14 @@ fi
 #USE_CPE=1 source $ROOT_DIR/sourceme_rccl.sh
 
 # Enable CrayMPI
-export USER_LIBFABRIC=build
+#export USER_LIBFABRIC=build
 source $ROOT_DIR/sourceme_craympi.sh
 
 which fi_info
 fi_info --version
 
 export MPICH_GPU_SUPPORT_ENABLED=1
+export MPICH_GPU_MANAGED_MEMORY_SUPPORT_ENABLED=0
 export MPICH_SMP_SINGLE_COPY_MODE=XPMEM
 #export FI_MR_CACHE_MONITOR=kdreg2 # no performance contribution
 # export FI_LOG_LEVEL=debug
@@ -35,7 +36,8 @@ echo "============"
 
 env
 
-for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+#for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
+for FI_CXI_RX_MATCH_MODE in hardware; do
     export FI_CXI_RX_MATCH_MODE=$FI_CXI_RX_MATCH_MODE
 
     SUFFIX="_multinode_${FI_CXI_RX_MATCH_MODE}_${SLURM_JOB_ID}"
@@ -44,7 +46,9 @@ for FI_CXI_RX_MATCH_MODE in hardware software hybrid; do
     echo $SUFFIX
     echo "========"
 
-    CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    #    CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
+    #        CMDS=("osu_bibw -b multiple H H" "osu_latency H H")
+            CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_bibw -b multiple H H")
 #    CMDS=("osu_bibw -b single -d $OSU_ACC D D" "osu_bibw -b single H H")
     #CMDS=("osu_bibw -W 32 -b multiple D D")
     #CMDS=("osu_bibw -b multiple D D")

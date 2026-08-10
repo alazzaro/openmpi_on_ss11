@@ -42,7 +42,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     echo $SUFFIX
     echo "========"
 
-#    if false; then
+    if false; then
     (
 	echo "with LinkX"
 
@@ -53,10 +53,11 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	export OMPI_MCA_mtl_ofi_av=table
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
+#	export OMPI_MCA_opal_cuda_support=false # improve performance for small messages, but D2D crashes on single node
 	#	export FI_LOG_LEVEL=debug
 
 	#	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
-       	CMDS=("osu_bibw -b multiple H H")
+       	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_bibw -b multiple H H")
 	#CMDS=("osu_bibw -W 32 -b multiple D D")
 	#CMDS=("osu_bibw -b multiple D D")
 	#CMDS=("osu_bibw D D")
@@ -66,9 +67,9 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
 	done
     )
-#    fi
+    fi
 
-    if false; then
+#    if false; then
     (
 	echo "with CXI"
 
@@ -79,9 +80,10 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	export OMPI_MCA_pml=cm
 	export OMPI_MCA_mtl=ofi
 	#    export FI_LOG_LEVEL=debug
+       	export OMPI_MCA_opal_cuda_support=false # improve performance for small messages
 
 	#	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")
-	CMDS=("osu_bibw -b multiple H H")
+       	CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_bibw -b multiple H H")
 	#CMDS=("osu_bibw -W 32 -b multiple D D")
 	#CMDS=("osu_bibw -b multiple D D")
 	#CMDS=("osu_bibw D D")
@@ -91,7 +93,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
 	done
     )
-    fi
+#    fi
 
     # NCCL/RCCL
     if false; then
