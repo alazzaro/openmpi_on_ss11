@@ -51,7 +51,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
         export OMPI_MCA_mtl_ofi_av=table
         export OMPI_MCA_pml=cm
         export OMPI_MCA_mtl=ofi
-	export OMPI_MCA_opal_cuda_support=false # improve performance for small messages
+#	export OMPI_MCA_opal_cuda_support=false # improve performance for small messages
         #    export FI_LOG_LEVEL=debug
 
 	#        CMDS=("osu_bibw -b multiple -d $OSU_ACC D D" "osu_latency -d $OSU_ACC D D" "osu_bibw -b multiple H H" "osu_latency H H")

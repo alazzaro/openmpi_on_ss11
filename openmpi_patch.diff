@@ -1,0 +1,157 @@
+--- a/opal/mca/accelerator/cuda/accelerator_cuda.c
++++ b/opal/mca/accelerator/cuda/accelerator_cuda.c
+@@ -193,8 +193,12 @@
+         }
+     }
+ 
+-    result = cuPointerGetAttribute(&mpool, CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE,
+-                                   dbuf);
++    /* cuPointerGetAttributes is faster than cuPointerGetAttribute for host buffers (driver 580+) */
++    {
++        CUpointer_attribute mpool_attr = CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE;
++        void *mpool_data = &mpool;
++        result = cuPointerGetAttributes(1, &mpool_attr, &mpool_data, dbuf);
++    }
+     if (CUDA_SUCCESS != result) {
+         return 0;
+     }
+@@ -260,28 +264,14 @@
+ 
+     *flags = 0;
+ 
+-    is_vmm = accelerator_cuda_check_vmm(dbuf, &vmm_mem_type, &vmm_dev_id);
+-    is_mpool_ptr = accelerator_cuda_check_mpool(dbuf, &mpool_mem_type, &mpool_dev_id);
+-
+-#if OPAL_CUDA_GET_ATTRIBUTES
++#if OPAL_CUDA_GET_ATTRIBUTES || (CUDA_VERSION >= 7000)
+     uint32_t is_managed = 0;
+-    /* With CUDA 7.0, we can get multiple attributes with a single call */
+     CUpointer_attribute attributes[3] = {CU_POINTER_ATTRIBUTE_MEMORY_TYPE,
+                                          CU_POINTER_ATTRIBUTE_CONTEXT,
+                                          CU_POINTER_ATTRIBUTE_IS_MANAGED};
+     void *attrdata[] = {(void *) &mem_type, (void *) &mem_ctx, (void *) &is_managed};
+ 
+     result = cuPointerGetAttributes(3, attributes, attrdata, dbuf);
+-    OPAL_OUTPUT_VERBOSE((101, opal_accelerator_base_framework.framework_output,
+-                         "dbuf=%p, mem_type=%d, mem_ctx=%p, is_managed=%d, result=%d", (void *) dbuf,
+-                         (int) mem_type, (void *) mem_ctx, is_managed, result));
+-
+-    /* Mark unified memory buffers with a flag.  This will allow all unified
+-     * memory to be forced through host buffers.  Note that this memory can
+-     * be either host or device so we need to set this flag prior to that check. */
+-    if (1 == is_managed) {
+-        *flags |= MCA_ACCELERATOR_FLAGS_UNIFIED_MEMORY;
+-    }
+     if (CUDA_SUCCESS != result) {
+         /* If cuda is not initialized, assume it is a host buffer. It can also
+          * return invalid value if the ptr was not allocated by, mapped by,
+@@ -291,7 +281,29 @@
+         } else {
+             return OPAL_ERROR;
+         }
+-    } else if (CU_MEMORYTYPE_HOST == mem_type) {
++    }
++
++    /* cuPointerGetAttributes reports zero for ordinary non-CUDA memory. */
++    if (0 == mem_type) {
++        return 0;
++    }
++
++    if (1 == is_managed) {
++        *flags |= MCA_ACCELERATOR_FLAGS_UNIFIED_MEMORY;
++    }
++
++    if (CU_MEMORYTYPE_DEVICE == mem_type && NULL != mem_ctx) {
++        result = cuCtxGetCurrent(&ctx);
++        if (OPAL_UNLIKELY(NULL == ctx)) {
++            cuCtxSetCurrent(mem_ctx);
++        }
++        return 1;
++    }
++
++    is_vmm = accelerator_cuda_check_vmm(dbuf, &vmm_mem_type, &vmm_dev_id);
++    is_mpool_ptr = accelerator_cuda_check_mpool(dbuf, &mpool_mem_type, &mpool_dev_id);
++
++    if (CU_MEMORYTYPE_HOST == mem_type) {
+         if (is_vmm && (vmm_mem_type == CU_MEMORYTYPE_DEVICE)) {
+             mem_type = CU_MEMORYTYPE_DEVICE;
+             *dev_id = vmm_dev_id;
+@@ -302,9 +314,6 @@
+             /* Host memory, nothing to do here */
+             return 0;
+         }
+-    } else if (0 == mem_type) {
+-        /* This can happen when CUDA is initialized but dbuf is not valid CUDA pointer */
+-        return 0;
+     } else {
+         if (is_vmm) {
+             *dev_id = vmm_dev_id;
+@@ -315,8 +324,12 @@
+             *dev_id = accelerator_cuda_get_device_id(mem_ctx);
+         }
+     }
+-#else /* OPAL_CUDA_GET_ATTRIBUTES */
+-    result = cuPointerGetAttribute(&mem_type, CU_POINTER_ATTRIBUTE_MEMORY_TYPE, dbuf);
++#else /* OPAL_CUDA_GET_ATTRIBUTES || (CUDA_VERSION >= 7000) */
++    {
++        CUpointer_attribute mem_attr = CU_POINTER_ATTRIBUTE_MEMORY_TYPE;
++        void *mem_data = &mem_type;
++        result = cuPointerGetAttributes(1, &mem_attr, &mem_data, dbuf);
++    }
+     if (CUDA_SUCCESS != result) {
+         /* If cuda is not initialized, assume it is a host buffer. */
+         if (CUDA_ERROR_NOT_INITIALIZED == result) {
+@@ -324,6 +337,9 @@
+         } else {
+             return OPAL_ERROR;
+         }
++    } else if (0 == mem_type) {
++        /* cuPointerGetAttributes returns SUCCESS with mem_type=0 for non-CUDA pointers */
++        return 0;
+     } else if (CU_MEMORYTYPE_HOST == mem_type) {
+         if (is_vmm && (vmm_mem_type == CU_MEMORYTYPE_DEVICE)) {
+             mem_type = CU_MEMORYTYPE_DEVICE;
+@@ -341,13 +357,16 @@
+         } else if (is_mpool_ptr) {
+             *dev_id = mpool_dev_id;
+         } else {
+-            result = cuPointerGetAttribute(&mem_ctx,
+-                                           CU_POINTER_ATTRIBUTE_CONTEXT, dbuf);
++            {
++                CUpointer_attribute ctx_attr = CU_POINTER_ATTRIBUTE_CONTEXT;
++                void *ctx_data = &mem_ctx;
++                result = cuPointerGetAttributes(1, &ctx_attr, &ctx_data, dbuf);
++            }
+             /* query the device from the context */
+             *dev_id = accelerator_cuda_get_device_id(mem_ctx);
+         }
+     }
+-#endif /* OPAL_CUDA_GET_ATTRIBUTES */
++#endif /* OPAL_CUDA_GET_ATTRIBUTES || (CUDA_VERSION >= 7000) */
+ 
+     /* Must be a device pointer */
+     assert(CU_MEMORYTYPE_DEVICE == mem_type);
+@@ -363,8 +382,12 @@
+     result = cuCtxGetCurrent(&ctx);
+     if (OPAL_UNLIKELY(NULL == ctx)) {
+         if (CUDA_SUCCESS == result) {
+-#if !OPAL_CUDA_GET_ATTRIBUTES
+-            result = cuPointerGetAttribute(&mem_ctx, CU_POINTER_ATTRIBUTE_CONTEXT, dbuf);
++#if !(OPAL_CUDA_GET_ATTRIBUTES || (CUDA_VERSION >= 7000))
++            {
++                CUpointer_attribute ctx_attr = CU_POINTER_ATTRIBUTE_CONTEXT;
++                void *ctx_data = &mem_ctx;
++                result = cuPointerGetAttributes(1, &ctx_attr, &ctx_data, dbuf);
++            }
+             if (OPAL_UNLIKELY(CUDA_SUCCESS != result)) {
+                 opal_output(0,
+                             "CUDA: error calling cuPointerGetAttribute: "
+@@ -372,7 +395,7 @@
+                             result, addr);
+                 return OPAL_ERROR;
+             }
+-#endif /* OPAL_CUDA_GET_ATTRIBUTES */
++#endif /* OPAL_CUDA_GET_ATTRIBUTES || (CUDA_VERSION >= 7000) */
+             if (is_vmm || is_mpool_ptr) {
+                 if (OPAL_SUCCESS ==
+                         accelerator_cuda_get_primary_context(

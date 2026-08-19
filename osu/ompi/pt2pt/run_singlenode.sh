@@ -42,7 +42,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
     echo $SUFFIX
     echo "========"
 
-    if false; then
+#    if false; then
     (
 	echo "with LinkX"
 
@@ -67,9 +67,9 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_lnx_${SUFFIX}"
 	done
     )
-    fi
+#    fi
 
-#    if false; then
+    if false; then
     (
 	echo "with CXI"
 
@@ -93,7 +93,7 @@ for FI_CXI_RX_MATCH_MODE in hybrid; do
 	    run_osu_cmd "$cmd" "mpi/pt2pt" "_cxi_${SUFFIX}"
 	done
     )
-#    fi
+    fi
 
     # NCCL/RCCL
     if false; then
